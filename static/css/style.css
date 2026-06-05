@@ -388,3 +388,53 @@ code { color: var(--teal); }
 .check-line { display:flex; gap:10px; align-items:flex-start; color:var(--muted); line-height:1.45; }
 .check-line input { width:auto; margin-top:3px; }
 .badge.warn { background:rgba(255,184,77,.14); border-color:rgba(255,184,77,.25); color:#ffd596; }
+
+
+/* v14 - visual por nicho, emojis e fundo temático */
+.themed-public {
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--theme-accent) 28%, transparent), transparent 28rem),
+    radial-gradient(circle at 88% 16%, color-mix(in srgb, var(--theme-accent2) 30%, transparent), transparent 28rem),
+    linear-gradient(180deg, #070917, #0e1024 58%, #080914);
+}
+.themed-hero > div, .themed-product-card, .themed-card {
+  position: relative;
+  overflow: hidden;
+}
+.themed-hero > div::before, .themed-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  background: radial-gradient(circle at top right, color-mix(in srgb, var(--theme-accent) 13%, transparent), transparent 16rem);
+}
+.themed-eyebrow {
+  border-color: color-mix(in srgb, var(--theme-accent) 40%, transparent);
+  color: var(--theme-accent);
+}
+.themed-cover {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--theme-accent) 38%, transparent), transparent 12rem),
+    linear-gradient(135deg, color-mix(in srgb, var(--theme-accent2) 84%, #101024), rgba(16,16,36,.96));
+}
+.theme-icon-big {
+  width: 112px;
+  height: 112px;
+  border-radius: 32px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,.92);
+  color: var(--theme-accent2);
+  font-weight: 950;
+  font-size: 34px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.28);
+}
+.themed-list li::marker { color: var(--theme-accent); }
+.theme-grid { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:16px; margin:16px 0; }
+.theme-preview { min-height: 245px; }
+.theme-preview::before { content:""; position:absolute; inset:-1px; pointer-events:none; background:radial-gradient(circle at top right, color-mix(in srgb, var(--theme-accent) 15%, transparent), transparent 13rem); }
+.theme-preview-top { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+.theme-preview-icon { width:54px; height:54px; border-radius:18px; display:grid; place-items:center; background:linear-gradient(135deg, var(--theme-accent), var(--theme-accent2)); color:#05050a; font-weight:950; font-size:16px; box-shadow:0 16px 38px color-mix(in srgb, var(--theme-accent) 22%, transparent); }
+.theme-preview strong { font-size:18px; line-height:1.15; }
+@media (max-width: 1000px){ .theme-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 680px){ .theme-grid { grid-template-columns: 1fr; } }

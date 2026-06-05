@@ -4235,261 +4235,483 @@ def commercial_robot_cron():
 
 
 # ---------------------------------------------------------------------------
-# v13 — Correção comercial: vídeos e campanhas realmente multinichos
-# A versão anterior gerava vídeo bonito, mas ainda usava linguagem escolar em
-# produtos gerais. Esta camada substitui os geradores por versões dinâmicas.
+# v14 — Estilo visual por nicho: emojis, ícones, fundos temáticos e copy mais viva
+# Esta camada deixa textos, página pública, campanhas e vídeo com identidade de produto.
 # ---------------------------------------------------------------------------
 
-def _ad_profile(product: Dict[str, Any]) -> Dict[str, Any]:
-    title = product.get("title") or "Produto Digital"
-    niche = (product.get("niche") or "produto digital").strip()
-    target = (product.get("target_audience") or "pessoas interessadas").strip()
-    promise = (product.get("promise") or "economizar tempo com materiais prontos e organizados").strip()
-    price = money(float(product.get("price") or 47))
-    txt = " ".join([title, niche, target, promise, product.get("discipline") or "", product.get("school_level") or ""]).lower()
+VISUAL_THEME_PROFILES = {
+    "IA": {
+        "match": ["ia", "inteligência artificial", "prompts"],
+        "emoji": "🤖", "icon": "IA", "label": "IA prática", "accent": "#22d3ee", "accent2": "#8b5cf6",
+        "bg": "Tecnologia • automação • WhatsApp • posts",
+        "hook": "Transforme ideias soltas em textos, mensagens e posts prontos para usar.",
+        "bullets": ["Prompts prontos por finalidade", "Mensagens para WhatsApp", "Ideias de posts e campanhas", "Checklist para aplicar sem complicação"],
+        "hashtags": "#ia #prompts #mei #negociosdigitais #whatsappbusiness #produtividade"
+    },
+    "FIN": {
+        "match": ["finanças", "financeiro", "gastos", "dívidas", "metas"],
+        "emoji": "💰", "icon": "R$", "label": "Organização financeira", "accent": "#22c55e", "accent2": "#0ea5e9",
+        "bg": "Controle • metas • contas • rotina",
+        "hook": "Veja seus gastos com clareza e organize a rotina financeira sem planilha complicada.",
+        "bullets": ["Controle mensal de gastos", "Mapa de contas e vencimentos", "Plano visual de metas", "Checklist de fechamento do mês"],
+        "hashtags": "#financaspessoais #organizacaofinanceira #plannerfinanceiro #metas #dinheiro"
+    },
+    "MEI": {
+        "match": ["mei", "pequenos negócios", "negócios", "vendas pelo whatsapp", "lojas"],
+        "emoji": "🛍️", "icon": "MEI", "label": "Negócio organizado", "accent": "#f97316", "accent2": "#8b5cf6",
+        "bg": "Clientes • preço • atendimento • divulgação",
+        "hook": "Deixe atendimento, preço, clientes e divulgação mais organizados para vender com mais confiança.",
+        "bullets": ["Cadastro e rotina de clientes", "Scripts de atendimento", "Ideias de promoção", "Checklist diário do negócio"],
+        "hashtags": "#mei #pequenosnegocios #empreendedorismo #vendas #whatsapp"
+    },
+    "BELEZA": {
+        "match": ["beleza", "estética", "manicure", "barbearia", "salão", "sobrancelha"],
+        "emoji": "✨", "icon": "GLAM", "label": "Atendimento premium", "accent": "#ec4899", "accent2": "#a855f7",
+        "bg": "Agenda • clientes • posts • retorno",
+        "hook": "Dê aparência mais profissional para sua agenda, atendimento e divulgação no Instagram.",
+        "bullets": ["Agenda de clientes", "Ficha de atendimento", "Mensagens de confirmação", "Posts e legendas para divulgar"],
+        "hashtags": "#beleza #manicure #estetica #salaodebeleza #agenda #clientes"
+    },
+    "CASA": {
+        "match": ["casa", "organização", "rotina", "limpeza", "doméstica", "família"],
+        "emoji": "🏡", "icon": "CASA", "label": "Rotina leve", "accent": "#14b8a6", "accent2": "#84cc16",
+        "bg": "Limpeza • cardápio • compras • tarefas",
+        "hook": "Organize a casa, o cardápio e a semana com um material simples e bonito de seguir.",
+        "bullets": ["Rotina semanal da casa", "Lista de compras", "Cardápio prático", "Checklist de tarefas"],
+        "hashtags": "#organizacao #rotinadacasa #planner #listadecompras #familia"
+    },
+    "COMIDA": {
+        "match": ["culinária", "marmitas", "confeitaria", "cardápio", "receitas", "cozinha"],
+        "emoji": "🍲", "icon": "MENU", "label": "Cozinha organizada", "accent": "#f59e0b", "accent2": "#ef4444",
+        "bg": "Cardápio • ficha técnica • pedidos • preço",
+        "hook": "Organize cardápio, preço, pedidos e divulgação para trabalhar com comida de forma mais profissional.",
+        "bullets": ["Cardápio semanal", "Ficha técnica simples", "Controle de pedidos", "Mensagens para clientes"],
+        "hashtags": "#marmitas #confeitaria #cardapio #delivery #comidacaseira #precificacao"
+    },
+    "CARREIRA": {
+        "match": ["carreira", "currículo", "entrevista", "linkedin", "emprego"],
+        "emoji": "💼", "icon": "CV", "label": "Apresentação profissional", "accent": "#3b82f6", "accent2": "#6366f1",
+        "bg": "Currículo • entrevista • perfil • mensagens",
+        "hook": "Monte uma apresentação profissional mais clara com modelos prontos para adaptar.",
+        "bullets": ["Modelo de currículo", "Roteiro de entrevista", "Bio profissional", "Mensagem para enviar currículo"],
+        "hashtags": "#curriculo #carreira #entrevista #primeiroemprego #linkedin #trabalho"
+    },
+    "DESIGN": {
+        "match": ["templates", "design", "redes sociais", "canva", "posts", "social media"],
+        "emoji": "🎨", "icon": "POST", "label": "Visual para redes", "accent": "#a855f7", "accent2": "#06b6d4",
+        "bg": "Posts • bio • calendário • legendas",
+        "hook": "Tenha uma estrutura visual e textual para postar com mais frequência e aparência profissional.",
+        "bullets": ["Calendário de conteúdo", "Legendas prontas", "Ideias de posts", "Checklist de publicação"],
+        "hashtags": "#canva #templates #socialmedia #instagram #design #posts"
+    },
+    "PETS": {
+        "match": ["pets", "pet", "cães", "gatos", "animais"],
+        "emoji": "🐾", "icon": "PET", "label": "Rotina pet", "accent": "#f59e0b", "accent2": "#22c55e",
+        "bg": "Rotina • gastos • cuidados • lembretes",
+        "hook": "Centralize a rotina, os gastos e os cuidados do seu pet em um material fácil de acompanhar.",
+        "bullets": ["Controle de gastos", "Rotina de cuidados", "Checklist de viagem", "Agenda de consultas"],
+        "hashtags": "#pets #caes #gatos #plannerpet #cuidadoscompet #tutores"
+    },
+    "EDU": {
+        "match": ["educação", "professor", "escolar", "bncc", "disciplinas", "atividades"],
+        "emoji": "📚", "icon": "EDU", "label": "Material educacional", "accent": "#24f5d0", "accent2": "#8b5cf6",
+        "bg": "Atividades • gabarito • BNCC editável • aulas",
+        "hook": "Economize tempo com materiais escolares organizados, editáveis e fáceis de revisar.",
+        "bullets": ["Atividades por disciplina", "Gabarito separado", "Orientação para aplicação", "Campos BNCC editáveis"],
+        "hashtags": "#professores #atividadesescolares #bncc #educacao #reforcoescolar"
+    },
+}
 
-    profile = {
-        "category": "KIT DIGITAL",
-        "label1": "Modelos",
-        "label2": "Checklists",
-        "label3": "Bônus",
-        "hashtags": "#produtodigital #organização #templates #empreendedorismo #mei #negociosonline",
-        "bullets": "✅ modelos prontos\n✅ checklists\n✅ mensagens e roteiros\n✅ amostra grátis",
-        "pain": "Você ainda perde tempo criando tudo do zero?",
-        "pain_small": "Material solto, texto fraco e visual amador afastam compradores.",
-        "solution": "Um pacote digital organizado para adaptar e aplicar",
-        "solution_small": f"Feito para {target.lower()}.",
-        "inside": "Modelos, exemplos e bônus prontos em uma estrutura clara",
-        "inside_small": "O comprador entende o que recebe e como usar.",
-        "trust": "Visual de produto pago, com promessa honesta",
-        "trust_small": "Sem milagre: entrega organizada, página forte e chamada clara.",
-        "cta": "Ver amostra grátis • Comprar pelo link",
-        "price_line": f"Oferta inicial: {price}",
-    }
+DEFAULT_VISUAL_THEME = {
+    "emoji": "🚀", "icon": "PRO", "label": "Produto digital", "accent": "#24f5d0", "accent2": "#8b5cf6",
+    "bg": "Organização • modelos • checklist • aplicação",
+    "hook": "Pare de começar do zero e use uma estrutura pronta, bonita e fácil de adaptar.",
+    "bullets": ["Modelos prontos", "Checklists práticos", "Exemplos preenchidos", "Manual de uso"],
+    "hashtags": "#produtodigital #templates #organizacao #rendaextra #negociosdigitais"
+}
 
-    if is_school_niche(product):
-        profile.update({
-            "category": "KIT ESCOLAR",
-            "label1": "Atividades",
-            "label2": "Gabaritos",
-            "label3": "BNCC",
-            "hashtags": "#professores #educacao #atividadesprontas #reforcoescolar #materialpedagogico",
-            "bullets": "✅ atividades prontas\n✅ gabaritos\n✅ orientação de uso\n✅ amostra grátis",
-            "pain": "Professor, você perde horas montando material do zero?",
-            "pain_small": "A rotina fica pesada quando tudo precisa ser criado na pressa.",
-            "solution": "Atividades, provas e orientações em um kit organizado",
-            "solution_small": "Separado por disciplina, com campos editáveis e revisão pedagógica.",
-            "inside": "Folha do aluno, orientação do professor e gabarito",
-            "inside_small": "Mais fácil de revisar, imprimir, adaptar e aplicar.",
-            "trust": "Campos BNCC editáveis para conferência",
-            "trust_small": "Material revisável, não oficial. Confira conforme sua turma e currículo local.",
-            "cta": "Baixar amostra grátis • Ver por dentro",
-        })
-    elif any(w in txt for w in ["ia", "prompt", "chatgpt", "whatsapp"]):
-        profile.update({
-            "category": "KIT IA",
-            "label1": "Prompts",
-            "label2": "WhatsApp",
-            "label3": "Posts",
-            "hashtags": "#ia #chatgpt #whatsappbusiness #mei #pequenosnegocios #produtividade",
-            "bullets": "✅ prompts prontos\n✅ mensagens para clientes\n✅ posts e ofertas\n✅ amostra grátis",
-            "pain": "Seu negócio perde tempo pensando no que responder e postar?",
-            "pain_small": "Atendimento lento e conteúdo improvisado passam pouca confiança.",
-            "solution": "Prompts, mensagens e posts prontos para pequenos negócios",
-            "solution_small": "Use IA de forma simples para organizar atendimento e divulgação.",
-            "inside": "WhatsApp, Instagram, ofertas, respostas e calendário",
-            "inside_small": "Tudo separado por objetivo para copiar, adaptar e usar.",
-            "trust": "Linguagem simples, profissional e sem enrolação técnica",
-            "trust_small": "Feito para MEIs, autônomos e lojas pequenas.",
-        })
-    elif any(w in txt for w in ["beleza", "salão", "manicure", "barbearia", "estética", "sobrancelha"]):
-        profile.update({
-            "category": "KIT BELEZA",
-            "label1": "Agenda",
-            "label2": "Posts",
-            "label3": "Clientes",
-            "hashtags": "#salaodebeleza #manicure #barbearia #estetica #whatsappbusiness #agenda",
-            "bullets": "✅ mensagens prontas\n✅ agenda e ficha\n✅ posts para divulgar\n✅ amostra grátis",
-            "pain": "Seu atendimento parece bom, mas sua divulgação ainda parece improvisada?",
-            "pain_small": "Cliente compra mais confiança quando vê organização e clareza.",
-            "solution": "Um kit para deixar agenda, WhatsApp e posts mais profissionais",
-            "solution_small": "Feito para salão, manicure, barbearia e estética.",
-            "inside": "Mensagens, ficha de cliente, confirmação e pós-atendimento",
-            "inside_small": "Organize a experiência antes, durante e depois do serviço.",
-            "trust": "Comunicação bonita, direta e fácil de adaptar",
-            "trust_small": "Sem promessa exagerada. É ferramenta de organização e apresentação.",
-        })
-    elif any(w in txt for w in ["finança", "financeiro", "gastos", "dívida", "divida", "contas"]):
-        profile.update({
-            "category": "PLANNER",
-            "label1": "Gastos",
-            "label2": "Contas",
-            "label3": "Metas",
-            "hashtags": "#organizacaofinanceira #plannerfinanceiro #financaspessoais #controledegastos",
-            "bullets": "✅ controle de gastos\n✅ mapa de contas\n✅ metas mensais\n✅ amostra grátis",
-            "pain": "Você chega ao fim do mês sem saber para onde o dinheiro foi?",
-            "pain_small": "Sem mapa visual, as contas ficam espalhadas e difíceis de controlar.",
-            "solution": "Planner financeiro simples para organizar a vida no papel",
-            "solution_small": "Educativo, visual e fácil de preencher.",
-            "inside": "Contas, dívidas, compras, metas e revisão mensal",
-            "inside_small": "Um caminho claro para enxergar a rotina financeira.",
-            "trust": "Organização financeira sem promessa de enriquecimento",
-            "trust_small": "Material educativo. Não substitui consultoria financeira.",
-        })
-    elif any(w in txt for w in ["marmita", "culinária", "confeitaria", "cardápio", "cardapio", "cozinha"]):
-        profile.update({
-            "category": "KIT CULINÁRIA",
-            "label1": "Cardápio",
-            "label2": "Preços",
-            "label3": "Pedidos",
-            "hashtags": "#marmitas #culinaria #confeitaria #comidacaseira #empreenderemcasa",
-            "bullets": "✅ cardápio organizado\n✅ ficha de preço\n✅ mensagens de pedido\n✅ amostra grátis",
-            "pain": "Você quer vender comida, mas ainda organiza tudo no improviso?",
-            "pain_small": "Cardápio confuso, preço sem padrão e atendimento solto atrapalham.",
-            "solution": "Um kit para organizar cardápio, preço e atendimento",
-            "solution_small": "Pensado para marmitas, lanches, doces e comida caseira.",
-            "inside": "Cardápio, ficha técnica, lista de compras e WhatsApp",
-            "inside_small": "Tudo em um fluxo mais simples para vender com organização.",
-            "trust": "Material prático para operação e divulgação",
-            "trust_small": "Não promete lucro garantido. Ajuda a estruturar melhor o processo.",
-        })
-    elif any(w in txt for w in ["currículo", "curriculo", "entrevista", "linkedin", "carreira"]):
-        profile.update({
-            "category": "KIT CARREIRA",
-            "label1": "Currículo",
-            "label2": "Entrevista",
-            "label3": "LinkedIn",
-            "hashtags": "#curriculo #entrevista #carreira #emprego #linkedindicas",
-            "bullets": "✅ modelos de currículo\n✅ respostas de entrevista\n✅ LinkedIn básico\n✅ amostra grátis",
-            "pain": "Seu currículo mostra seu valor ou só lista informações soltas?",
-            "pain_small": "Uma apresentação confusa pode fazer boas experiências passarem despercebidas.",
-            "solution": "Modelos prontos para melhorar currículo e apresentação profissional",
-            "solution_small": "Feito para iniciantes, estudantes e trabalhadores.",
-            "inside": "Currículo, entrevista, bio profissional e checklist",
-            "inside_small": "Organização para se apresentar com mais clareza.",
-            "trust": "Ajuda prática, sem promessa de emprego garantido",
-            "trust_small": "O resultado depende do perfil, vagas, mercado e preparação.",
-        })
-    elif any(w in txt for w in ["pet", "gato", "cachorro", "vacina", "veterin"]):
-        profile.update({
-            "category": "PLANNER PET",
-            "label1": "Vacinas",
-            "label2": "Gastos",
-            "label3": "Rotina",
-            "hashtags": "#pets #cachorros #gatos #plannerpet #cuidadoscompet",
-            "bullets": "✅ rotina do pet\n✅ vacinas e consultas\n✅ controle de gastos\n✅ amostra grátis",
-            "pain": "As informações do seu pet ficam espalhadas em vários lugares?",
-            "pain_small": "Consulta, vacina, banho, remédio e gastos precisam de organização.",
-            "solution": "Um planner bonito para cuidar da rotina do pet com mais controle",
-            "solution_small": "Feito para tutores de cães e gatos.",
-            "inside": "Vacinas, rotina, alimentação, consultas e gastos",
-            "inside_small": "Tudo centralizado para lembrar do que importa.",
-            "trust": "Organização afetuosa, sem substituir veterinário",
-            "trust_small": "Para dúvidas de saúde, procure um profissional.",
-        })
-    elif any(w in txt for w in ["canva", "templates", "social media", "posts", "design", "redes sociais"]):
-        profile.update({
-            "category": "PACK SOCIAL",
-            "label1": "Posts",
-            "label2": "Legendas",
-            "label3": "Calendário",
-            "hashtags": "#templates #canva #socialmedia #postpronto #instagramparanegocios",
-            "bullets": "✅ calendário de posts\n✅ legendas prontas\n✅ chamadas de venda\n✅ amostra grátis",
-            "pain": "Seu Instagram parece parado porque você nunca sabe o que postar?",
-            "pain_small": "Postar sem estratégia deixa o perfil com pouca clareza.",
-            "solution": "Posts, legendas e calendário para divulgar com aparência profissional",
-            "solution_small": "Feito para lojas, MEIs e prestadores de serviço.",
-            "inside": "Ideias, legendas, ganchos, bio e chamadas de oferta",
-            "inside_small": "Um mês de conteúdo para adaptar ao seu negócio.",
-            "trust": "Aparência de agência, com execução simples",
-            "trust_small": "O alcance depende de consistência, oferta e público.",
-        })
-    elif any(w in txt for w in ["casa", "rotina", "organização", "organizacao", "família", "familia"]):
-        profile.update({
-            "category": "PLANNER ROTINA",
-            "label1": "Rotina",
-            "label2": "Compras",
-            "label3": "Semana",
-            "hashtags": "#organizacaodacasa #rotina #planner #listadecompras #marmitas",
-            "bullets": "✅ planner semanal\n✅ lista de compras\n✅ rotina da casa\n✅ amostra grátis",
-            "pain": "Sua semana começa sem plano e termina na correria?",
-            "pain_small": "Quando compras, refeições e tarefas ficam soltas, tudo pesa mais.",
-            "solution": "Um planner visual para organizar casa, compras e rotina",
-            "solution_small": "Feito para famílias, estudantes e pessoas ocupadas.",
-            "inside": "Cardápio, lista de compras, tarefas e planejamento semanal",
-            "inside_small": "Mais clareza para fazer o básico sem tanta bagunça.",
-            "trust": "Organização simples, bonita e imprimível",
-            "trust_small": "A rotina melhora com uso constante e adaptação pessoal.",
-        })
-    return profile
+
+def product_theme(product_or_niche: Any) -> Dict[str, Any]:
+    if isinstance(product_or_niche, dict):
+        text = " ".join(str(product_or_niche.get(k, "")) for k in ["niche", "title", "product_type", "discipline", "school_level"]).lower()
+    else:
+        text = str(product_or_niche or "").lower()
+    for theme in VISUAL_THEME_PROFILES.values():
+        if any(m in text for m in theme.get("match", [])):
+            return {**DEFAULT_VISUAL_THEME, **theme}
+    return dict(DEFAULT_VISUAL_THEME)
+
+
+def _theme_for_values(title: str, niche: str, product_type: str = "", discipline: str = "", school_level: str = "") -> Dict[str, Any]:
+    return product_theme({"title": title, "niche": niche, "product_type": product_type, "discipline": discipline, "school_level": school_level})
+
+
+def _is_edu_values(niche: str = "", product_type: str = "", discipline: str = "", school_level: str = "") -> bool:
+    try:
+        return is_education_product(niche, product_type, discipline, school_level)
+    except Exception:
+        text = " ".join([niche, product_type, discipline, school_level]).lower()
+        return any(x in text for x in ["educação", "escolar", "professor", "bncc", "disciplina"])
+
+
+def public_bullets(product: Dict[str, Any]) -> List[str]:
+    theme = product_theme(product)
+    return theme.get("bullets", DEFAULT_VISUAL_THEME["bullets"])
+
+
+def _hex_to_rgb(hex_color: str, fallback=(36, 245, 208)):
+    try:
+        hex_color = (hex_color or "").strip().lstrip("#")
+        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    except Exception:
+        return fallback
+
+
+def _safe_money(value: Any) -> str:
+    try:
+        return money(float(value or 0))
+    except Exception:
+        return "R$ 0,00"
+
+
+def _premium_visual_sections(title: str, niche: str, product_type: str, target: str, pages: int, promise: str, discipline: str, school_level: str) -> str:
+    theme = _theme_for_values(title, niche, product_type, discipline, school_level)
+    bullets = theme.get("bullets", [])
+    modules = _premium_model_for(niche).get("modules", []) if "_premium_model_for" in globals() else []
+    if not modules:
+        modules = ["Comece por aqui", "Modelos prontos", "Exemplos preenchidos", "Checklist final", "Plano de aplicação"]
+    deliverables = _premium_model_for(niche).get("deliverables", bullets) if "_premium_model_for" in globals() else bullets
+    warning = _premium_model_for(niche).get("warning", "Material editável. Revise antes de aplicar ou vender.") if "_premium_model_for" in globals() else "Material editável. Revise antes de aplicar ou vender."
+    parts = [
+        f"# {theme['emoji']} {title}",
+        "",
+        f"**{theme['label']}** • {product_type} • {niche}",
+        f"**Público:** {target}",
+        f"**Objetivo:** {promise}",
+        "",
+        f"## ✨ Visão geral do produto",
+        f"{theme['hook']} A ideia é entregar um material com cara de produto pago: bonito, organizado, direto ao ponto e com uso prático.",
+        "",
+        "## 🎯 Promessa honesta",
+        f"Este produto ajuda {target.lower()} a {promise.lower()}. Ele não promete resultado automático; entrega estrutura, clareza, modelos e um caminho mais fácil para aplicar.",
+        "",
+        "## 📦 O que vem no pacote",
+    ]
+    parts.extend([f"- {theme['emoji']} {d}" for d in deliverables])
+    parts += ["", "## 🧭 Sumário organizado"]
+    for i, m in enumerate(modules[:10], 1):
+        parts.append(f"{i}. {m}")
+    parts += ["", "---", ""]
+    for i, m in enumerate(modules[:10], 1):
+        d = deliverables[(i-1) % len(deliverables)] if deliverables else "modelo prático"
+        parts += [
+            f"## {theme['emoji']} Módulo {i} — {m}",
+            "",
+            "### Por que este módulo importa",
+            f"Este módulo foi criado para transformar uma necessidade comum do nicho de {niche.lower()} em uma ação simples e aplicável.",
+            "",
+            "### Entregável principal",
+            f"**{d}**",
+            "",
+            "### Modelo pronto para adaptar",
+            "Copie, personalize e use como base:",
+            "",
+            f"> Olá! Estou organizando uma solução prática para {target.lower()}. A ideia é facilitar: {promise.lower()}. Veja este modelo, adapte para sua realidade e revise antes de publicar ou enviar.",
+            "",
+            "### Exemplo preenchido",
+            f"Exemplo: uma pessoa do público de {target.lower()} usa este material para economizar tempo, evitar improviso e deixar a apresentação mais profissional.",
+            "",
+            "### Checklist do módulo",
+            "- [ ] Entendi a finalidade do modelo.",
+            "- [ ] Editei com minhas informações reais.",
+            "- [ ] Revisei a linguagem antes de usar.",
+            "- [ ] Testei no celular e no computador.",
+            "- [ ] Guardei uma versão final para reutilizar.",
+            "",
+        ]
+    parts += [
+        "---", "",
+        "## 🎁 Bônus de valor percebido",
+        f"- {theme['emoji']} Amostra grátis para gerar confiança antes da compra.",
+        "- ✅ Manual 'comece por aqui'.",
+        "- ✅ Checklist de publicação ou aplicação.",
+        "- ✅ Mensagens de WhatsApp para divulgar ou usar com clientes.",
+        "- ✅ Calendário simples de 7 dias para aplicar o material.",
+        "", "## ⚠️ Aviso responsável",
+        warning,
+        "", "## ✅ Conclusão",
+        "O objetivo deste pacote é parecer e funcionar como produto pago: organizado, bonito, útil e fácil de usar. Quanto melhor você revisar, personalizar e mostrar por dentro, maior a chance de gerar confiança na venda.",
+    ]
+    return "\n".join(parts)
+
+
+# Guarda versões premium existentes antes de sobrescrever com visual por nicho.
+try:
+    _v14_template_content_general_prev = template_content_general
+    _v14_template_sales_page_general_prev = template_sales_page_general
+    _v14_template_social_posts_general_prev = template_social_posts_general
+    _v14_build_lead_magnet_prev = build_lead_magnet
+    _v14_build_whatsapp_sequence_prev = build_whatsapp_sequence
+except Exception:
+    pass
+
+
+def template_content_general(title: str, niche: str, product_type: str, target: str, pages: int, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    return _premium_visual_sections(title, niche, product_type, target, pages, promise, discipline, school_level)
+
+
+def template_sales_page_general(title: str, niche: str, product_type: str, target: str, price: float, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    theme = _theme_for_values(title, niche, product_type, discipline, school_level)
+    bullets = "\n".join([f"- {theme['emoji']} {b}" for b in theme.get("bullets", [])])
+    warning = _premium_model_for(niche).get("warning", "Material editável e educativo. Revise antes de aplicar.") if "_premium_model_for" in globals() else "Material editável e educativo. Revise antes de aplicar."
+    return f"""
+# {theme['emoji']} Página de venda premium — {title}
+
+## Headline principal
+{title}: o pacote digital pronto para {target.lower()} que querem {promise.lower()} sem começar do zero.
+
+## Subheadline
+{theme['hook']}
+
+## Abertura que chama atenção
+Você não precisa montar tudo do zero, ficar procurando modelos soltos ou publicar algo com aparência improvisada. Este pacote foi criado para entregar uma estrutura mais bonita, organizada e fácil de adaptar.
+
+## O problema
+No nicho de {niche.lower()}, muita gente sabe que precisa melhorar a organização, mas não tem tempo para criar modelos, textos, checklists e roteiros do zero. O resultado é improviso, atraso e material com pouca confiança visual.
+
+## A solução
+O **{title}** reúne modelos, exemplos, checklist e orientação prática em um pacote digital com aparência profissional.
+
+## O que você recebe
+{bullets}
+- 🎁 Amostra grátis para conhecer antes de comprar.
+- 📌 Manual de uso com ordem recomendada.
+- 🧩 Modelos editáveis para adaptar à sua realidade.
+
+## Benefícios práticos
+- ✨ Visual mais organizado e confiável.
+- ⚡ Economia de tempo na criação.
+- 📲 Facilidade para usar no celular ou computador.
+- 🧠 Menos improviso e mais clareza.
+- 🎯 Material pronto para revisar, adaptar e aplicar.
+
+## Para quem é
+- Para {target.lower()}.
+- Para quem quer algo simples, bonito e útil.
+- Para quem quer começar com um material pronto antes de contratar alguém ou criar tudo do zero.
+
+## Para quem não é
+- Não é para quem quer resultado sem aplicar.
+- Não é promessa de lucro, emprego, aprovação, cura ou venda garantida.
+- Não substitui profissional especializado quando o assunto exigir orientação técnica.
+
+## Preço de lançamento
+**{money(price)}**
+
+## Chamada para ação
+Clique no botão de compra, baixe o material e comece pelo arquivo **LEIA PRIMEIRO**. Se quiser ver antes, baixe a amostra grátis.
+
+## Garantia honesta
+Use a garantia da plataforma escolhida e explique no checkout. Produto digital bom vende pela clareza, não por promessa exagerada.
+
+## Aviso responsável
+{warning}
+
+## FAQ
+**Recebo na hora?** Sim, quando o checkout estiver configurado na plataforma de venda.
+
+**Posso editar?** Sim. O material foi feito para adaptação.
+
+**Serve para iniciante?** Sim. A estrutura guia o uso passo a passo.
+
+**É resultado garantido?** Não. O produto entrega estrutura e organização; resultado depende de aplicação, público, oferta e divulgação.
+""".strip()
+
+
+def template_social_posts_general(title: str, target: str, niche: str, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    theme = _theme_for_values(title, niche, "", discipline, school_level)
+    hooks = [
+        f"{theme['emoji']} Você ainda cria tudo do zero?",
+        f"🚨 Pare de improvisar no nicho de {niche.lower()}.",
+        f"✨ Olha como esse material fica organizado por dentro.",
+        f"⚡ Uma estrutura pronta para economizar tempo.",
+        f"🎁 Baixe uma amostra grátis antes de comprar.",
+        f"📌 Produto digital bom não é texto jogado: é organização, exemplo e checklist.",
+        f"💡 Antes: bagunça. Depois: modelo pronto para adaptar.",
+        f"🔥 Se você precisa {promise.lower()}, veja esse kit.",
+    ]
+    captions = []
+    for h in hooks:
+        captions.append(f"{h}\n\n{title}\n\n✅ material digital organizado\n✅ modelos e checklists\n✅ aparência mais profissional\n✅ amostra grátis para ver por dentro\n\nNão é promessa mágica. É uma estrutura pronta para adaptar e aplicar.\n\nComente EU QUERO ou acesse o link da página.\n\n{theme['hashtags']}")
+    whatsapp = [
+        f"Oi! Preparei o {title}. É um material digital para {target.lower()} que querem {promise.lower()}. Quer que eu te mande uma amostra grátis para ver por dentro? {theme['emoji']}",
+        f"Esse pacote vem com modelos, checklist e orientação de uso. A ideia é economizar tempo e deixar tudo mais profissional. Posso te enviar o link?",
+        f"Não é promessa milagrosa. É um material pronto para adaptar. Se fizer sentido para você, veja a amostra grátis primeiro.",
+        f"O pacote completo está com preço de lançamento e entrega digital pela plataforma. Quer que eu te mande a página?",
+    ]
+    scripts = [
+        f"Roteiro 1 — Gancho visual: 'Você ainda monta tudo do zero?' Mostre uma tela com bagunça e depois o {title} organizado.",
+        f"Roteiro 2 — Por dentro: 'Olha o que vem dentro do {title}'. Mostre módulos, bônus e checklist.",
+        "Roteiro 3 — Antes/depois: antes improviso, depois modelo pronto, exemplo preenchido e checklist final.",
+        "Roteiro 4 — Objeção: 'Será que serve para iniciante?' Mostre o manual comece por aqui.",
+        "Roteiro 5 — Amostra grátis: mostre que a pessoa pode ver antes de comprar.",
+        f"Roteiro 6 — Oferta: mostre o preço de lançamento e diga: 'link na página para baixar'.",
+    ]
+    return "\n".join([
+        f"# {theme['emoji']} Kit de divulgação visual — {title}", "",
+        "## Ganchos chamativos",
+        *[f"{i}. {h}" for i, h in enumerate(hooks, 1)], "",
+        "## Legendas com emojis e CTA",
+        *[f"### Legenda {i}\n{c}" for i, c in enumerate(captions, 1)], "",
+        "## Mensagens para WhatsApp",
+        *[f"{i}. {w}" for i, w in enumerate(whatsapp, 1)], "",
+        "## Roteiros para vídeos curtos",
+        *[f"{i}. {s}" for i, s in enumerate(scripts, 1)], "",
+        "## Hashtags do nicho",
+        theme.get("hashtags", "#produtodigital")
+    ])
+
+
+def build_lead_magnet(product: Dict[str, Any]) -> str:
+    if _is_edu_values(product.get("niche", ""), product.get("product_type", ""), product.get("discipline", ""), product.get("school_level", "")):
+        try:
+            return _v14_build_lead_magnet_prev(product)
+        except Exception:
+            pass
+    theme = product_theme(product)
+    title = product.get("title", "Produto Digital")
+    return f"""
+# {theme['emoji']} Amostra grátis — {title}
+
+Obrigado por baixar a amostra. Ela mostra como o material é organizado antes da compra.
+
+## O que você vai ver nesta amostra
+- {theme['emoji']} Uma página de apresentação do produto.
+- ✅ Um modelo simples para adaptar.
+- 📌 Um checklist rápido de uso.
+- 🎯 Uma orientação para começar sem complicação.
+
+## Modelo demonstrativo
+**Objetivo:** {product.get('promise') or theme['hook']}
+
+### Passo 1 — Defina sua necessidade
+Escreva qual parte da rotina você quer organizar primeiro.
+
+### Passo 2 — Use o modelo base
+Copie o texto abaixo e personalize:
+
+> Preciso organizar melhor minha rotina no nicho de {product.get('niche','produto digital')}. Meu primeiro objetivo é melhorar a apresentação, economizar tempo e evitar improviso.
+
+### Passo 3 — Checklist rápido
+- [ ] O material foi personalizado.
+- [ ] As informações estão corretas.
+- [ ] O visual combina com o público.
+- [ ] A mensagem está clara.
+- [ ] O arquivo foi testado no celular.
+
+## Quer o pacote completo?
+O pacote completo vem com modelos, checklists, exemplos, bônus e orientação de uso para deixar tudo mais profissional.
+""".strip()
+
+
+def build_whatsapp_sequence(product: Dict[str, Any]) -> str:
+    if _is_edu_values(product.get("niche", ""), product.get("product_type", ""), product.get("discipline", ""), product.get("school_level", "")):
+        try:
+            return _v14_build_whatsapp_sequence_prev(product)
+        except Exception:
+            pass
+    theme = product_theme(product)
+    title = product.get("title", "Produto Digital")
+    price = _safe_money(product.get("price"))
+    checkout = product.get("checkout_link") or "COLE_AQUI_O_LINK_DO_CHECKOUT"
+    return f"""
+# {theme['emoji']} Sequência WhatsApp — {title}
+
+## Mensagem 1 — Amostra grátis
+Oi! Preparei uma amostra grátis do **{title}**. É um material digital para ajudar com: {product.get('promise') or theme['hook']}. Quer que eu te envie o link para ver por dentro? {theme['emoji']}
+
+## Mensagem 2 — Valor percebido
+O pacote completo vem com modelos, checklists, exemplos e orientação de uso. A ideia é economizar tempo e deixar tudo mais organizado e profissional.
+
+## Mensagem 3 — Quebra de objeção
+Não é promessa mágica e nem resultado garantido. É um material pronto para você adaptar à sua realidade, usando como base para organizar melhor sua rotina.
+
+## Mensagem 4 — Fechamento
+O valor de lançamento é **{price}**. Se fizer sentido para você, aqui está o link de compra com entrega digital: {checkout}
+
+## Mensagem 5 — Pós-venda
+Obrigado pela compra! Conseguiu baixar o arquivo? Comece pelo **LEIA PRIMEIRO** e depois use o checklist final.
+""".strip()
 
 
 def build_video_script(product: Dict[str, Any]) -> List[Dict[str, str]]:
+    theme = product_theme(product)
     title = product.get("title") or "Produto Digital"
-    profile = _ad_profile(product)
+    price = _safe_money(product.get("price") or 47)
+    if _is_edu_values(product.get("niche", ""), product.get("product_type", ""), product.get("discipline", ""), product.get("school_level", "")):
+        return [
+            {"scene":"1", "tag":"DOR REAL", "text":"Professor, você perde horas montando material do zero?", "small":"Economize tempo com um kit escolar editável e organizado."},
+            {"scene":"2", "tag":"SOLUÇÃO", "text":title[:92], "small":"Atividades, gabaritos, orientações e campos BNCC para revisão."},
+            {"scene":"3", "tag":"POR DENTRO", "text":"Arquivos separados e fáceis de adaptar", "small":"Mais clareza para imprimir, revisar e aplicar."},
+            {"scene":"4", "tag":"AMOSTRA", "text":"Baixe uma amostra grátis", "small":"Veja por dentro antes de comprar."},
+            {"scene":"5", "tag":"OFERTA", "text":f"Oferta inicial: {price}", "small":"Link na página, bio ou WhatsApp."},
+        ]
     return [
-        {"scene":"1", "tag":"DOR REAL", "text":profile["pain"], "small":profile["pain_small"]},
-        {"scene":"2", "tag":"SOLUÇÃO", "text":profile["solution"], "small":profile["solution_small"]},
-        {"scene":"3", "tag":"PRODUTO", "text":title[:95], "small":profile["inside"]},
-        {"scene":"4", "tag":"POR DENTRO", "text":profile["inside"], "small":profile["inside_small"]},
-        {"scene":"5", "tag":"CONFIANÇA", "text":profile["trust"], "small":profile["trust_small"]},
-        {"scene":"6", "tag":"AMOSTRA", "text":"Veja por dentro antes de comprar", "small":"Amostra grátis para aumentar confiança e captar interessados."},
-        {"scene":"7", "tag":"OFERTA", "text":profile["price_line"], "small":"Entrega digital. Coloque o link do checkout na página pública."},
+        {"scene":"1", "tag":"CHAMA ATENÇÃO", "text":"Você ainda cria tudo do zero?", "small":theme["hook"]},
+        {"scene":"2", "tag":"SOLUÇÃO", "text":title[:92], "small":f"{theme['label']} • material digital editável"},
+        {"scene":"3", "tag":"VOCÊ RECEBE", "text":"Modelos + checklists + exemplos", "small":"Tudo organizado para adaptar e usar com mais confiança."},
+        {"scene":"4", "tag":"VISUAL", "text":"Aparência de produto pago", "small":"Textos com emojis, ícones, estrutura e tema do nicho."},
+        {"scene":"5", "tag":"AMOSTRA", "text":"Baixe uma amostra grátis", "small":"Veja por dentro antes de comprar."},
+        {"scene":"6", "tag":"OFERTA", "text":f"Oferta inicial: {price}", "small":"Link na página, bio ou WhatsApp."},
     ]
 
 
 def build_social_campaign(product: Dict[str, Any], days: int = 30) -> List[Dict[str, str]]:
+    theme = product_theme(product)
     title = product.get("title") or "Produto Digital"
-    profile = _ad_profile(product)
-    target = product.get("target_audience") or "pessoas interessadas"
-    promise = product.get("promise") or "economizar tempo com materiais prontos e organizados"
+    price = _safe_money(product.get("price") or 47)
     url = product_public_url(product)
-    price_line = profile["price_line"]
-    angles = [
-        ("dor", profile["pain"]),
-        ("por_dentro", f"Veja por dentro o que vem no {title}."),
-        ("amostra", "Antes de comprar, baixe a amostra grátis."),
-        ("transformacao", profile["solution"]),
-        ("confianca", profile["trust"]),
-        ("oferta", price_line),
-        ("uso", f"Feito para {target.lower()} que querem {promise.lower()}.")
+    hooks = [
+        f"{theme['emoji']} Você ainda começa tudo do zero?",
+        f"🚨 Pare de improvisar: veja esse material por dentro.",
+        f"✨ Um pacote digital com visual mais profissional.",
+        f"⚡ Modelos, checklist e exemplos prontos para adaptar.",
+        f"🎁 Baixe a amostra grátis antes de comprar.",
+        f"📌 O jeito mais simples de organizar essa parte da rotina.",
+        f"🔥 Oferta inicial: {price}.",
     ]
-    platforms = ["Instagram Reels", "TikTok", "YouTube Shorts", "Facebook Page", "WhatsApp"]
+    if _is_edu_values(product.get("niche", ""), product.get("product_type", ""), product.get("discipline", ""), product.get("school_level", "")):
+        hooks = [
+            "📚 Professor, você perde tempo montando material do zero?",
+            "✅ Atividades, gabarito e orientação em um só pacote.",
+            "🎁 Baixe a amostra grátis antes de comprar.",
+            "🧩 Material escolar editável para adaptar.",
+            "📌 Campos BNCC para revisão pedagógica.",
+        ]
+    platforms = ["Instagram Reels", "TikTok", "Facebook Page", "WhatsApp", "YouTube Shorts"]
     rows = []
     for day in range(1, days + 1):
-        angle, hook = angles[(day - 1) % len(angles)]
+        hook = hooks[(day - 1) % len(hooks)]
         platform = platforms[(day - 1) % len(platforms)]
         if platform == "WhatsApp":
-            caption = (
-                f"Oi! Preparei uma amostra grátis do {title}.\n\n"
-                f"É um material digital para {target.lower()} que querem {promise.lower()}.\n\n"
-                f"Ele vem com estrutura organizada, modelos prontos, bônus e orientação de uso. "
-                f"Quer ver por dentro antes de comprar? {url}"
-            )
+            caption = f"Oi! {hook}\n\nPreparei o {title}. Ele ajuda com: {product.get('promise') or theme['hook']}\n\nTem amostra grátis para ver por dentro: {url}"
         elif platform == "Facebook Page":
-            caption = (
-                f"{hook}\n\n{title}\n\n"
-                f"Material digital organizado para {target.lower()}.\n\n{profile['bullets']}\n\n"
-                f"Veja a amostra grátis e confira se faz sentido para você: {url}"
-            )
+            caption = f"{hook}\n\n{title}\n\n{theme['hook']}\n\n✅ material digital organizado\n✅ amostra grátis\n✅ entrega pela plataforma configurada\n\nAcesse: {url}"
         else:
-            caption = (
-                f"{hook}\n\n{title}\n{profile['bullets']}\n\n"
-                f"Veja por dentro antes de comprar: {url}"
-            )
+            caption = f"{hook}\n\n{title}\n✅ modelos prontos\n✅ checklists\n✅ exemplos\n✅ amostra grátis\n\nVeja por dentro: {url}"
         rows.append({
             "day": str(day),
             "platform": platform,
             "post_type": "video_curto" if platform in ["Instagram Reels", "TikTok", "YouTube Shorts"] else "post_texto",
             "caption": caption,
-            "hashtags": profile["hashtags"],
-            "angle": angle,
+            "hashtags": theme.get("hashtags", DEFAULT_VISUAL_THEME["hashtags"]),
+            "angle": "visual_tematico",
         })
     return rows
 
 
 def generate_sales_video(product: Dict[str, Any]) -> Path:
-    """Gera MP4 vertical multinicho, sem linguagem escolar indevida."""
+    """Gera MP4 vertical com fundo temático por nicho, mockup visual e texto chamativo."""
     try:
         from PIL import Image, ImageDraw, ImageFont
         import imageio.v2 as imageio
@@ -4497,13 +4719,15 @@ def generate_sales_video(product: Dict[str, Any]) -> Path:
     except Exception as exc:
         raise RuntimeError("Para gerar vídeo, instale: pip install pillow imageio imageio-ffmpeg") from exc
 
+    theme = product_theme(product)
     title = product.get("title") or "produto"
-    profile = _ad_profile(product)
-    out = EXPORT_DIR / f"{slugify(title)}-video-profissional.mp4"
+    out = EXPORT_DIR / f"{slugify(title)}-video-tematico.mp4"
     W, H = 1080, 1920
     fps = 24
     seconds_per_scene = 2.55
     frames_per_scene = int(fps * seconds_per_scene)
+    accent = _hex_to_rgb(theme.get("accent"), (36, 245, 208))
+    accent2 = _hex_to_rgb(theme.get("accent2"), (139, 92, 246))
 
     def font(size, bold=False):
         candidates = [
@@ -4517,18 +4741,11 @@ def generate_sales_video(product: Dict[str, Any]) -> Path:
                 pass
         return ImageFont.load_default()
 
-    big = font(72, True); mid = font(40, False); small = font(28, False); badge_font = font(27, True); mini = font(24, False); card_font = font(32, False)
+    big = font(76, True); mid = font(42, False); small = font(30, False); badge_font = font(28, True); mini = font(24, False); icon_font = font(54, True)
     scenes = build_video_script(product)
 
-    def draw_gradient(draw):
-        for y in range(H):
-            r = 9 + int(25 * (y/H))
-            g = 10 + int(16 * (1-y/H))
-            b = 24 + int(54 * (1-y/H))
-            draw.line((0, y, W, y), fill=(r, g, b))
-
-    def safe_lines(text, draw, fnt, width, limit):
-        return _wrap_text(str(text or ""), draw, fnt, width)[:limit]
+    def blend(a, b, t):
+        return tuple(int(a[i] * (1-t) + b[i] * t) for i in range(3))
 
     with imageio.get_writer(str(out), fps=fps, codec="libx264", quality=8, pixelformat="yuv420p", macro_block_size=1) as writer:
         for idx, scene in enumerate(scenes):
@@ -4536,62 +4753,70 @@ def generate_sales_video(product: Dict[str, Any]) -> Path:
                 t = f / max(1, frames_per_scene - 1)
                 img = Image.new("RGB", (W, H), (8, 9, 24))
                 draw = ImageDraw.Draw(img)
-                draw_gradient(draw)
-
-                shift = int(26 * t)
-                draw.ellipse((-280+shift, -195, 650+shift, 740), fill=(77, 48, 165))
-                draw.ellipse((650-shift, 1220, 1420-shift, 2045), fill=(18, 125, 120))
-                draw.rounded_rectangle((64, 78, 1016, 1845), radius=58, outline=(255,255,255), width=3)
-
-                progress_w = int((idx + t) / len(scenes) * 900)
+                for y in range(H):
+                    base_col = blend((8, 9, 24), tuple(max(0, c//3) for c in accent2), y/H)
+                    draw.line((0, y, W, y), fill=base_col)
+                shift = int(34 * t)
+                draw.ellipse((-290+shift, -180, 690+shift, 790), fill=tuple(max(0, min(255, c)) for c in accent2))
+                draw.ellipse((625-shift, 1220, 1410-shift, 2050), fill=tuple(max(0, min(255, c)) for c in accent))
+                draw.rounded_rectangle((58, 74, 1022, 1848), radius=62, outline=(255,255,255), width=3)
+                # progresso
                 draw.rounded_rectangle((90, 1800, 990, 1818), radius=8, fill=(55, 55, 84))
-                draw.rounded_rectangle((90, 1800, 90+progress_w, 1818), radius=8, fill=(36,245,208))
-
-                draw.rounded_rectangle((110, 120, 470, 190), radius=34, fill=(36,245,208))
+                draw.rounded_rectangle((90, 1800, 90 + int((idx + t) / len(scenes) * 900), 1818), radius=8, fill=accent)
+                # badge marca
+                draw.rounded_rectangle((110, 116, 450, 190), radius=34, fill=accent)
                 draw.text((145, 140), "RENDA DIGITAL IA", fill=(5,5,12), font=badge_font)
-                draw.rounded_rectangle((110, 220, 402, 274), radius=26, outline=(255,255,255), width=2)
-                draw.text((138, 234), scene.get("tag", "VENDA"), fill=(235,232,255), font=badge_font)
-
+                draw.rounded_rectangle((110, 218, 420, 276), radius=28, fill=(255,255,255))
+                draw.text((135, 234), scene.get("tag", "VENDA")[:18], fill=(10,10,24), font=badge_font)
+                # ícone textual do nicho
+                draw.rounded_rectangle((720, 116, 940, 220), radius=34, fill=(255,255,255))
+                icon_text = str(theme.get("icon", "PRO"))[:6]
+                bbox = draw.textbbox((0,0), icon_text, font=icon_font)
+                draw.text((830 - (bbox[2]-bbox[0])//2, 142), icon_text, fill=accent2, font=icon_font)
+                # mockup produto
                 mx = 650 + int(18*t); my = 315
-                draw.rounded_rectangle((mx, my, mx+300, my+398), radius=32, fill=(245,245,250))
-                draw.rounded_rectangle((mx+24, my+28, mx+276, my+94), radius=18, fill=(143,92,255))
-                cat = profile.get("category", "KIT DIGITAL")[:18]
-                draw.text((mx+44, my+47), cat, fill=(255,255,255), font=mini)
-                for j, label in enumerate([profile["label1"], profile["label2"], profile["label3"]]):
-                    draw.text((mx+38, my+136 + j*58), str(label)[:18], fill=(12,12,24), font=card_font)
-                draw.rounded_rectangle((mx+38, my+315, mx+260, my+360), radius=18, fill=(36,245,208))
-
+                draw.rounded_rectangle((mx, my, mx+285, my+395), radius=30, fill=(248,248,252))
+                draw.rounded_rectangle((mx+22, my+26, mx+263, my+98), radius=20, fill=accent2)
+                draw.text((mx+40, my+48), theme.get("label", "Produto")[:18], fill=(255,255,255), font=mini)
+                for j, b in enumerate(public_bullets(product)[:4]):
+                    yy = my + 135 + j*55
+                    draw.rounded_rectangle((mx+34, yy+5, mx+58, yy+29), radius=8, fill=accent)
+                    draw.text((mx+72, yy), str(b)[:18], fill=(12,12,24), font=mini)
+                draw.rounded_rectangle((mx+35, my+326, mx+250, my+365), radius=18, fill=accent)
+                # texto principal
                 y = 750
-                for line in safe_lines(scene["text"], draw, big, 835, 5):
+                for line in _wrap_text(scene["text"], draw, big, 835)[:5]:
                     draw.text((112, y), line, fill=(255,255,255), font=big)
-                    y += 88
+                    y += 92
                 y += 22
-                for line in safe_lines(scene["small"], draw, mid, 820, 4):
-                    draw.text((114, y), line, fill=(225,220,255), font=mid)
-                    y += 56
-
-                draw.rounded_rectangle((115, 1542, 965, 1658), radius=42, fill=(143, 92, 255))
-                cta = profile.get("cta", "Ver amostra grátis • Comprar pelo link")
-                cta_lines = safe_lines(cta, draw, mid, 780, 2)
-                cta_y = 1566 if len(cta_lines) == 1 else 1550
-                for line in cta_lines:
-                    draw.text((150, cta_y), line, fill=(255,255,255), font=mid)
-                    cta_y += 48
-                draw.text((115, 1705), "Produto digital editável. Revise antes de publicar ou vender.", fill=(185, 181, 216), font=small)
+                for line in _wrap_text(scene["small"], draw, mid, 820)[:4]:
+                    draw.text((114, y), line, fill=(232,228,255), font=mid)
+                    y += 58
+                # CTA
+                draw.rounded_rectangle((115, 1542, 965, 1658), radius=42, fill=accent2)
+                draw.text((165, 1575), "Baixar amostra grátis • Ver por dentro", fill=(255,255,255), font=mid)
+                draw.text((115, 1705), "Produto digital editável. Revise e adapte antes de usar.", fill=(210, 207, 230), font=small)
                 writer.append_data(np.array(img))
     return out
 
 
-# Alias útil quando alguém digita a rota em inglês no navegador.
-try:
-    app.add_url_rule('/niches', endpoint='niches_alias', view_func=login_required(niches))
-except Exception:
-    pass
+# Robô comercial também usa as campanhas temáticas da v14.
+def build_robot_campaign(product: Dict[str, Any], days: int = 30) -> List[Dict[str, str]]:
+    return build_social_campaign(product, days)
 
-try:
-    app.add_url_rule('/configuracoes', endpoint='settings_alias', view_func=login_required(settings_page))
-except Exception:
-    pass
+
+@app.route("/estudio-visual")
+@login_required
+def visual_studio():
+    conn = db_conn()
+    products = [row_to_dict(r) for r in conn.execute("SELECT * FROM products ORDER BY created_at DESC LIMIT 20").fetchall()]
+    conn.close()
+    return render_template("visual_studio.html", title="Estúdio visual", products=products, themes=VISUAL_THEME_PROFILES, product_theme=product_theme)
+
+
+# Disponibiliza tema e bullets nas páginas Jinja.
+app.jinja_env.globals["product_theme"] = product_theme
+app.jinja_env.globals["public_bullets"] = public_bullets
 
 ensure_social_tables()
 ensure_robot_tables()

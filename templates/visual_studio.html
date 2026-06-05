@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Estúdio visual</span>
+    <h1>Temas, emojis, ícones e identidade por nicho</h1>
+    <p>Use esta área para conferir se o produto está com linguagem visual coerente com o nicho. A v14 aplica esses temas em textos, página pública, campanhas e vídeos.</p>
+  </div>
+</header>
+
+<section class="glass-card gradient-card">
+  <h2>Regra profissional</h2>
+  <p class="muted">Emojis e ícones podem melhorar muito, mas precisam ser usados com equilíbrio: gancho, benefícios, CTA e blocos importantes. Exagero deixa o produto com aparência amadora ou spam.</p>
+</section>
+
+<section class="theme-grid">
+  {% for key, theme in themes.items() %}
+  <article class="glass-card theme-preview" style="--theme-accent: {{ theme.accent }}; --theme-accent2: {{ theme.accent2 }};">
+    <div class="theme-preview-top">
+      <span class="theme-preview-icon">{{ theme.icon }}</span>
+      <strong>{{ theme.emoji }} {{ theme.label }}</strong>
+    </div>
+    <p>{{ theme.hook }}</p>
+    <div class="chips">
+      {% for b in theme.bullets[:4] %}<span>{{ b }}</span>{% endfor %}
+    </div>
+    <small class="muted">{{ theme.bg }}</small>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="glass-card">
+  <h2>Produtos recentes</h2>
+  {% if products %}
+  <div class="table-wrap"><table><thead><tr><th>Produto</th><th>Nicho</th><th>Tema aplicado</th><th>Ações</th></tr></thead><tbody>
+  {% for p in products %}
+    {% set th = product_theme(p) %}
+    <tr>
+      <td>{{ p.title }}</td>
+      <td>{{ p.niche }}</td>
+      <td>{{ th.emoji }} {{ th.label }}</td>
+      <td><a class="btn ghost" href="{{ url_for('product_detail', product_id=p.id) }}">Abrir</a></td>
+    </tr>
+  {% endfor %}
+  </tbody></table></div>
+  {% else %}
+  <p class="muted">Crie um produto primeiro para visualizar o tema aplicado.</p>
+  {% endif %}
+</section>
+{% endblock %}
