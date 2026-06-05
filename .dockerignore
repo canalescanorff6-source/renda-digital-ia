@@ -1,0 +1,11 @@
+.git
+.env
+.venv
+venv
+__pycache__
+*.pyc
+storage/*.db
+storage/*.db-*
+storage/exports/*
+build
+dist

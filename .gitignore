@@ -1,0 +1,27 @@
+# Ambiente local
+.env
+.venv/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Banco e arquivos gerados
+storage/*.db
+storage/*.db-*
+storage/renda_digital_ia.db
+storage/exports/*
+!storage/exports/.gitkeep
+
+# Builds
+build/
+dist/
+*.spec
+
+# Sistema
+.DS_Store
+Thumbs.db

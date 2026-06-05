@@ -238,7 +238,7 @@ code { color: var(--teal); }
 
 .filters-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;align-items:end}.filters-form label{display:flex;flex-direction:column;gap:8px;color:var(--muted)}.filters-form select{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(8,16,29,.88);color:var(--text)}
 
-/* v5 - Venda Real: página pública, leads e funil */
+/* Página pública, leads e funil */
 .metric-grid.metric-grid-wide { grid-template-columns: repeat(6, 1fr); }
 .public-body { min-height: 100vh; }
 .public-page { width: min(1180px, calc(100vw - 28px)); margin: 0 auto; padding: 28px 0 60px; }
@@ -267,7 +267,7 @@ code { color: var(--teal); }
 @media (max-width: 900px) { .public-hero, .public-grid { grid-template-columns: 1fr; } .public-hero h1 { font-size: 42px; } }
 @media (max-width: 760px) { .metric-grid.metric-grid-wide { grid-template-columns: 1fr; } }
 
-/* v6 - Central Venda Real */
+/* Central comercial */
 .checklist-live { display:grid; gap:10px; }
 .check-row { border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.04); border-radius:16px; padding:13px; display:grid; gap:5px; }
 .check-row strong { color:#ffd166; }

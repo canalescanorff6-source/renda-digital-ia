@@ -60,8 +60,14 @@ YOUTUBE_READY = bool(os.getenv("YOUTUBE_CLIENT_SECRET_JSON", "").strip())
 # ----------------------------- Banco de dados -----------------------------
 
 def db_conn():
-    conn = sqlite3.connect(DB_PATH)
+    # Timeout maior evita falhas temporárias no SQLite quando o app sobe em hospedagem.
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=30000")
+    except Exception:
+        pass
     return conn
 
 
@@ -194,12 +200,12 @@ def init_db():
     except Exception:
         pass
 
-    existing = cur.execute("SELECT id FROM users WHERE email = ?", (DEFAULT_ADMIN_EMAIL,)).fetchone()
-    if not existing:
-        cur.execute(
-            "INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)",
-            (DEFAULT_ADMIN_EMAIL, generate_password_hash(DEFAULT_ADMIN_PASSWORD), datetime.utcnow().isoformat()),
-        )
+    # Evita CrashLoopBackOff quando a hospedagem inicia mais de um processo ao mesmo tempo.
+    # Se outro worker já criou o admin, o INSERT OR IGNORE não derruba o app.
+    cur.execute(
+        "INSERT OR IGNORE INTO users (email, password_hash, created_at) VALUES (?, ?, ?)",
+        (DEFAULT_ADMIN_EMAIL, generate_password_hash(DEFAULT_ADMIN_PASSWORD), datetime.utcnow().isoformat()),
+    )
     conn.commit()
     conn.close()
 
@@ -1475,6 +1481,7 @@ def ready_mega_form() -> Dict[str, Any]:
 
 
 @app.route("/venda-real")
+@app.route("/central-comercial")
 @login_required
 def venda_real_page():
     status = venda_real_status()
@@ -1604,6 +1611,7 @@ def logout():
 
 
 @app.route("/")
+@app.route("/dashboard")
 @login_required
 def dashboard():
     conn = db_conn()
@@ -2393,6 +2401,7 @@ def social_queue_rows(limit=80):
 
 
 @app.route("/automacao-posts")
+@app.route("/campanhas")
 @login_required
 def social_automation():
     ensure_social_tables()
@@ -2565,7 +2574,7 @@ def publish_facebook_page(item_id):
 
 
 
-# ----------------------------- v8: camada profissional e realista -----------------------------
+# ----------------------------- Camada profissional e realista -----------------------------
 
 PROFESSIONAL_NOTICE = (
     "Este sistema ajuda a criar produto, oferta, página, criativos e rotina de divulgação. "
@@ -2810,7 +2819,7 @@ def generate_sales_video(product: Dict[str, Any]) -> Path:
         raise RuntimeError("Para gerar vídeo, instale: pip install pillow imageio imageio-ffmpeg") from exc
 
     title = product.get("title") or "produto"
-    out = EXPORT_DIR / f"{slugify(title)}-video-profissional-v8.mp4"
+    out = EXPORT_DIR / f"{slugify(title)}-video-profissional.mp4"
     W, H = 1080, 1920
     fps = 24
     seconds_per_scene = 2.45
@@ -2902,7 +2911,7 @@ def product_professional_package(product_id):
     if not product:
         abort(404)
     video = generate_sales_video(product)
-    out = EXPORT_DIR / f"{slugify(product['title'])}-pacote-profissional-v8.zip"
+    out = EXPORT_DIR / f"{slugify(product['title'])}-pacote-profissional.zip"
     with ZipFile(out, "w", ZIP_DEFLATED) as z:
         for name, content in build_professional_package_files(product).items():
             z.writestr(name, content.encode("utf-8"))
