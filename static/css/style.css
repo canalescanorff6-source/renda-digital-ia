@@ -378,3 +378,13 @@ code { color: var(--teal); }
 .filters-card { margin-bottom:16px; }
 @media (max-width: 1200px) { .premium-blueprint-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 760px) { .premium-blueprint-grid, .premium-copy-grid { grid-template-columns: 1fr; } .sidebar { overflow: visible; } .sidebar-nav { max-height: none; } }
+
+/* v12 - Robô comercial */
+.robot-product-picker { display:grid; gap:10px; max-height:360px; overflow:auto; padding-right:4px; }
+.check-card { display:flex; gap:12px; align-items:flex-start; padding:12px; border-radius:16px; border:1px solid var(--border); background:rgba(255,255,255,.045); cursor:pointer; }
+.check-card input { width:auto; margin-top:4px; }
+.check-card b { display:block; line-height:1.25; }
+.check-card small { display:block; color:var(--muted); margin-top:4px; }
+.check-line { display:flex; gap:10px; align-items:flex-start; color:var(--muted); line-height:1.45; }
+.check-line input { width:auto; margin-top:3px; }
+.badge.warn { background:rgba(255,184,77,.14); border-color:rgba(255,184,77,.25); color:#ffd596; }

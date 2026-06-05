@@ -3879,7 +3879,362 @@ def professional_funnel_page():
     return render_template("funnel_profissional.html", title="Funil profissional", products=products, selected=selected, funnel=funnel, checklist=checklist)
 
 
+# ----------------------------- Robô comercial ético -----------------------------
+
+def ensure_robot_tables():
+    ensure_social_tables()
+    conn = db_conn()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS robot_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            action TEXT NOT NULL,
+            details TEXT,
+            status TEXT DEFAULT 'ok',
+            created_at TEXT NOT NULL
+        )
+        """
+    )
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS robot_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+        """
+    )
+    defaults = {
+        "robot_mode": "assistido",
+        "daily_posts": "3",
+        "start_hour": "09",
+        "auto_facebook": "0",
+        "avoid_spam": "1",
+    }
+    for k, v in defaults.items():
+        cur.execute("INSERT OR IGNORE INTO robot_settings (key, value) VALUES (?, ?)", (k, v))
+    conn.commit()
+    conn.close()
+
+
+def robot_log(action: str, details: str = "", status: str = "ok"):
+    try:
+        ensure_robot_tables()
+        conn = db_conn()
+        conn.execute(
+            "INSERT INTO robot_logs (action, details, status, created_at) VALUES (?, ?, ?, ?)",
+            (action, details[:1200], status, datetime.utcnow().isoformat()),
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+
+def robot_settings_dict() -> Dict[str, str]:
+    ensure_robot_tables()
+    conn = db_conn()
+    rows = conn.execute("SELECT key, value FROM robot_settings").fetchall()
+    conn.close()
+    return {r["key"]: r["value"] for r in rows}
+
+
+def update_robot_settings(form: Dict[str, Any]):
+    ensure_robot_tables()
+    allowed = ["robot_mode", "daily_posts", "start_hour", "auto_facebook", "avoid_spam"]
+    conn = db_conn()
+    for key in allowed:
+        value = str(form.get(key, "0" if key in {"auto_facebook", "avoid_spam"} else "")).strip()
+        if key == "daily_posts":
+            try:
+                value = str(max(1, min(8, int(value or 3))))
+            except Exception:
+                value = "3"
+        if key == "start_hour":
+            try:
+                value = str(max(6, min(22, int(value or 9))))
+            except Exception:
+                value = "9"
+        conn.execute("INSERT OR REPLACE INTO robot_settings (key, value) VALUES (?, ?)", (key, value))
+    conn.commit(); conn.close()
+
+
+def is_school_niche(product: Dict[str, Any]) -> bool:
+    txt = " ".join([str(product.get(k) or "") for k in ["niche", "discipline", "school_level", "target_audience", "title"]]).lower()
+    return any(w in txt for w in ["professor", "educação", "escolar", "bncc", "disciplina", "ensino", "atividade escolar"])
+
+
+def build_robot_campaign(product: Dict[str, Any], days: int = 30) -> List[Dict[str, str]]:
+    """Campanha mais ampla: funciona para educação e também para MEI, beleza, culinária, IA, finanças, pets etc."""
+    title = product.get("title") or "Produto Digital"
+    niche = product.get("niche") or "produto digital"
+    target = product.get("target_audience") or "pessoas interessadas"
+    promise = product.get("promise") or "economizar tempo com materiais prontos e organizados"
+    price = money(float(product.get("price") or 47))
+    url = product_public_url(product)
+    school = is_school_niche(product)
+
+    if school:
+        angles = [
+            ("dor", "Você ainda perde horas montando material do zero?"),
+            ("por_dentro", "Veja como o kit vem organizado por partes para usar com mais facilidade."),
+            ("amostra", "Baixe uma amostra grátis antes de comprar."),
+            ("autoridade", "Material com orientação, gabarito e estrutura editável."),
+            ("oferta", f"Oferta inicial por {price}, com entrega digital."),
+            ("prova", "Mostre para um colega professor que precisa economizar tempo."),
+        ]
+        bullets = "✅ atividades prontas\n✅ gabarito\n✅ orientação de uso\n✅ amostra grátis"
+        hashtags = "#professores #educacao #atividadesprontas #reforcoescolar #materialdigital #aulasprontas"
+    else:
+        angles = [
+            ("dor", f"Você trabalha com {niche.lower()} e ainda cria tudo do zero?"),
+            ("transformacao", f"Organize sua rotina com modelos prontos, exemplos e checklist."),
+            ("por_dentro", f"Veja por dentro o que vem no {title}."),
+            ("amostra", "Baixe uma amostra grátis antes de comprar."),
+            ("objeção", "Não é promessa mágica: é material pronto para adaptar e aplicar."),
+            ("oferta", f"Preço de lançamento: {price}, com entrega digital."),
+            ("uso", f"Feito para {target.lower()} que querem {promise.lower()}.")
+        ]
+        bullets = "✅ modelos prontos\n✅ checklists\n✅ mensagens e roteiros\n✅ amostra grátis"
+        hashtags = "#produtodigital #empreendedorismo #mei #rendaextra #organização #templates #negociosonline"
+
+    platforms = ["Instagram Reels", "TikTok", "YouTube Shorts", "Facebook Page", "WhatsApp"]
+    rows = []
+    for day in range(1, days + 1):
+        angle, hook = angles[(day - 1) % len(angles)]
+        platform = platforms[(day - 1) % len(platforms)]
+        if platform == "WhatsApp":
+            caption = (
+                f"Oi! Preparei uma amostra grátis do {title}.\n\n"
+                f"É um material digital para {target.lower()} que querem {promise.lower()}. "
+                f"Ele vem organizado com modelos, orientação e bônus para facilitar o uso.\n\n"
+                f"Quer ver por dentro? {url}"
+            )
+        elif platform == "Facebook Page":
+            caption = (
+                f"{hook}\n\n{title}\n\n"
+                f"Material digital organizado para {target.lower()}.\n\n{bullets}\n\n"
+                f"Veja a amostra grátis e confira se faz sentido para você: {url}"
+            )
+        else:
+            caption = (
+                f"{hook}\n\n{title}\n{bullets}\n\n"
+                f"Veja por dentro antes de comprar: {url}"
+            )
+        rows.append({
+            "day": str(day),
+            "platform": platform,
+            "post_type": "video_curto" if platform in ["Instagram Reels", "TikTok", "YouTube Shorts"] else "post_texto",
+            "caption": caption,
+            "hashtags": hashtags,
+            "angle": angle,
+        })
+    return rows
+
+
+def get_robot_products(limit: int = 50) -> List[Dict[str, Any]]:
+    conn = db_conn()
+    rows = conn.execute(
+        """
+        SELECT * FROM products
+        WHERE COALESCE(status, '') != 'arquivado'
+        ORDER BY
+          CASE WHEN checkout_link IS NOT NULL AND checkout_link != '' THEN 0 ELSE 1 END,
+          created_at DESC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    conn.close()
+    return [row_to_dict(r) for r in rows]
+
+
+def robot_create_queue_for_products(products: List[Dict[str, Any]], days: int, daily_posts: int, clear_old: bool = False) -> Dict[str, int]:
+    ensure_robot_tables()
+    from datetime import timedelta
+    conn = db_conn()
+    now = datetime.utcnow().isoformat()
+    created = 0
+    skipped = 0
+    start_hour = int(robot_settings_dict().get("start_hour", "9") or 9)
+    if clear_old:
+        ids = [p["id"] for p in products]
+        if ids:
+            placeholders = ",".join(["?"] * len(ids))
+            conn.execute(f"DELETE FROM social_queue WHERE status = 'rascunho' AND product_id IN ({placeholders})", ids)
+    for p_index, product in enumerate(products):
+        campaign = build_robot_campaign(product, days)
+        # Limita volume para não parecer spam. O ideal é consistência e variação, não excesso.
+        max_items = max(1, min(len(campaign), int(days) * max(1, min(8, int(daily_posts)))))
+        for idx, item in enumerate(campaign[:max_items]):
+            publish_day = date.today() + timedelta(days=int(item["day"]) - 1)
+            hour = start_hour + ((idx + p_index) % max(1, min(8, int(daily_posts)))) * 2
+            hour = min(22, hour)
+            publish_at = f"{publish_day.isoformat()}T{hour:02d}:00:00"
+            exists = conn.execute(
+                "SELECT id FROM social_queue WHERE product_id=? AND platform=? AND publish_at=? AND caption=? LIMIT 1",
+                (product["id"], item["platform"], publish_at, item["caption"]),
+            ).fetchone()
+            if exists:
+                skipped += 1
+                continue
+            conn.execute(
+                """
+                INSERT INTO social_queue (product_id, platform, publish_at, post_type, caption, hashtags, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, 'rascunho', ?, ?)
+                """,
+                (product["id"], item["platform"], publish_at, item["post_type"], item["caption"], item["hashtags"], now, now),
+            )
+            created += 1
+    conn.commit(); conn.close()
+    robot_log("Criou fila automática", f"{created} posts criados, {skipped} duplicados ignorados, {len(products)} produtos.")
+    return {"created": created, "skipped": skipped}
+
+
+def robot_due_rows(limit: int = 20) -> List[Dict[str, Any]]:
+    ensure_robot_tables()
+    conn = db_conn()
+    rows = conn.execute(
+        """
+        SELECT social_queue.*, products.title AS product_title, products.public_slug
+        FROM social_queue LEFT JOIN products ON products.id = social_queue.product_id
+        WHERE social_queue.status='rascunho' AND social_queue.publish_at <= ?
+        ORDER BY social_queue.publish_at ASC LIMIT ?
+        """,
+        (datetime.utcnow().isoformat()[:19], limit),
+    ).fetchall()
+    conn.close()
+    return [row_to_dict(r) for r in rows]
+
+
+def robot_publish_due_facebook(limit: int = 5) -> Dict[str, int]:
+    ensure_robot_tables()
+    sent = 0
+    failed = 0
+    if not (FACEBOOK_PAGE_ID and FACEBOOK_PAGE_ACCESS_TOKEN):
+        robot_log("Publicação automática", "Facebook Page não configurado.", "aviso")
+        return {"sent": 0, "failed": 0}
+    due = [r for r in robot_due_rows(limit * 3) if r.get("platform") == "Facebook Page"][:limit]
+    for row in due:
+        conn = db_conn()
+        message = (row.get("caption") or "") + "\n\n" + (row.get("hashtags") or "")
+        product = {"public_slug": row.get("public_slug"), "title": row.get("product_title")}
+        link = product_public_url(product)
+        try:
+            import urllib.parse, urllib.request
+            data = urllib.parse.urlencode({
+                "message": message,
+                "link": link,
+                "access_token": FACEBOOK_PAGE_ACCESS_TOKEN,
+            }).encode("utf-8")
+            req = urllib.request.Request(f"https://graph.facebook.com/v20.0/{FACEBOOK_PAGE_ID}/feed", data=data, method="POST")
+            with urllib.request.urlopen(req, timeout=25) as resp:
+                body = resp.read().decode("utf-8")
+            conn.execute("UPDATE social_queue SET status='postado_auto', external_url=?, error='', updated_at=? WHERE id=?", (body[:400], datetime.utcnow().isoformat(), row["id"]))
+            conn.commit(); sent += 1
+        except Exception as exc:
+            conn.execute("UPDATE social_queue SET status='erro', error=?, updated_at=? WHERE id=?", (str(exc)[:500], datetime.utcnow().isoformat(), row["id"]))
+            conn.commit(); failed += 1
+        finally:
+            conn.close()
+    robot_log("Publicação Facebook Page", f"{sent} enviados, {failed} erros.", "ok" if failed == 0 else "aviso")
+    return {"sent": sent, "failed": failed}
+
+
+def robot_audit_products(products: List[Dict[str, Any]]) -> Dict[str, Any]:
+    ready = 0; needs_checkout = 0; needs_copy = 0; needs_public = 0
+    for p in products:
+        if not (p.get("checkout_link") or "").strip():
+            needs_checkout += 1
+        if not (p.get("sales_page") or "").strip() or len(p.get("sales_page") or "") < 700:
+            needs_copy += 1
+        if not int(p.get("public_enabled") or 0):
+            needs_public += 1
+        if (p.get("checkout_link") or "").strip() and (p.get("sales_page") or "").strip() and int(p.get("public_enabled") or 0):
+            ready += 1
+    return {"total": len(products), "ready": ready, "needs_checkout": needs_checkout, "needs_copy": needs_copy, "needs_public": needs_public}
+
+
+@app.route("/robo-comercial")
+@login_required
+def commercial_robot():
+    ensure_robot_tables()
+    products = get_robot_products()
+    audit = robot_audit_products(products)
+    settings = robot_settings_dict()
+    conn = db_conn()
+    logs = [row_to_dict(r) for r in conn.execute("SELECT * FROM robot_logs ORDER BY id DESC LIMIT 20").fetchall()]
+    queue_stats = conn.execute(
+        """
+        SELECT status, COUNT(*) AS total FROM social_queue GROUP BY status
+        """
+    ).fetchall()
+    conn.close()
+    stats = {r["status"]: r["total"] for r in queue_stats}
+    due = robot_due_rows(12)
+    api_status = {
+        "Facebook Page": bool(FACEBOOK_PAGE_ID and FACEBOOK_PAGE_ACCESS_TOKEN),
+        "Instagram Reels": bool(INSTAGRAM_ACCOUNT_ID and FACEBOOK_PAGE_ACCESS_TOKEN and public_base_url()),
+        "TikTok": bool(TIKTOK_ACCESS_TOKEN),
+        "YouTube Shorts": bool(YOUTUBE_READY),
+    }
+    return render_template("commercial_robot.html", title="Robô comercial", products=products, audit=audit, settings=settings, stats=stats, due=due, logs=logs, api_status=api_status, public_base_url=public_base_url())
+
+
+@app.route("/robo-comercial/configurar", methods=["POST"])
+@login_required
+def commercial_robot_configure():
+    update_robot_settings(request.form)
+    robot_log("Configuração atualizada", "Preferências do robô comercial foram alteradas.")
+    flash("Configurações do robô comercial salvas.", "success")
+    return redirect(url_for("commercial_robot"))
+
+
+@app.route("/robo-comercial/rodar", methods=["POST"])
+@login_required
+def commercial_robot_run():
+    products = get_robot_products()
+    selected = request.form.getlist("product_ids")
+    if selected:
+        selected_set = {int(x) for x in selected if str(x).isdigit()}
+        products = [p for p in products if int(p["id"]) in selected_set]
+    days = max(7, min(90, int(request.form.get("days") or 30)))
+    daily_posts = max(1, min(8, int(request.form.get("daily_posts") or robot_settings_dict().get("daily_posts", "3"))))
+    clear_old = request.form.get("clear_old") == "1"
+    result = robot_create_queue_for_products(products, days=days, daily_posts=daily_posts, clear_old=clear_old)
+    flash(f"Robô preparou {result['created']} posts/vídeos/mensagens. Duplicados ignorados: {result['skipped']}.", "success")
+    return redirect(url_for("commercial_robot"))
+
+
+@app.route("/robo-comercial/publicar-facebook", methods=["POST"])
+@login_required
+def commercial_robot_publish_facebook():
+    result = robot_publish_due_facebook(limit=5)
+    if result["sent"] or result["failed"]:
+        flash(f"Publicação Facebook: {result['sent']} enviados, {result['failed']} erros.", "success" if result["failed"] == 0 else "danger")
+    else:
+        flash("Nenhum post enviado. Verifique se há posts vencidos e se a API do Facebook Page está configurada.", "warning")
+    return redirect(url_for("commercial_robot"))
+
+
+@app.route("/api/robo-comercial/cron")
+def commercial_robot_cron():
+    secret = request.args.get("secret", "")
+    expected = os.getenv("ROBOT_SECRET", WEBHOOK_SECRET)
+    if not expected or secret != expected:
+        return jsonify({"ok": False, "error": "secret inválido"}), 403
+    settings = robot_settings_dict()
+    products = get_robot_products()
+    created = 0
+    if request.args.get("create_queue", "0") == "1":
+        result = robot_create_queue_for_products(products, days=int(request.args.get("days", 30)), daily_posts=int(settings.get("daily_posts", "3")), clear_old=False)
+        created = result["created"]
+    published = robot_publish_due_facebook(limit=int(request.args.get("limit", 3))) if settings.get("auto_facebook") == "1" else {"sent": 0, "failed": 0}
+    return jsonify({"ok": True, "products": len(products), "created": created, "facebook": published})
+
+
 ensure_social_tables()
+ensure_robot_tables()
 
 
 if __name__ == "__main__":

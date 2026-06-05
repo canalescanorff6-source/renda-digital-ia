@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-header">
+  <div>
+    <div class="eyebrow">Automação comercial assistida</div>
+    <h1>Robô comercial</h1>
+    <p>Central para pegar seus produtos, montar campanhas, gerar fila de posts e publicar onde houver API oficial configurada. A ideia é automatizar com segurança, sem spam e sem colocar suas contas em risco.</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn ghost" href="{{ url_for('premium_library') }}">Criar produto</a>
+    <a class="btn primary" href="{{ url_for('social_automation') }}">Campanhas</a>
+  </div>
+</section>
+
+<div class="alert-soft">
+  <strong>Importante:</strong> este robô não invade redes sociais, não usa navegador escondido e não envia spam. Ele trabalha com fila, conteúdo, vídeos, links e APIs oficiais. Instagram, TikTok e YouTube exigem app, OAuth e permissões; Facebook Page pode publicar quando o token estiver configurado.
+</div>
+
+<section class="metric-grid metric-grid-wide">
+  <div class="metric-card purple"><span>Produtos</span><strong>{{ audit.total }}</strong><small>na base</small></div>
+  <div class="metric-card"><span>Prontos para vender</span><strong>{{ audit.ready }}</strong><small>com checkout e página</small></div>
+  <div class="metric-card"><span>Sem checkout</span><strong>{{ audit.needs_checkout }}</strong><small>precisa link Kiwify/Hotmart</small></div>
+  <div class="metric-card"><span>Fila rascunho</span><strong>{{ stats.get('rascunho', 0) }}</strong><small>posts preparados</small></div>
+  <div class="metric-card"><span>Postados</span><strong>{{ stats.get('postado_auto', 0) + stats.get('postado_manual', 0) }}</strong><small>manual + automático</small></div>
+  <div class="metric-card"><span>Facebook API</span><strong>{% if api_status['Facebook Page'] %}OK{% else %}OFF{% endif %}</strong><small>postagem oficial</small></div>
+</section>
+
+<section class="two-cols">
+  <div class="glass-card gradient-card">
+    <div class="card-title-row">
+      <h2>Rodar robô agora</h2>
+      <span class="badge">seguro</span>
+    </div>
+    <p>O robô escolhe os produtos marcados, cria campanha com vídeos curtos, posts de Facebook, mensagens de WhatsApp e calendário de publicação.</p>
+    <form method="post" action="{{ url_for('commercial_robot_run') }}" class="stack">
+      <label>Dias de campanha</label>
+      <input type="number" name="days" min="7" max="90" value="30">
+      <label>Postagens por dia</label>
+      <input type="number" name="daily_posts" min="1" max="8" value="{{ settings.get('daily_posts', '3') }}">
+      <label class="check-line"><input type="checkbox" name="clear_old" value="1"> Limpar rascunhos antigos destes produtos antes de criar nova fila</label>
+      <div class="robot-product-picker">
+        <strong>Produtos que o robô vai divulgar</strong>
+        {% for p in products %}
+        <label class="check-card">
+          <input type="checkbox" name="product_ids" value="{{ p.id }}" checked>
+          <span>
+            <b>{{ p.title }}</b>
+            <small>{{ p.niche }} • {{ p.price|money }}{% if not p.checkout_link %} • falta checkout{% endif %}</small>
+          </span>
+        </label>
+        {% else %}
+        <div class="empty-state">Crie pelo menos um produto primeiro.</div>
+        {% endfor %}
+      </div>
+      <button class="btn primary full" type="submit">Criar campanhas automáticas</button>
+    </form>
+  </div>
+
+  <div class="glass-card">
+    <div class="card-title-row">
+      <h2>Configuração do robô</h2>
+      <span class="badge">controle</span>
+    </div>
+    <form method="post" action="{{ url_for('commercial_robot_configure') }}" class="stack">
+      <label>Modo de operação</label>
+      <select name="robot_mode">
+        <option value="assistido" {% if settings.get('robot_mode') == 'assistido' %}selected{% endif %}>Assistido: cria e você revisa</option>
+        <option value="semi_auto" {% if settings.get('robot_mode') == 'semi_auto' %}selected{% endif %}>Semi-automático: cria fila e publica Facebook configurado</option>
+      </select>
+      <label>Postagens por dia</label>
+      <input type="number" name="daily_posts" min="1" max="8" value="{{ settings.get('daily_posts', '3') }}">
+      <label>Horário inicial</label>
+      <input type="number" name="start_hour" min="6" max="22" value="{{ settings.get('start_hour', '9') }}">
+      <label class="check-line"><input type="checkbox" name="auto_facebook" value="1" {% if settings.get('auto_facebook') == '1' %}checked{% endif %}> Permitir publicação automática no Facebook Page quando houver token</label>
+      <label class="check-line"><input type="checkbox" name="avoid_spam" value="1" {% if settings.get('avoid_spam') != '0' %}checked{% endif %}> Evitar excesso de posts e mensagens repetidas</label>
+      <button class="btn ghost" type="submit">Salvar configuração</button>
+    </form>
+
+    <div class="notice" style="margin-top:16px">
+      Para cron automático, use: <code>/api/robo-comercial/cron?secret=SEU_ROBOT_SECRET</code>. Defina <code>ROBOT_SECRET</code> nas variáveis do RunSite.
+    </div>
+  </div>
+</section>
+
+<section class="two-cols">
+  <div class="glass-card">
+    <div class="card-title-row">
+      <h2>Publicação oficial</h2>
+      <span class="badge">API</span>
+    </div>
+    <p>Quando o Facebook Page estiver configurado, o robô pode enviar os posts vencidos pela API oficial.</p>
+    <div class="info-list compact">
+      <div><span>Facebook Page</span><strong>{% if api_status['Facebook Page'] %}Configurado{% else %}Não configurado{% endif %}</strong></div>
+      <div><span>Instagram Reels</span><strong>{% if api_status['Instagram Reels'] %}Preparado{% else %}Requer API/OAuth{% endif %}</strong></div>
+      <div><span>TikTok</span><strong>{% if api_status['TikTok'] %}Preparado{% else %}Requer API/OAuth{% endif %}</strong></div>
+      <div><span>YouTube Shorts</span><strong>{% if api_status['YouTube Shorts'] %}Preparado{% else %}Requer OAuth{% endif %}</strong></div>
+    </div>
+    <form method="post" action="{{ url_for('commercial_robot_publish_facebook') }}">
+      <button class="btn primary" type="submit">Publicar Facebook vencidos</button>
+    </form>
+  </div>
+
+  <div class="glass-card">
+    <div class="card-title-row">
+      <h2>Próximos vencidos</h2>
+      <a class="btn ghost" href="{{ url_for('social_automation') }}">Ver fila completa</a>
+    </div>
+    <div class="stack">
+      {% for item in due %}
+      <div class="sale-item">
+        <div>
+          <strong>{{ item.platform }}</strong>
+          <small>{{ item.publish_at }} • {{ item.product_title }}</small>
+        </div>
+        <span class="badge">{{ item.status }}</span>
+      </div>
+      {% else %}
+      <div class="empty-state">Nenhum post vencido agora.</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="card-title-row">
+    <h2>Diagnóstico dos produtos</h2>
+    <a class="btn ghost" href="{{ url_for('products') }}">Editar produtos</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Produto</th><th>Nicho</th><th>Preço</th><th>Checkout</th><th>Página pública</th><th>Ação</th></tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td><strong>{{ p.title }}</strong></td>
+          <td>{{ p.niche }}</td>
+          <td>{{ p.price|money }}</td>
+          <td>{% if p.checkout_link %}<span class="badge">OK</span>{% else %}<span class="badge warn">falta</span>{% endif %}</td>
+          <td>{% if p.public_enabled %}<span class="badge">ativa</span>{% else %}<span class="badge warn">desativada</span>{% endif %}</td>
+          <td><a class="btn ghost" href="{{ url_for('product_detail', product_id=p.id) }}">Abrir</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">Nenhum produto encontrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="card-title-row">
+    <h2>Logs do robô</h2>
+    <span class="badge">últimas ações</span>
+  </div>
+  <div class="stack">
+    {% for log in logs %}
+    <div class="sale-item">
+      <div>
+        <strong>{{ log.action }}</strong>
+        <small>{{ log.created_at }} • {{ log.details }}</small>
+      </div>
+      <span class="badge">{{ log.status }}</span>
+    </div>
+    {% else %}
+    <div class="empty-state">O robô ainda não executou nenhuma ação.</div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="glass-card">
+  <h2>Variáveis opcionais para automatizar mais</h2>
+  <pre class="content-preview">ROBOT_SECRET=uma_chave_grande_para_cron
+PUBLIC_BASE_URL=https://seu-site.runsite.app
+FACEBOOK_PAGE_ID=id_da_pagina
+FACEBOOK_PAGE_ACCESS_TOKEN=token_da_pagina
+INSTAGRAM_ACCOUNT_ID=id_da_conta_profissional
+TIKTOK_ACCESS_TOKEN=token_oauth_tiktok
+YOUTUBE_CLIENT_SECRET_JSON=client_secret.json</pre>
+</section>
+{% endblock %}
