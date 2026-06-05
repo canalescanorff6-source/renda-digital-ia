@@ -1,18 +1,35 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="login-card glass-card">
-  <div class="badge">Painel premium</div>
-  <h1>Renda Digital IA Escolar</h1>
-  <p>Crie kits escolares para todas as disciplinas, gere páginas de venda, organize divulgação e acompanhe vendas em um só lugar.</p>
-  <form method="post" class="stack">
-    <label>E-mail</label>
-    <input name="email" type="email" placeholder="admin@local.com" required value="{{ default_email }}">
-    <label>Senha</label>
-    <input name="password" type="password" placeholder="sua senha" required>
-    <button class="btn primary" type="submit">Entrar no painel</button>
-  </form>
-  <div class="notice">
-    Primeiro acesso local: <strong>{{ default_email }}</strong> / senha definida no arquivo <strong>.env</strong>. No pacote limpo, a senha temporária é <strong>MudeEssaSenha123!</strong>.
+<section class="login-pro">
+  <div class="login-hero glass-card">
+    <div class="brand-row-login">
+      <div class="brand-icon">IA</div>
+      <div>
+        <strong>Renda Digital IA Pro</strong>
+        <span>Área administrativa</span>
+      </div>
+    </div>
+    <h1>Painel seguro para gestão comercial.</h1>
+    <p>Entre para administrar produtos, campanhas, leads, páginas públicas e vendas.</p>
+    <div class="login-mini-grid">
+      <div><strong>Produtos</strong><span>kits e ofertas</span></div>
+      <div><strong>Campanhas</strong><span>posts e vídeos</span></div>
+      <div><strong>Leads</strong><span>interessados</span></div>
+    </div>
   </div>
-</div>
+
+  <div class="login-card glass-card">
+    <div class="badge">Acesso restrito</div>
+    <h2>Entrar</h2>
+    <p class="muted compact-text">Use o e-mail e a senha configurados no painel de hospedagem.</p>
+    <form method="post" class="stack" autocomplete="on">
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" placeholder="seu@email.com" required autocomplete="username">
+      <label for="password">Senha</label>
+      <input id="password" name="password" type="password" placeholder="Digite sua senha" required autocomplete="current-password">
+      <button class="btn primary full" type="submit">Acessar painel</button>
+    </form>
+    <div class="login-footnote">Dados sensíveis não são exibidos nesta tela.</div>
+  </div>
+</section>
 {% endblock %}
