@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Escolha estratégica</span>
+    <h1>Nichos escolares com público maior</h1>
+    <p>Ranking interno para produtos educacionais por disciplina, ano escolar, reforço e projetos.</p>
+  </div>
+  <a class="btn primary" href="{{ url_for('product_new') }}">Criar produto</a>
+</header>
+
+<div class="niche-grid">
+  {% for n in niches %}
+  <div class="glass-card niche-card">
+    <div class="score">{{ n.score }}</div>
+    <h2>{{ n.name }}</h2>
+    <p>{{ n.why }}</p>
+    <div class="chips">
+      {% for ex in n.examples %}<span>{{ ex }}</span>{% endfor %}
+    </div>
+    <div class="price-range">Preço sugerido: <strong>{{ n.price }}</strong></div>
+    <a class="btn ghost full" href="{{ url_for('product_new', niche=n.name) }}">Criar neste nicho</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

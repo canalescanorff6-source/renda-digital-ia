@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Criador IA educacional</span>
+    <h1>Novo produto escolar</h1>
+    <p>Crie kits para todas as disciplinas, pacotes por bimestre, bancos de questões, simulados, folha do aluno, gabarito e posts de venda.</p>
+  </div>
+</header>
+
+<form method="post" class="glass-card form-grid wide-form">
+  <div class="field span-2">
+    <label>Nome do produto</label>
+    <input name="title" required placeholder="Ex: Mega Kit Professor Total - Todas as Disciplinas" value="{{ preset_data.title }}">
+  </div>
+  <div class="field">
+    <label>Nicho</label>
+    <select name="niche">
+      {% for n in niches %}
+        <option value="{{ n.name }}" {% if preset == n.name %}selected{% endif %}>{{ n.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Tipo de produto</label>
+    <select name="product_type">
+      {% for t in product_types %}<option value="{{ t }}" {% if preset_data.product_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Disciplina</label>
+    <select name="discipline">
+      {% for s in subjects %}<option value="{{ s }}" {% if preset_data.discipline == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Ano/Nível</label>
+    <select name="school_level">
+      {% for l in school_levels %}<option value="{{ l }}" {% if preset_data.school_level == l %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field span-2">
+    <label>Público-alvo</label>
+    <input name="target_audience" placeholder="Ex: professores, reforço escolar, escolas e pais" value="{{ preset_data.target_audience }}">
+  </div>
+  <div class="field">
+    <label>Preço sugerido</label>
+    <input name="price" type="number" step="0.01" value="{{ preset_data.price }}">
+  </div>
+  <div class="field">
+    <label>Quantidade aproximada de páginas</label>
+    <input name="pages" type="number" value="30" min="5" max="200">
+  </div>
+  <div class="field span-2">
+    <label>Promessa honesta do produto</label>
+    <input name="promise" placeholder="Ex: economizar tempo com atividades, provas, gabaritos e materiais prontos para adaptar" value="{{ preset_data.promise }}">
+  </div>
+  <div class="field">
+    <label>Status</label>
+    <select name="status">
+      <option value="rascunho">Rascunho</option>
+      <option value="publicado">Publicado</option>
+      <option value="pausado">Pausado</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Plataforma</label>
+    <select name="platform">
+      <option>Manual</option>
+      <option>Kiwify</option>
+      <option>Hotmart</option>
+      <option>Eduzz</option>
+      <option>Monetizze</option>
+    </select>
+  </div>
+  <div class="field span-2">
+    <label>Link do checkout</label>
+    <input name="checkout_link" placeholder="Cole aqui o link da Kiwify/Hotmart quando tiver">
+  </div>
+  <div class="field">
+    <label>Link público personalizado</label>
+    <input name="public_slug" placeholder="Ex: mega-kit-professor-total">
+  </div>
+  <div class="field">
+    <label>Página pública</label>
+    <select name="public_enabled"><option value="1">Ativada</option><option value="0">Desativada</option></select>
+  </div>
+  <div class="field">
+    <label>Dias de garantia sugeridos</label>
+    <input name="guarantee_days" type="number" value="7" min="0" max="30">
+  </div>
+  <div class="field">
+    <label>Título da isca grátis</label>
+    <input name="lead_magnet_title" placeholder="Amostra grátis do produto">
+  </div>
+  <div class="field span-2">
+    <label>Bônus da oferta</label>
+    <input name="bonus_stack" placeholder="Amostra grátis; Checklist BNCC; Calendário de posts; Arquivos separados">
+  </div>
+  <div class="span-2 action-row">
+    <a class="btn ghost" href="{{ url_for('products') }}">Cancelar</a>
+    <button class="btn primary" type="submit">Gerar produto agora</button>
+  </div>
+</form>
+{% endblock %}

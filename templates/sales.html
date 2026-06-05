@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Controle manual</span>
+    <h1>Vendas</h1>
+    <p>Cadastre vendas manualmente ou receba vendas por webhook no futuro.</p>
+  </div>
+  <a class="btn ghost" href="{{ url_for('sales_export_csv') }}">Exportar CSV</a>
+</header>
+
+<section class="two-cols">
+  <form class="glass-card form-grid" method="post" action="{{ url_for('sale_new') }}">
+    <h2 class="span-2">Cadastrar venda</h2>
+    <div class="field span-2"><label>Produto</label><select name="product_id"><option value="">Sem produto vinculado</option>{% for p in products %}<option value="{{ p.id }}">{{ p.title }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Nome do cliente</label><input name="buyer_name" placeholder="Opcional"></div>
+    <div class="field"><label>E-mail do cliente</label><input name="buyer_email" type="email" placeholder="Opcional"></div>
+    <div class="field"><label>Plataforma</label><select name="platform"><option>Manual</option><option>Kiwify</option><option>Hotmart</option><option>Eduzz</option><option>Monetizze</option></select></div>
+    <div class="field"><label>Valor</label><input name="amount" type="number" step="0.01" value="29.90"></div>
+    <div class="field"><label>Status</label><select name="status"><option value="aprovada">Aprovada</option><option value="pendente">Pendente</option><option value="reembolsada">Reembolsada</option></select></div>
+    <div class="field"><label>ID externo</label><input name="external_id" placeholder="Opcional"></div>
+    <div class="span-2"><button class="btn primary" type="submit">Salvar venda</button></div>
+  </form>
+
+  <div class="glass-card">
+    <h2>Dica de uso</h2>
+    <p>Enquanto a integração automática não estiver configurada, lance as vendas manualmente olhando o painel da Kiwify, Hotmart ou outra plataforma.</p>
+    <p class="muted">Depois, use o webhook genérico em Configuração para importar eventos de venda aprovada.</p>
+  </div>
+</section>
+
+<section class="glass-card">
+  <h2>Histórico</h2>
+  {% if sales %}
+  <div class="table-wrap"><table><thead><tr><th>Produto</th><th>Cliente</th><th>Plataforma</th><th>Status</th><th>Valor</th><th></th></tr></thead><tbody>
+  {% for s in sales %}
+    <tr>
+      <td>{{ s.product_title or 'Sem vínculo' }}</td>
+      <td>{{ s.buyer_name or s.buyer_email or 'Cliente' }}</td>
+      <td>{{ s.platform }}</td>
+      <td>{{ s.status }}</td>
+      <td>{{ s.amount|money }}</td>
+      <td><form method="post" action="{{ url_for('sale_delete', sale_id=s.id) }}" onsubmit="return confirm('Excluir venda?')"><button class="link-button">Excluir</button></form></td>
+    </tr>
+  {% endfor %}
+  </tbody></table></div>
+  {% else %}<p class="muted">Nenhuma venda cadastrada.</p>{% endif %}
+</section>
+{% endblock %}

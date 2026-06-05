@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Central comercial</span>
+    <h1>Central comercial: produto, página, leads e checkout</h1>
+    <p>Use esta tela para deixar a estrutura pronta para vender de verdade: produto final, página pública, amostra grátis, checkout e divulgação diária.</p>
+  </div>
+  <div class="header-actions">
+    <form method="post" action="{{ url_for('create_ready_mega_kit') }}">
+      <button class="btn primary" type="submit">Criar produto principal</button>
+    </form>
+    <a class="btn ghost" href="{{ url_for('products') }}">Meus produtos</a>
+  </div>
+</header>
+
+<div class="alert-soft">
+  <strong>Sem ilusão:</strong> o arquivo fica pronto para começar, mas renda real depende de divulgar, configurar checkout e melhorar a oferta com base nas dúvidas do público.
+</div>
+
+<section class="metric-grid metric-grid-wide">
+  <div class="metric-card purple"><span>Pronto para vender</span><strong>{{ status.percent }}%</strong><small>checklist da estrutura</small></div>
+  <div class="metric-card"><span>Produtos</span><strong>{{ status.products_total }}</strong><small>materiais criados</small></div>
+  <div class="metric-card"><span>Com checkout</span><strong>{{ status.checkout_ready }}</strong><small>links de compra</small></div>
+  <div class="metric-card"><span>Leads</span><strong>{{ status.leads_total }}</strong><small>interessados</small></div>
+  <div class="metric-card"><span>Visitas</span><strong>{{ status.visits_total }}</strong><small>páginas públicas</small></div>
+  <div class="metric-card"><span>Receita lançada</span><strong>{{ status.revenue|money }}</strong><small>vendas aprovadas</small></div>
+</section>
+
+<section class="two-cols">
+  <div class="glass-card">
+    <h2>Checklist para venda estruturada</h2>
+    <div class="checklist-live">
+      {% for item in status["items"] %}
+      <div class="check-row {% if item.ok %}okrow{% endif %}">
+        <strong>{% if item.ok %}✓{% else %}!{% endif %} {{ item.name }}</strong>
+        <span>{{ item.help }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="glass-card gradient-card">
+    <h2>Ordem certa para começar</h2>
+    <ol class="steps">
+      <li>Clique em <strong>Criar produto principal</strong>.</li>
+      <li>Abra o produto e baixe o <strong>Pacote cliente FINAL</strong>.</li>
+      <li>Cadastre o ZIP do cliente na Kiwify, Hotmart ou plataforma escolhida.</li>
+      <li>Cole o link do checkout no produto.</li>
+      <li>Divulgue a página pública e a amostra grátis.</li>
+      <li>Responda leads pelo WhatsApp e acompanhe as vendas.</li>
+    </ol>
+    <p class="muted">O sistema entrega a estrutura; a venda vem do tráfego e da oferta.</p>
+  </div>
+</section>
+
+<section class="three-cols">
+  <div class="glass-card">
+    <h2>Produto pronto</h2>
+    <p>Gera o Mega Kit Professor Total com todas as disciplinas, BNCC editável, amostra grátis e bônus.</p>
+    <form method="post" action="{{ url_for('create_ready_mega_kit') }}"><button class="btn primary" type="submit">Criar agora</button></form>
+  </div>
+  <div class="glass-card">
+    <h2>Pacote final</h2>
+    <p>Dentro do produto, baixe o ZIP limpo para entregar ao comprador, separado por disciplina e com manual.</p>
+    <a class="btn ghost" href="{{ url_for('products') }}">Abrir produtos</a>
+  </div>
+  <div class="glass-card">
+    <h2>Leads e vendas</h2>
+    <p>Capture interessados pela amostra grátis, exporte CSV e lance vendas manuais enquanto o webhook não estiver ativo.</p>
+    <div class="header-actions"><a class="btn ghost" href="{{ url_for('leads_page') }}">Leads</a><a class="btn ghost" href="{{ url_for('sales') }}">Vendas</a></div>
+  </div>
+</section>
+
+{% if status.top_product %}
+<section class="glass-card">
+  <h2>Produto mais recente</h2>
+  <p><strong>{{ status.top_product.title }}</strong></p>
+  <div class="header-actions">
+    <a class="btn primary" href="{{ url_for('product_detail', product_id=status.top_product.id) }}">Abrir produto</a>
+    {% if status.top_product.public_slug %}<a class="btn ghost" target="_blank" href="{{ url_for('public_product_page', slug=status.top_product.public_slug) }}">Página pública</a>{% endif %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

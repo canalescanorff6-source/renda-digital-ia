@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Validação</span>
+    <h1>Análise de oferta</h1>
+    <p>Teste se sua ideia está clara antes de perder tempo criando um produto grande demais.</p>
+  </div>
+</header>
+
+<section class="two-cols">
+  <form method="post" class="glass-card form-grid">
+    <h2 class="span-2">Analisar minha oferta</h2>
+    <div class="field span-2"><label>Nome do produto</label><input name="title" value="{{ form.title }}" placeholder="Ex: Kit Professor IA - Atividades Prontas"></div>
+    <div class="field"><label>Público-alvo</label><input name="target" value="{{ form.target }}" placeholder="Ex: professores do 4º ao 6º ano"></div>
+    <div class="field"><label>Preço</label><input name="price" value="{{ form.price }}" type="number" step="0.01"></div>
+    <div class="field span-2"><label>Promessa honesta</label><input name="promise" value="{{ form.promise }}" placeholder="Ex: economizar tempo criando provas com gabarito"></div>
+    <div class="field span-2"><label>Canal de divulgação</label><input name="channel" value="{{ form.channel }}" placeholder="Ex: TikTok, Instagram, WhatsApp e grupos de professores"></div>
+    <div class="span-2"><button class="btn primary" type="submit">Analisar oferta</button></div>
+  </form>
+
+  <div class="glass-card">
+    <h2>Como usar</h2>
+    <p>Uma boa oferta precisa deixar claro: para quem é, qual problema resolve, o que a pessoa recebe, quanto custa e onde você vai encontrar compradores.</p>
+    <p class="muted">Pontuação alta não garante venda. Ela só indica que a ideia está mais clara para ser testada.</p>
+  </div>
+</section>
+
+{% if result %}
+<section class="glass-card result-card">
+  <div class="score-big">{{ result.score }}</div>
+  <h2>{{ result.level }}</h2>
+  <div class="chips"><span>{{ result.suggested_headline }}</span><span>{{ result.suggested_cta }}</span></div>
+  <h3>Diagnóstico</h3>
+  <ul class="clean-list">
+    {% for r in result.reasons %}<li>{{ r }}</li>{% endfor %}
+  </ul>
+  <h3>Próximos passos</h3>
+  <ul class="clean-list">
+    {% for s in result.next_steps %}<li>{{ s }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

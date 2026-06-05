@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-header">
+  <div>
+    <div class="eyebrow">v8 • Profissional realista</div>
+    <h1>Central profissional</h1>
+    <p>Auditoria da oferta, checklist comercial, pacote profissional e rotina realista para vender sem promessa milagrosa.</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn ghost" href="{{ url_for('social_automation') }}">Posts e vídeos</a>
+    <a class="btn primary" href="{{ url_for('product_new') }}">Criar produto</a>
+  </div>
+</section>
+
+<div class="alert-soft">
+  <strong>Visão realista:</strong> {{ notice }}
+</div>
+
+<section class="metric-grid metric-grid-wide">
+  <div class="metric-card purple"><span>Produtos auditados</span><strong>{{ audits|length }}</strong><small>últimos produtos</small></div>
+  <div class="metric-card"><span>Canal principal</span><strong>Vídeo</strong><small>Reels/TikTok/Shorts</small></div>
+  <div class="metric-card"><span>Conversão</span><strong>Lead</strong><small>amostra grátis</small></div>
+  <div class="metric-card"><span>Venda</span><strong>Checkout</strong><small>Kiwify/Hotmart</small></div>
+  <div class="metric-card"><span>Risco evitado</span><strong>Spam</strong><small>divulgação responsável</small></div>
+  <div class="metric-card"><span>Próximo passo</span><strong>Teste</strong><small>oferta e preço</small></div>
+</section>
+
+<section class="two-cols">
+  <div class="glass-card">
+    <div class="card-title-row">
+      <h2>Auditoria dos produtos</h2>
+      <span class="badge">0 a 100</span>
+    </div>
+    {% if audits %}
+      <div class="stack">
+      {% for item in audits %}
+        <div class="audit-card">
+          <div class="audit-head">
+            <div>
+              <strong>{{ item.product.title }}</strong>
+              <small>{{ item.product.discipline }} • {{ item.product.price|money }}</small>
+            </div>
+            <div class="audit-score">{{ item.audit.score }}</div>
+          </div>
+          <p><strong>{{ item.audit.level }}</strong></p>
+          <div class="check-list-mini">
+          {% for row in item.audit["items"] %}
+            <div class="check-mini {% if row.ok %}ok-mini{% endif %}">
+              <span>{% if row.ok %}✓{% else %}!{% endif %}</span>
+              <div><strong>{{ row.name }}</strong><small>{{ row.fix }}</small></div>
+            </div>
+          {% endfor %}
+          </div>
+          <div class="card-actions">
+            <a class="btn ghost" href="{{ url_for('product_detail', product_id=item.product.id) }}">Abrir produto</a>
+            <a class="btn primary" href="{{ url_for('product_professional_package', product_id=item.product.id) }}">Baixar pacote profissional</a>
+            <a class="btn ghost" href="{{ url_for('download_sales_video', product_id=item.product.id) }}">Baixar vídeo v8</a>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">Nenhum produto ainda. Crie o produto principal e volte aqui para auditar.</p>
+      <a class="btn primary" href="{{ url_for('venda_real_page') }}">Criar produto principal</a>
+    {% endif %}
+  </div>
+
+  <div class="glass-card gradient-card">
+    <h2>Máquina realista de venda</h2>
+    <ol class="steps">
+      <li>Produto revisado e com entrega limpa.</li>
+      <li>Checkout configurado e testado.</li>
+      <li>Página pública com amostra grátis.</li>
+      <li>Vídeos mostrando dor, produto por dentro e benefício.</li>
+      <li>Atendimento no WhatsApp para quem pediu a amostra.</li>
+      <li>Medição: visitas, leads, cliques, vendas e dúvidas.</li>
+    </ol>
+    <div class="notice">
+      Só pense em anúncio pago depois de ter pelo menos uma venda orgânica ou muitos interessados pedindo o material.
+    </div>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="card-title-row">
+    <h2>Canais e função de cada um</h2>
+    <span class="badge">sem fantasia</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Canal</th><th>Papel</th><th>Ritmo</th><th>Observação</th></tr></thead>
+      <tbody>
+      {% for c in channels %}
+        <tr><td>{{ c.name }}</td><td>{{ c.role }}</td><td>{{ c.cadence }}</td><td>{{ c.note }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="glass-card">
+  <h2>Checklist antes de tentar vender</h2>
+  <div class="professional-grid">
+    <div><strong>Produto</strong><p>Arquivo abre no celular, está organizado, tem capa, sumário, instrução e revisão humana.</p></div>
+    <div><strong>BNCC</strong><p>Campos editáveis revisados conforme ano, disciplina, turma e currículo local.</p></div>
+    <div><strong>Oferta</strong><p>Preço inicial claro, bônus verdadeiros, garantia honesta e entrega explicada.</p></div>
+    <div><strong>Vídeo</strong><p>Primeiros 3 segundos chamam atenção, mostra o produto e chama para amostra grátis.</p></div>
+    <div><strong>Checkout</strong><p>Produto cadastrado na plataforma, link testado e entrega automática funcionando.</p></div>
+    <div><strong>Métrica</strong><p>Anote quantos viram, quantos pediram amostra, quantos clicaram e quantos compraram.</p></div>
+  </div>
+</section>
+{% endblock %}

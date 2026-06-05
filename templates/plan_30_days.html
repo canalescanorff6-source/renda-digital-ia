@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Execução diária</span>
+    <h1>Plano de 30 dias</h1>
+    <p>Uma rotina simples para tirar o produto do papel, divulgar e melhorar com base nas respostas das pessoas.</p>
+  </div>
+  <a class="btn primary" href="{{ url_for('income_machine') }}">Escolher produto</a>
+</header>
+
+<section class="timeline">
+  {% for day in daily_plan %}
+  <div class="glass-card timeline-item">
+    <div class="day-number">{{ '%02d'|format(loop.index) }}</div>
+    <div>
+      <h2>{{ day[0] }}</h2>
+      <p>{{ day[1] }}</p>
+      <p class="muted">Ação rápida: registre o que você fez e quais dúvidas apareceram.</p>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}

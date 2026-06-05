@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Online</span>
+    <h1>Configuração para hospedagem</h1>
+    <p>Veja o que precisa configurar para deixar o sistema no ar.</p>
+  </div>
+</header>
+
+<section class="settings-grid">
+  <div class="glass-card">
+    <h2>Login admin</h2>
+    <p><strong>E-mail:</strong> {{ admin_email }}</p>
+    <p class="muted">Troque ADMIN_EMAIL e ADMIN_PASSWORD no arquivo .env antes de publicar.</p>
+  </div>
+  <div class="glass-card">
+    <h2>IA automática</h2>
+    {% if openai_ok %}<p class="ok">OPENAI_API_KEY configurada.</p>{% else %}<p class="muted">Sem OPENAI_API_KEY. O app usa templates locais e gera prompts para colar no ChatGPT.</p>{% endif %}
+  </div>
+  <div class="glass-card">
+    <h2>Exportação PDF</h2>
+    {% if reportlab_ok %}<p class="ok">ReportLab instalado. Downloads em PDF ativos.</p>{% else %}<p class="danger-text">ReportLab não encontrado. Instale as dependências.</p>{% endif %}
+  </div>
+  <div class="glass-card">
+    <h2>Banco de dados</h2>
+    <p class="muted">SQLite local:</p>
+    <code>{{ db_path }}</code>
+  </div>
+</section>
+
+<section class="glass-card">
+  <h2>Webhook de vendas</h2>
+  <p>Use este endpoint quando a plataforma permitir enviar evento de venda aprovada:</p>
+  <div class="copy-box"><code id="webhook-url">{{ webhook_url }}</code><button class="btn ghost" onclick="copyText('webhook-url')">Copiar</button></div>
+  <p class="muted">Envie o segredo no cabeçalho <code>X-Webhook-Secret</code>. Configure WEBHOOK_SECRET no .env.</p>
+  {% if webhook_secret_set %}<p class="ok">WEBHOOK_SECRET configurado.</p>{% else %}<p class="danger-text">WEBHOOK_SECRET ainda está com valor padrão. Troque antes de publicar.</p>{% endif %}
+</section>
+
+<section class="glass-card">
+  <h2>Para colocar online</h2>
+  <ol class="steps">
+    <li>Suba esta pasta no GitHub.</li>
+    <li>No RunSite, Render, Railway ou VPS, crie um app Python.</li>
+    <li>Configure o comando de instalação: <code>pip install -r requirements.txt</code>.</li>
+    <li>Configure o comando de iniciar: <code>gunicorn app:app</code>.</li>
+    <li>Adicione variáveis: <code>SECRET_KEY</code>, <code>ADMIN_EMAIL</code>, <code>ADMIN_PASSWORD</code> e <code>WEBHOOK_SECRET</code>.</li>
+  </ol>
+</section>
+{% endblock %}

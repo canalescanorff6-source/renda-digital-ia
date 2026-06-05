@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Editar</span>
+    <h1>{{ product.title }}</h1>
+    <p>Altere conteúdo, disciplina, ano, preço, checkout e textos de venda.</p>
+  </div>
+  <a class="btn ghost" href="{{ url_for('product_detail', product_id=product.id) }}">Voltar</a>
+</header>
+
+<form method="post" class="glass-card form-grid wide-form">
+  <div class="field span-2"><label>Nome</label><input name="title" value="{{ product.title }}" required></div>
+  <div class="field">
+    <label>Nicho</label>
+    <select name="niche">
+      {% for n in niches %}<option value="{{ n.name }}" {% if product.niche == n.name %}selected{% endif %}>{{ n.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Tipo</label>
+    <select name="product_type">
+      {% for t in product_types %}<option value="{{ t }}" {% if product.product_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Disciplina</label>
+    <select name="discipline">
+      {% for s in subjects %}<option value="{{ s }}" {% if product.discipline == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Ano/Nível</label>
+    <select name="school_level">
+      {% for l in school_levels %}<option value="{{ l }}" {% if product.school_level == l %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field span-2"><label>Público</label><input name="target_audience" value="{{ product.target_audience }}"></div>
+  <div class="field"><label>Preço</label><input name="price" type="number" step="0.01" value="{{ product.price }}"></div>
+  <div class="field"><label>Status</label><select name="status"><option value="rascunho" {% if product.status=='rascunho' %}selected{% endif %}>Rascunho</option><option value="publicado" {% if product.status=='publicado' %}selected{% endif %}>Publicado</option><option value="pausado" {% if product.status=='pausado' %}selected{% endif %}>Pausado</option></select></div>
+  <div class="field span-2"><label>Promessa honesta</label><input name="promise" value="{{ product.promise }}"></div>
+  <div class="field"><label>Plataforma</label><input name="platform" value="{{ product.platform }}"></div>
+  <div class="field"><label>Link checkout</label><input name="checkout_link" value="{{ product.checkout_link or '' }}"></div>
+  <div class="field"><label>Link público personalizado</label><input name="public_slug" value="{{ product.public_slug or '' }}"></div>
+  <div class="field"><label>Página pública</label><select name="public_enabled"><option value="1" {% if product.public_enabled != 0 %}selected{% endif %}>Ativada</option><option value="0" {% if product.public_enabled == 0 %}selected{% endif %}>Desativada</option></select></div>
+  <div class="field"><label>Dias de garantia sugeridos</label><input name="guarantee_days" type="number" value="{{ product.guarantee_days or 7 }}"></div>
+  <div class="field"><label>Título da isca grátis</label><input name="lead_magnet_title" value="{{ product.lead_magnet_title or '' }}"></div>
+  <div class="field span-2"><label>Bônus da oferta</label><input name="bonus_stack" value="{{ product.bonus_stack or '' }}"></div>
+  <div class="field span-2"><label>Conteúdo da isca grátis</label><textarea name="lead_magnet_content" rows="10">{{ product.lead_magnet_content or '' }}</textarea></div>
+  <div class="field span-2"><label>Conteúdo do produto</label><textarea name="content" rows="18">{{ product.content }}</textarea></div>
+  <div class="field span-2"><label>Página de venda</label><textarea name="sales_page" rows="14">{{ product.sales_page }}</textarea></div>
+  <div class="field span-2"><label>Posts e mensagens</label><textarea name="social_posts" rows="14">{{ product.social_posts }}</textarea></div>
+  <div class="span-2 action-row"><button class="btn primary" type="submit">Salvar alterações</button></div>
+</form>
+{% endblock %}

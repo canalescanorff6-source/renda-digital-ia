@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">BNCC profissional</span>
+    <h1>Mapa BNCC editável</h1>
+    <p>Consulte uma base inicial de códigos e organize seus produtos com campos pedagógicos claros.</p>
+  </div>
+  <a class="btn primary" href="{{ url_for('product_new', discipline=discipline, school_level=school_level) }}">Criar produto com esta base</a>
+</header>
+<section class="glass-card">
+  <form method="get" class="filters-form">
+    <label>Disciplina
+      <select name="discipline">
+        {% for s in subjects %}<option value="{{ s }}" {% if s == discipline %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Ano/Nível
+      <select name="school_level">
+        {% for l in school_levels %}<option value="{{ l }}" {% if l == school_level %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="btn ghost" type="submit">Ver mapa</button>
+  </form>
+</section>
+<section class="glass-card tabs-card">
+  <h2>Mapa gerado</h2>
+  <p class="muted">Use como base editável. Revise com o documento oficial da BNCC e com o currículo local antes de vender.</p>
+  <pre class="content-preview">{{ mapa }}</pre>
+</section>
+{% endblock %}

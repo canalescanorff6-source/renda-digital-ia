@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Produto</span>
+    <h1>{{ product.title }}</h1>
+    <p>{{ product.niche }} · {{ product.discipline or 'Todas as disciplinas' }} · {{ product.school_level or 'Ensino fundamental' }} · {{ product.product_type }} · {{ product.price|money }}</p>
+  </div>
+  <div class="header-actions">
+    {% if product.public_slug %}<a class="btn primary" href="{{ url_for('public_product_page', slug=product.public_slug) }}" target="_blank">Página pública</a>{% endif %}
+    <a class="btn ghost" href="{{ url_for('professional_center') }}">Central profissional</a>
+    <a class="btn ghost" href="{{ url_for('venda_real_page') }}">Central comercial</a>
+    <a class="btn ghost" href="{{ url_for('product_calendar', product_id=product.id) }}">Plano de lançamento</a>
+    <a class="btn ghost" href="{{ url_for('product_edit', product_id=product.id) }}">Editar</a>
+    {% if product.checkout_link %}<a class="btn primary" href="{{ product.checkout_link }}" target="_blank">Abrir checkout</a>{% endif %}
+  </div>
+</header>
+
+<section class="two-cols detail-layout">
+  <div class="glass-card">
+    <h2>Arquivos para baixar</h2>
+    <p class="muted">Baixe o conteúdo, folha do aluno, gabarito, mapa BNCC, página de venda, posts e prompts. O pacote ZIP também entrega arquivos separados por disciplina quando for Mega Kit.</p>
+    <div class="download-grid">
+      <a class="download-card" href="{{ url_for('product_download', product_id=product.id, section='content', fmt='pdf') }}">PDF do produto</a>
+      <a class="download-card" href="{{ url_for('product_download', product_id=product.id, section='content', fmt='md') }}">Texto editável</a>
+      <a class="download-card" href="{{ url_for('product_download', product_id=product.id, section='sales_page', fmt='md') }}">Página de venda</a>
+      <a class="download-card" href="{{ url_for('product_download', product_id=product.id, section='social_posts', fmt='md') }}">Posts</a>
+      <a class="download-card" href="{{ url_for('product_download', product_id=product.id, section='prompt_pack', fmt='md') }}">Prompts ChatGPT</a>
+      <a class="download-card" href="{{ url_for('product_download', product_id=product.id, section='bncc_map', fmt='md') }}">Mapa BNCC</a>
+      <a class="download-card" href="{{ url_for('public_product_sample', slug=product.public_slug) if product.public_slug else '#' }}">Isca grátis</a>
+      <a class="download-card" href="{{ url_for('product_ad_creatives', product_id=product.id) }}">Criativos venda</a>
+      <a class="download-card strong" href="{{ url_for('product_customer_package', product_id=product.id) }}">Pacote cliente FINAL</a>
+      <a class="download-card strong" href="{{ url_for('product_professional_package', product_id=product.id) }}">Pacote profissional v8</a>
+      <a class="download-card strong" href="{{ url_for('product_launch_package', product_id=product.id) }}">Pacote lançamento ZIP</a>
+    </div>
+    <div class="header-actions stacked-actions">
+      <form method="post" action="{{ url_for('product_regenerate', product_id=product.id) }}" onsubmit="return confirm('Regenerar conteúdo vai substituir os textos atuais. Continuar?')">
+        <button class="btn ghost" type="submit">Regenerar conteúdo</button>
+      </form>
+      <form method="post" action="{{ url_for('product_duplicate', product_id=product.id) }}">
+        <button class="btn ghost" type="submit">Duplicar para testar outra oferta</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="glass-card">
+    <h2>Resumo da oferta</h2>
+    <div class="info-list">
+      <div><span>Status</span><strong>{{ product.status }}</strong></div>
+      <div><span>Plataforma</span><strong>{{ product.platform }}</strong></div>
+      <div><span>Disciplina</span><strong>{{ product.discipline or 'Todas as disciplinas' }}</strong></div>
+      <div><span>Ano/Nível</span><strong>{{ product.school_level or 'Ensino fundamental' }}</strong></div>
+      <div><span>Público</span><strong>{{ product.target_audience }}</strong></div>
+      <div><span>Promessa</span><strong>{{ product.promise }}</strong></div>
+      <div><span>BNCC</span><strong>Campos editáveis por atividade</strong></div>
+      <div><span>Página pública</span><strong>{% if product.public_slug %}/p/{{ product.public_slug }}{% else %}Sem slug{% endif %}</strong></div>
+      <div><span>Checkout</span><strong>{% if product.checkout_link %}Configurado{% else %}Falta colar o link{% endif %}</strong></div>
+      <div><span>Isca grátis</span><strong>{{ product.lead_magnet_title or 'Amostra grátis' }}</strong></div>
+      <div><span>Bônus</span><strong>{{ product.bonus_stack or 'Checklist, posts e calendário' }}</strong></div>
+    </div>
+  </div>
+</section>
+
+<section class="glass-card tabs-card">
+  <div class="tabs">
+    <button class="tab active" data-tab="content">Produto</button>
+    <button class="tab" data-tab="sales">Página de venda</button>
+    <button class="tab" data-tab="posts">Posts</button>
+    <button class="tab" data-tab="prompts">Prompts</button>
+    <button class="tab" data-tab="bncc">Mapa BNCC</button>
+    <button class="tab" data-tab="lead">Isca grátis</button>
+  </div>
+  <pre id="tab-content" class="content-preview">{{ product.content }}</pre>
+  <pre id="tab-sales" class="content-preview hidden">{{ product.sales_page }}</pre>
+  <pre id="tab-posts" class="content-preview hidden">{{ product.social_posts }}</pre>
+  <pre id="tab-prompts" class="content-preview hidden">{{ product.prompt_pack }}</pre>
+  <pre id="tab-bncc" class="content-preview hidden">{{ product.bncc_map }}</pre>
+  <pre id="tab-lead" class="content-preview hidden">{{ product.lead_magnet_content or 'Amostra grátis não configurada.' }}</pre>
+</section>
+
+<section class="glass-card">
+  <h2>Vendas deste produto</h2>
+  {% if sales %}
+  <div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Plataforma</th><th>Status</th><th>Valor</th></tr></thead><tbody>
+  {% for s in sales %}<tr><td>{{ s.buyer_name or s.buyer_email or 'Cliente' }}</td><td>{{ s.platform }}</td><td>{{ s.status }}</td><td>{{ s.amount|money }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<p class="muted">Sem vendas cadastradas para este produto.</p>{% endif %}
+</section>
+{% endblock %}

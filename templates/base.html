@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or 'Renda Digital IA' }}</title>
+  <link rel="manifest" href="{{ url_for('web_manifest') }}">
+  <meta name="theme-color" content="#19f5d0">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    {% if session.get('user_id') %}
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">IA</div>
+        <div>
+          <strong>Renda Digital</strong>
+          <span>Plataforma Comercial</span>
+        </div>
+      </div>
+      <nav>
+        <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('professional_center') }}" class="nav-link highlight">Central profissional</a>
+        <a href="{{ url_for('venda_real_page') }}" class="nav-link highlight">Central comercial</a>
+        <a href="{{ url_for('social_automation') }}" class="nav-link highlight">Campanhas e vídeos</a>
+        <a href="{{ url_for('niches') }}" class="nav-link">Pesquisa de nichos</a>
+        <a href="{{ url_for('discipline_center') }}" class="nav-link">Disciplinas</a>
+        <a href="{{ url_for('bncc_center') }}" class="nav-link">BNCC</a>
+        <a href="{{ url_for('income_machine') }}" class="nav-link">Central de produtos</a>
+        <a href="{{ url_for('offer_lab') }}" class="nav-link">Análise de oferta</a>
+        <a href="{{ url_for('plan_30_days') }}" class="nav-link">Plano 30 dias</a>
+        <a href="{{ url_for('product_new') }}" class="nav-link highlight">+ Criar produto</a>
+        <a href="{{ url_for('products') }}" class="nav-link">Meus produtos</a>
+        <a href="{{ url_for('sales') }}" class="nav-link">Vendas</a>
+        <a href="{{ url_for('leads_page') }}" class="nav-link">Leads</a>
+        <a href="{{ url_for('settings_page') }}" class="nav-link">Configuração</a>
+      </nav>
+      <div class="sidebar-footer">
+        <small>Logado como</small>
+        <span>{{ session.get('user_email') }}</span>
+        <a href="{{ url_for('logout') }}">Sair</a>
+      </div>
+    </aside>
+    {% endif %}
+
+    <main class="main-content {% if not session.get('user_id') %}centered{% endif %}">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-wrap">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

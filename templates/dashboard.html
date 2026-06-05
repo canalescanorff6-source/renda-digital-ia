@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Visão geral</span>
+    <h1>Dashboard de vendas</h1>
+    <p>Acompanhe kits educacionais, materiais por disciplina, vendas manuais e integrações por webhook.</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn primary" href="{{ url_for('venda_real_page') }}">Central venda estruturada</a>
+    <a class="btn ghost" href="{{ url_for('income_machine') }}">Central de produtos</a>
+    <a class="btn ghost" href="{{ url_for('niches') }}">Ver nichos</a>
+    <a class="btn primary" href="{{ url_for('product_new') }}">Criar produto</a>
+  </div>
+</header>
+
+<div class="alert-soft">
+  <strong>Importante:</strong> o sistema ajuda a criar produto, página pública, amostra grátis, leads e pacotes de entrega. Ele não garante vendas automáticas; as vendas dependem de checkout, divulgação e oferta testada.
+</div>
+
+<section class="metric-grid metric-grid-wide">
+  <div class="metric-card purple">
+    <span>Total vendido</span>
+    <strong>{{ stats.total|money }}</strong>
+    <small>{{ stats.approved_count }} vendas aprovadas</small>
+  </div>
+  <div class="metric-card">
+    <span>Ticket médio</span>
+    <strong>{{ stats.avg_ticket|money }}</strong>
+    <small>média das vendas aprovadas</small>
+  </div>
+  <div class="metric-card">
+    <span>Produtos ativos</span>
+    <strong>{{ products_count }}</strong>
+    <small>kits, apostilas, simulados e bancos de questões</small>
+  </div>
+  <div class="metric-card">
+    <span>Clientes</span>
+    <strong>{{ clients_count }}</strong>
+    <small>compradores únicos cadastrados</small>
+  </div>
+  <div class="metric-card">
+    <span>Leads</span>
+    <strong>{{ leads_count }}</strong>
+    <small>interessados capturados</small>
+  </div>
+  <div class="metric-card">
+    <span>Visitas</span>
+    <strong>{{ visits_count }}</strong>
+    <small>páginas públicas</small>
+  </div>
+</section>
+
+<section class="two-cols">
+  <div class="glass-card gradient-card">
+    <div class="card-title-row">
+      <h2>Meta de acompanhamento</h2>
+      <a href="{{ url_for('plan_30_days') }}">Plano 30 dias</a>
+    </div>
+    <p class="big-number">{{ monthly_goal|money }}</p>
+    <p>Faltam <strong>{{ goal_remaining|money }}</strong> para bater a meta configurada. Com seu ticket médio atual, seriam cerca de <strong>{{ sales_needed }}</strong> vendas aprovadas.</p>
+    <p class="muted">Isso é apenas uma conta de acompanhamento, não garantia de renda.</p>
+  </div>
+  <div class="glass-card">
+    <h2>Próximo passo recomendado</h2>
+    <p>Escolha uma disciplina ou pacote completo, gere o produto, publique a página pública, capture leads com a amostra grátis e leve para o checkout.</p>
+    <div class="header-actions">
+      <a class="btn primary" href="{{ url_for('discipline_center') }}">Ver disciplinas</a>
+      <a class="btn ghost" href="{{ url_for('offer_lab') }}">Testar oferta</a>
+      <a class="btn ghost" href="{{ url_for('leads_page') }}">Ver leads</a>
+    </div>
+  </div>
+</section>
+
+<section class="two-cols">
+  <div class="glass-card">
+    <div class="card-title-row">
+      <h2>Produtos com melhor desempenho</h2>
+      <a href="{{ url_for('products') }}">Ver todos</a>
+    </div>
+    {% if top_products %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Produto</th><th>Vendas</th><th>Total</th></tr></thead>
+          <tbody>
+          {% for p in top_products %}
+            <tr>
+              <td><a href="{{ url_for('product_detail', product_id=p.id) }}">{{ p.title }}</a></td>
+              <td>{{ p.qty }}</td>
+              <td>{{ p.total|money }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Crie seu primeiro produto e cadastre uma venda para aparecer aqui.</p>
+    {% endif %}
+  </div>
+
+  <div class="glass-card">
+    <div class="card-title-row">
+      <h2>Últimas vendas</h2>
+      <a href="{{ url_for('sales') }}">Lançar venda</a>
+    </div>
+    {% if recent_sales %}
+      <div class="sales-list">
+      {% for sale in recent_sales %}
+        <div class="sale-item">
+          <div>
+            <strong>{{ sale.product_title or 'Produto não vinculado' }}</strong>
+            <small>{{ sale.buyer_name or sale.buyer_email or 'Cliente' }} · {{ sale.platform }}</small>
+          </div>
+          <span>{{ sale.amount|money }}</span>
+        </div>
+      {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">Nenhuma venda cadastrada ainda.</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="glass-card">
+  <h2>Status do modo IA</h2>
+  {% if openai_ok %}
+    <p class="ok">Modo automático com API ativado.</p>
+  {% else %}
+    <p class="muted">Modo sem API: o sistema usa modelos prontos e também gera prompts para você colar aqui no ChatGPT.</p>
+  {% endif %}
+</section>
+{% endblock %}

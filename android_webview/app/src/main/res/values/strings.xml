@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Renda Digital IA Pro</string>
+    <!-- Troque pela URL real do RunSite depois que o site estiver online. -->
+    <string name="app_url">https://SEU-SITE-RUNSITE.runsite.app</string>
+</resources>

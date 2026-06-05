@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-header">
+  <div>
+    <div class="eyebrow">v8 • Vídeos e posts profissionais</div>
+    <h1>Campanhas e vídeos</h1>
+    <p>Gere vídeo vertical mais profissional, calendário de 30 dias, legendas, hashtags e fila de publicação com rotina realista de vendas.</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn ghost" href="{{ url_for('products') }}">Meus produtos</a>
+    <a class="btn primary" href="{{ url_for('product_new') }}">Criar produto</a>
+  </div>
+</section>
+
+<div class="alert-soft">
+  <strong>Importante:</strong> o sistema gera tudo para postar e já prepara automação real. Para publicar direto em Instagram, TikTok e YouTube, cada plataforma exige API oficial, login OAuth e permissões/aprovação. Facebook Page pode publicar automaticamente quando o token estiver configurado no <code>.env</code>.
+</div>
+
+<section class="metric-grid metric-grid-wide">
+  <div class="metric-card purple"><span>Fila criada</span><strong>{{ queue|length }}</strong><small>posts prontos</small></div>
+  <div class="metric-card"><span>Facebook Page</span><strong>{% if api_status['Facebook Page'] %}OK{% else %}OFF{% endif %}</strong><small>auto-post</small></div>
+  <div class="metric-card"><span>Instagram Reels</span><strong>{% if api_status['Instagram Reels'] %}OK{% else %}API{% endif %}</strong><small>precisa permissão</small></div>
+  <div class="metric-card"><span>TikTok</span><strong>{% if api_status['TikTok'] %}OK{% else %}API{% endif %}</strong><small>Direct Post</small></div>
+  <div class="metric-card"><span>YouTube Shorts</span><strong>{% if api_status['YouTube Shorts'] %}OK{% else %}API{% endif %}</strong><small>OAuth</small></div>
+  <div class="metric-card"><span>Base pública</span><strong>URL</strong><small>{{ public_base_url }}</small></div>
+</section>
+
+<section class="two-cols">
+  <div class="glass-card">
+    <div class="card-title-row">
+      <h2>Gerar campanha automática</h2>
+      <span class="badge">30 dias</span>
+    </div>
+    <p>Escolha um produto e o sistema cria uma fila de posts com textos para TikTok, Reels, Facebook e WhatsApp.</p>
+    {% if products %}
+      <div class="stack">
+        {% for p in products %}
+        <div class="sale-item">
+          <div>
+            <strong>{{ p.title }}</strong>
+            <small>{{ p.discipline }} • {{ p.school_level }} • {{ p.price|money }}</small>
+          </div>
+          <div class="card-actions">
+            <form method="post" action="{{ url_for('generate_social_queue', product_id=p.id) }}">
+              <input type="hidden" name="days" value="30">
+              <button class="btn primary" type="submit">Criar fila 30 dias</button>
+            </form>
+            <a class="btn ghost" href="{{ url_for('download_sales_video', product_id=p.id) }}">Baixar vídeo MP4</a>
+            <a class="btn ghost" href="{{ url_for('download_social_auto_package', product_id=p.id) }}">Pacote social ZIP</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>Você ainda não tem produto criado. Crie o produto principal primeiro.</p>
+        <a class="btn primary" href="{{ url_for('venda_real_page') }}">Ir para Venda Real</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="glass-card gradient-card">
+    <h2>Como fica a venda automática</h2>
+    <ol class="steps">
+      <li>Você cria o produto principal.</li>
+      <li>O sistema gera vídeo MP4 vertical.</li>
+      <li>O sistema cria 30 dias de legendas e mensagens.</li>
+      <li>Você configura as APIs oficiais quando quiser postar direto.</li>
+      <li>Enquanto isso, pode baixar tudo e postar manualmente.</li>
+    </ol>
+    <div class="notice">
+      Evite spam em grupos. Poste com amostra grátis, conteúdo útil e chamada honesta. Isso protege suas contas e melhora a confiança.
+    </div>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="card-title-row">
+    <h2>Fila de publicação</h2>
+    <a class="btn ghost" href="{{ url_for('social_automation') }}">Atualizar</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Produto</th>
+          <th>Plataforma</th>
+          <th>Legenda</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in queue %}
+        <tr>
+          <td>{{ item.publish_at }}</td>
+          <td>{{ item.product_title }}</td>
+          <td>{{ item.platform }}</td>
+          <td style="min-width:360px; white-space:pre-wrap">{{ item.caption[:380] }}{% if item.caption|length > 380 %}...{% endif %}<br><small>{{ item.hashtags }}</small></td>
+          <td>{{ item.status }}{% if item.error %}<br><small class="danger-text">{{ item.error }}</small>{% endif %}</td>
+          <td>
+            <div class="card-actions">
+              {% if item.platform == 'Facebook Page' %}
+              <form method="post" action="{{ url_for('publish_facebook_page', item_id=item.id) }}">
+                <button class="btn primary" type="submit">Postar Facebook</button>
+              </form>
+              {% endif %}
+              <form method="post" action="{{ url_for('mark_social_posted', item_id=item.id) }}">
+                <button class="btn ghost" type="submit">Marcar postado</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">Nenhum post na fila ainda. Gere uma campanha acima.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="glass-card">
+  <h2>Variáveis para automação oficial</h2>
+  <p>Coloque no <code>.env</code> quando for publicar automaticamente por API:</p>
+  <pre class="content-preview">PUBLIC_BASE_URL=https://seudominio.com
+FACEBOOK_PAGE_ID=ID_DA_SUA_PAGINA
+FACEBOOK_PAGE_ACCESS_TOKEN=TOKEN_DA_PAGINA
+INSTAGRAM_ACCOUNT_ID=ID_DA_CONTA_INSTAGRAM_PROFISSIONAL
+TIKTOK_ACCESS_TOKEN=TOKEN_OAUTH_TIKTOK
+YOUTUBE_CLIENT_SECRET_JSON=client_secret.json</pre>
+</section>
+{% endblock %}

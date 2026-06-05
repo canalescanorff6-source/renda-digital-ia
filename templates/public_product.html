@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ product.title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="public-body">
+  <main class="public-page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-wrap public-flash">
+        {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="public-hero">
+      <div>
+        <span class="eyebrow">Material digital escolar</span>
+        <h1>{{ product.title }}</h1>
+        <p class="public-subtitle">{{ product.promise or 'Material pronto para adaptar, revisar e usar.' }}</p>
+        <div class="public-badges">
+          <span>{{ product.discipline or 'Todas as disciplinas' }}</span>
+          <span>{{ product.school_level or 'Ensino fundamental' }}</span>
+          <span>{{ product.product_type }}</span>
+        </div>
+        <div class="public-actions">
+          {% if product.checkout_link %}
+            <a class="btn primary" href="{{ product.checkout_link }}" target="_blank">Comprar agora — {{ product.price|money }}</a>
+          {% else %}
+            <a class="btn primary" href="#lead">Quero receber a amostra</a>
+          {% endif %}
+          <a class="btn ghost" href="#amostra">Ver amostra</a>
+        </div>
+        <p class="muted">Entrega digital pela plataforma de venda configurada pelo produtor.</p>
+      </div>
+      <aside class="public-product-card">
+        <div class="mockup-cover">
+          <small>BNCC editável</small>
+          <strong>{{ product.title }}</strong>
+          <span>{{ product.discipline or 'Todas as disciplinas' }}</span>
+        </div>
+        <div class="price-box">
+          <span>Valor</span>
+          <strong>{{ product.price|money }}</strong>
+          <small>Produto digital</small>
+        </div>
+      </aside>
+    </section>
+
+    <section class="public-grid">
+      <article class="glass-card">
+        <h2>O que você recebe</h2>
+        <ul class="clean-list">
+          <li>Atividades organizadas por disciplina/tema.</li>
+          <li>Folha do aluno pronta para revisar e imprimir.</li>
+          <li>Orientação para professor, tutor ou responsável.</li>
+          <li>Gabarito comentado separado.</li>
+          <li>Mapa BNCC editável para conferência pedagógica.</li>
+          <li>Bônus e checklist de aplicação.</li>
+        </ul>
+      </article>
+      <article class="glass-card">
+        <h2>Para quem é</h2>
+        <p>{{ product.target_audience }}</p>
+        <p class="muted">Use como base editável. Revise os códigos BNCC, adapte para sua turma e confira o currículo local antes de aplicar.</p>
+      </article>
+      <article class="glass-card">
+        <h2>Bônus incluídos</h2>
+        <p>{{ product.bonus_stack or 'Amostra grátis, checklist BNCC, calendário de divulgação e arquivos organizados.' }}</p>
+      </article>
+    </section>
+
+    <section id="lead" class="two-cols public-lead-area">
+      <form class="glass-card form-grid" method="post" action="{{ url_for('public_product_lead', slug=product.public_slug) }}">
+        <h2 class="span-2">Receber amostra grátis</h2>
+        <p class="span-2 muted">Cadastre seu contato para baixar a amostra. Depois você pode decidir se quer o pacote completo.</p>
+        <div class="field"><label>Nome</label><input name="name" placeholder="Seu nome"></div>
+        <div class="field"><label>E-mail</label><input name="email" type="email" placeholder="seuemail@email.com"></div>
+        <div class="field span-2"><label>WhatsApp</label><input name="whatsapp" placeholder="(00) 00000-0000"></div>
+        <div class="span-2"><button class="btn primary" type="submit">Liberar amostra</button></div>
+      </form>
+      <div id="amostra" class="glass-card">
+        <h2>Amostra do material</h2>
+        <pre class="content-preview public-sample">{{ sample }}</pre>
+        <a class="btn ghost" href="{{ url_for('public_product_sample', slug=product.public_slug) }}">Baixar amostra editável</a>
+      </div>
+    </section>
+
+    <section class="glass-card public-faq">
+      <h2>Perguntas frequentes</h2>
+      <details open><summary>Recebo na hora?</summary><p>Sim, quando o checkout estiver configurado, a entrega digital é feita pela plataforma usada pelo vendedor.</p></details>
+      <details><summary>É material oficial do MEC?</summary><p>Não. É um material editável organizado com campos BNCC para revisão. Revise e adapte antes de aplicar.</p></details>
+      <details><summary>Posso adaptar?</summary><p>Sim. A proposta é usar como base para economizar tempo e ajustar conforme a realidade da turma.</p></details>
+      <details><summary>Tem garantia?</summary><p>O prazo sugerido de garantia é de {{ product.guarantee_days or 7 }} dias, conforme as regras que você configurar na plataforma de venda.</p></details>
+    </section>
+  </main>
+</body>
+</html>

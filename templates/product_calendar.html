@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Lançamento</span>
+    <h1>Plano de lançamento</h1>
+    <p>{{ product.title }} · pontuação da oferta: {{ score.score }}/100 — {{ score.level }}</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn ghost" href="{{ url_for('product_detail', product_id=product.id) }}">Voltar</a>
+    <a class="btn primary" href="{{ url_for('product_launch_package', product_id=product.id) }}">Baixar pacote ZIP</a>
+  </div>
+</header>
+
+<section class="three-cols">
+  <div class="glass-card">
+    <h2>Diagnóstico</h2>
+    <div class="score-big small">{{ score.score }}</div>
+    <ul class="clean-list">
+      {% for r in score.reasons %}<li>{{ r }}</li>{% endfor %}
+    </ul>
+  </div>
+  <div class="glass-card">
+    <h2>Meta simples</h2>
+    <p>Comece tentando validar interesse, não faturamento alto. Busque conversas reais e primeiras vendas pequenas.</p>
+    <p class="muted">Depois de vender, melhore o produto e aumente o pacote.</p>
+  </div>
+  <div class="glass-card">
+    <h2>O que baixar</h2>
+    <p>O pacote ZIP inclui produto, página, posts, calendário de 30 dias, funil, checklist e texto para cadastrar na plataforma.</p>
+  </div>
+</section>
+
+<section class="glass-card tabs-card">
+  <div class="tabs">
+    <button class="tab active" data-tab="calendar">Calendário 30 dias</button>
+    <button class="tab" data-tab="funnel">Funil</button>
+    <button class="tab" data-tab="checklist">Checklist</button>
+  </div>
+  <pre id="tab-calendar" class="content-preview">{{ calendar }}</pre>
+  <pre id="tab-funnel" class="content-preview hidden">{{ funnel }}</pre>
+  <pre id="tab-checklist" class="content-preview hidden">{{ checklist }}</pre>
+</section>
+{% endblock %}

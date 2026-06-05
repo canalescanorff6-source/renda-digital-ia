@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Estratégia prática</span>
+    <h1>Central de produtos</h1>
+    <p>Ideias de produtos educacionais para todas as disciplinas, reforço, professores, escolas e pais.</p>
+  </div>
+  <a class="btn primary" href="{{ url_for('product_new') }}">Criar do zero</a>
+</header>
+
+<div class="alert-soft">
+  <strong>Regra do jogo:</strong> escolha uma disciplina ou pacote completo, crie uma versão simples, publique uma amostra, colete dúvidas e melhore. O sistema aumenta organização, mas a renda depende de validação e divulgação consistente.
+</div>
+
+<section class="glass-card">
+  <h2>Sequência recomendada para começar</h2>
+  <div class="steps-grid">
+    <div><strong>1</strong><span>Escolha um público fácil de alcançar</span></div>
+    <div><strong>2</strong><span>Resolva uma dor escolar real</span></div>
+    <div><strong>3</strong><span>Venda entrada, pacote e premium</span></div>
+    <div><strong>4</strong><span>Mostre o produto por dentro</span></div>
+    <div><strong>5</strong><span>Anote objeções e melhore a oferta</span></div>
+  </div>
+</section>
+
+<section class="product-grid">
+  {% for idea in ideas %}
+  <article class="glass-card product-card idea-card">
+    <div class="status publicado">{{ idea.difficulty }}</div>
+    <h2>{{ idea.title }}</h2>
+    <p>{{ idea.niche }} · {{ idea.product_type }}</p>
+    <div class="info-list compact">
+      <div><span>Público</span><strong>{{ idea.target }}</strong></div>
+      <div><span>Promessa</span><strong>{{ idea.promise }}</strong></div>
+      <div><span>Divulgação</span><strong>{{ idea.channel }}</strong></div>
+    </div>
+    <div class="product-meta"><span>Preço: {{ idea.price|money }}</span></div>
+    <div class="card-actions">
+      <a class="btn primary" href="{{ url_for('product_new', title=idea.title, niche=idea.niche, product_type=idea.product_type, discipline=idea.discipline, school_level=idea.school_level, target=idea.target, price=idea.price, promise=idea.promise) }}">Gerar produto</a>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

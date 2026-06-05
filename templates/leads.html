@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Funil de venda</span>
+    <h1>Leads e interessados</h1>
+    <p>Contatos capturados pelas páginas públicas dos produtos. Use para enviar amostra, responder dúvidas e oferecer o checkout com respeito.</p>
+  </div>
+  <a class="btn ghost" href="{{ url_for('leads_export_csv') }}">Exportar CSV</a>
+</header>
+
+<section class="metric-grid">
+  <div class="metric-card purple"><span>Leads</span><strong>{{ total_leads }}</strong><small>interessados capturados</small></div>
+  <div class="metric-card"><span>Visitas</span><strong>{{ total_visits }}</strong><small>visualizações das páginas públicas</small></div>
+  <div class="metric-card"><span>Conversão</span><strong>{{ conversion_rate }}%</strong><small>leads ÷ visitas</small></div>
+  <div class="metric-card"><span>Próxima ação</span><strong>WhatsApp</strong><small>enviar amostra e tirar dúvidas</small></div>
+</section>
+
+<section class="glass-card">
+  <h2>Lista de contatos</h2>
+  {% if leads %}
+  <div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Origem</th></tr></thead><tbody>
+  {% for l in leads %}
+    <tr><td>{{ l.created_at[:10] }}</td><td>{{ l.product_title or 'Produto' }}</td><td>{{ l.name or '-' }}</td><td>{{ l.email or '-' }}</td><td>{{ l.whatsapp or '-' }}</td><td>{{ l.source }}</td></tr>
+  {% endfor %}
+  </tbody></table></div>
+  {% else %}<p class="muted">Ainda não há leads. Publique a página pública de um produto e ofereça uma amostra grátis.</p>{% endif %}
+</section>
+{% endblock %}
