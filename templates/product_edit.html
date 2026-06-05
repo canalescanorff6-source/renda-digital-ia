@@ -4,7 +4,7 @@
   <div>
     <span class="eyebrow">Editar</span>
     <h1>{{ product.title }}</h1>
-    <p>Altere conteúdo, disciplina, ano, preço, checkout e textos de venda.</p>
+    <p>Altere conteúdo, área, público, preço, checkout e textos de venda.</p>
   </div>
   <a class="btn ghost" href="{{ url_for('product_detail', product_id=product.id) }}">Voltar</a>
 </header>
@@ -24,13 +24,13 @@
     </select>
   </div>
   <div class="field">
-    <label>Disciplina</label>
+    <label>Área/Disciplina</label>
     <select name="discipline">
       {% for s in subjects %}<option value="{{ s }}" {% if product.discipline == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
     </select>
   </div>
   <div class="field">
-    <label>Ano/Nível</label>
+    <label>Nível/Público</label>
     <select name="school_level">
       {% for l in school_levels %}<option value="{{ l }}" {% if product.school_level == l %}selected{% endif %}>{{ l }}</option>{% endfor %}
     </select>

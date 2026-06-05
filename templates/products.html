@@ -4,13 +4,13 @@
   <div>
     <span class="eyebrow">Catálogo</span>
     <h1>Meus produtos</h1>
-    <p>Organize seus kits por disciplina, ano escolar, páginas de venda e links de checkout.</p>
+    <p>Organize seus produtos digitais por nicho, público, página de venda e link de checkout.</p>
   </div>
   <div class="header-actions"><form method="post" action="{{ url_for('create_ready_mega_kit') }}"><button class="btn primary" type="submit">Criar produto principal</button></form><a class="btn ghost" href="{{ url_for('product_new') }}">+ Novo produto</a></div>
 </header>
 
 <form class="search-row" method="get">
-  <input name="q" value="{{ q }}" placeholder="Buscar por nome, nicho, disciplina ou ano">
+  <input name="q" value="{{ q }}" placeholder="Buscar por nome, nicho, área ou público">
   <button class="btn ghost" type="submit">Buscar</button>
 </form>
 
@@ -19,7 +19,7 @@
   <article class="glass-card product-card">
     <div class="status {{ p.status }}">{{ p.status }}</div>
     <h2>{{ p.title }}</h2>
-    <p>{{ p.niche }} · {{ p.discipline or 'Todas as disciplinas' }} · {{ p.product_type }}</p>
+    <p>{{ p.niche }} · {{ p.discipline or 'Produto geral' }} · {{ p.product_type }}</p>
     <div class="product-meta">
       <span>{{ p.price|money }}</span>
       <span>{{ p.platform }}</span>

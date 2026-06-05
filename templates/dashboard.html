@@ -4,7 +4,7 @@
   <div>
     <span class="eyebrow">Visão geral</span>
     <h1>Dashboard de vendas</h1>
-    <p>Acompanhe kits educacionais, materiais por disciplina, vendas manuais e integrações por webhook.</p>
+    <p>Acompanhe produtos digitais, páginas públicas, leads, vendas manuais e integrações por webhook.</p>
   </div>
   <div class="header-actions">
     <a class="btn primary" href="{{ url_for('venda_real_page') }}">Central venda estruturada</a>
@@ -32,7 +32,7 @@
   <div class="metric-card">
     <span>Produtos ativos</span>
     <strong>{{ products_count }}</strong>
-    <small>kits, apostilas, simulados e bancos de questões</small>
+    <small>kits, planners, templates, prompts e materiais digitais</small>
   </div>
   <div class="metric-card">
     <span>Clientes</span>
@@ -63,9 +63,9 @@
   </div>
   <div class="glass-card">
     <h2>Próximo passo recomendado</h2>
-    <p>Escolha uma disciplina ou pacote completo, gere o produto, publique a página pública, capture leads com a amostra grátis e leve para o checkout.</p>
+    <p>Escolha um nicho, gere o produto, publique a página pública, capture leads com a amostra grátis e leve para o checkout.</p>
     <div class="header-actions">
-      <a class="btn primary" href="{{ url_for('discipline_center') }}">Ver disciplinas</a>
+      <a class="btn primary" href="{{ url_for('discipline_center') }}">Ver áreas/nichos</a>
       <a class="btn ghost" href="{{ url_for('offer_lab') }}">Testar oferta</a>
       <a class="btn ghost" href="{{ url_for('leads_page') }}">Ver leads</a>
     </div>

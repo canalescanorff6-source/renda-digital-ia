@@ -3,20 +3,20 @@
 <header class="page-header">
   <div>
     <span class="eyebrow">Público maior</span>
-    <h1>Central de disciplinas</h1>
-    <p>Crie produtos para várias matérias, anos escolares, reforço, pais e escolas. A ideia é vender pacotes amplos e também versões específicas por disciplina.</p>
+    <h1>Central de áreas</h1>
+    <p>Crie produtos para várias matérias, anos escolares, reforço, pais e escolas. A ideia é vender pacotes amplos e também versões específicas por área.</p>
   </div>
   <a class="btn primary" href="{{ url_for('product_new') }}">Criar mega kit</a>
 </header>
 
 <div class="alert-soft">
-  <strong>Estratégia:</strong> comece com um mega kit de todas as disciplinas, depois transforme cada disciplina em produto separado. Assim você cria entrada barata, pacote completo e versão premium.
+  <strong>Estratégia:</strong> comece com um mega kit de todas as áreas, depois transforme cada área em produto separado. Assim você cria entrada barata, pacote completo e versão premium.
 </div>
 
 <section class="glass-card">
   <h2>Combos recomendados</h2>
   <div class="steps-grid">
-    <div><strong>1</strong><span>Mega Kit: todas as disciplinas para anos iniciais</span></div>
+    <div><strong>1</strong><span>Mega Kit: todas as áreas para anos iniciais</span></div>
     <div><strong>2</strong><span>Português + Matemática para reforço escolar</span></div>
     <div><strong>3</strong><span>Banco de questões 6º ao 9º ano</span></div>
     <div><strong>4</strong><span>Redação + ENEM para ensino médio</span></div>
@@ -27,7 +27,7 @@
 <section class="product-grid">
   {% for item in ideas %}
   <article class="glass-card product-card idea-card">
-    <div class="status publicado">disciplina</div>
+    <div class="status publicado">área</div>
     <h2>{{ item.title }}</h2>
     <p>{{ item.subject }} · {{ item.product_type }} · {{ item.school_level }}</p>
     <div class="info-list compact">
@@ -36,7 +36,7 @@
       <div><span>Preço sugerido</span><strong>{{ item.price|money }}</strong></div>
     </div>
     <div class="card-actions">
-      <a class="btn primary" href="{{ url_for('product_new', title=item.title, niche='Educação - todas as disciplinas', product_type=item.product_type, discipline=item.subject, school_level=item.school_level, target=item.target, price=item.price, promise=item.promise) }}">Gerar produto</a>
+      <a class="btn primary" href="{{ url_for('product_new', title=item.title, niche='Educação - todas as áreas', product_type=item.product_type, discipline=item.subject, school_level=item.school_level, target=item.target, price=item.price, promise=item.promise) }}">Gerar produto</a>
     </div>
   </article>
   {% endfor %}

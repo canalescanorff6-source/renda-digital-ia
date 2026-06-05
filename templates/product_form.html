@@ -2,16 +2,16 @@
 {% block content %}
 <header class="page-header">
   <div>
-    <span class="eyebrow">Criador IA educacional</span>
-    <h1>Novo produto escolar</h1>
-    <p>Crie kits para todas as disciplinas, pacotes por bimestre, bancos de questões, simulados, folha do aluno, gabarito e posts de venda.</p>
+    <span class="eyebrow">Criador IA multinichos</span>
+    <h1>Novo produto digital</h1>
+    <p>Crie produtos digitais para nichos vendáveis: IA para negócios, finanças pessoais, MEI, beleza, casa, culinária, carreira, pets, templates e também educação.</p>
   </div>
 </header>
 
 <form method="post" class="glass-card form-grid wide-form">
   <div class="field span-2">
     <label>Nome do produto</label>
-    <input name="title" required placeholder="Ex: Mega Kit Professor Total - Todas as Disciplinas" value="{{ preset_data.title }}">
+    <input name="title" required placeholder="Ex: Kit IA para Pequenos Negócios - Prompts, Posts e WhatsApp" value="{{ preset_data.title }}">
   </div>
   <div class="field">
     <label>Nicho</label>
@@ -28,20 +28,20 @@
     </select>
   </div>
   <div class="field">
-    <label>Disciplina</label>
+    <label>Área/Disciplina</label>
     <select name="discipline">
       {% for s in subjects %}<option value="{{ s }}" {% if preset_data.discipline == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
     </select>
   </div>
   <div class="field">
-    <label>Ano/Nível</label>
+    <label>Nível/Público</label>
     <select name="school_level">
       {% for l in school_levels %}<option value="{{ l }}" {% if preset_data.school_level == l %}selected{% endif %}>{{ l }}</option>{% endfor %}
     </select>
   </div>
   <div class="field span-2">
     <label>Público-alvo</label>
-    <input name="target_audience" placeholder="Ex: professores, reforço escolar, escolas e pais" value="{{ preset_data.target_audience }}">
+    <input name="target_audience" placeholder="Ex: MEIs, autônomos, lojas pequenas, profissionais de beleza, famílias, professores ou pais" value="{{ preset_data.target_audience }}">
   </div>
   <div class="field">
     <label>Preço sugerido</label>
@@ -53,7 +53,7 @@
   </div>
   <div class="field span-2">
     <label>Promessa honesta do produto</label>
-    <input name="promise" placeholder="Ex: economizar tempo com atividades, provas, gabaritos e materiais prontos para adaptar" value="{{ preset_data.promise }}">
+    <input name="promise" placeholder="Ex: economizar tempo com modelos, checklists, prompts, posts e materiais prontos para adaptar" value="{{ preset_data.promise }}">
   </div>
   <div class="field">
     <label>Status</label>
@@ -95,7 +95,7 @@
   </div>
   <div class="field span-2">
     <label>Bônus da oferta</label>
-    <input name="bonus_stack" placeholder="Amostra grátis; Checklist BNCC; Calendário de posts; Arquivos separados">
+    <input name="bonus_stack" placeholder="Amostra grátis; Checklist de uso; Calendário de posts; Modelos editáveis; Bônus de WhatsApp">
   </div>
   <div class="span-2 action-row">
     <a class="btn ghost" href="{{ url_for('products') }}">Cancelar</a>

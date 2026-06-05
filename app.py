@@ -331,62 +331,97 @@ def first_paragraphs(text: str, max_chars: int = 1800) -> str:
 
 NICHES = [
     {
-        "name": "Educação - todas as disciplinas",
+        "name": "IA para pequenos negócios",
         "score": 99,
-        "why": "Público maior: professores, reforço escolar, pais, escolas pequenas e criadores de materiais didáticos. Permite vender pacotes por ano, bimestre e disciplina.",
-        "examples": ["Mega Kit Atividades", "Pacote Bimestral", "Banco de Questões", "Simulados"],
-        "price": "R$ 27,00 a R$ 97,00",
+        "why": "Alta procura por soluções simples com IA: prompts, roteiros, atendimento, posts, cardápios, ideias de conteúdo e organização para MEI e pequenos negócios.",
+        "examples": ["Pack de prompts", "Kit atendimento WhatsApp", "Roteiros Reels", "Calendário de conteúdo"],
+        "price": "R$ 19,90 a R$ 97,00",
     },
     {
-        "name": "Ensino fundamental anos iniciais",
+        "name": "Finanças pessoais e organização",
         "score": 97,
-        "why": "Alta procura por atividades prontas, alfabetização, matemática básica, leitura, ciências e datas comemorativas.",
-        "examples": ["Kit 1º ao 5º ano", "Alfabetização", "Matemática Básica", "Projetos Interdisciplinares"],
-        "price": "R$ 19,90 a R$ 67,00",
-    },
-    {
-        "name": "Ensino fundamental anos finais",
-        "score": 94,
-        "why": "Permite vender por disciplina: Português, Matemática, Ciências, História, Geografia, Inglês e Artes.",
-        "examples": ["Banco de Questões 6º ao 9º", "Revisões", "Trabalhos", "Simulados"],
-        "price": "R$ 29,90 a R$ 97,00",
-    },
-    {
-        "name": "Ensino médio e ENEM",
-        "score": 91,
-        "why": "Bom para simulados, redação, mapas mentais, revisão por área e listas de exercícios.",
-        "examples": ["Redação", "Simulados ENEM", "Biologia", "Física", "Química", "Matemática"],
-        "price": "R$ 37,00 a R$ 147,00",
-    },
-    {
-        "name": "Reforço escolar e pais",
-        "score": 90,
-        "why": "Público maior fora da escola: pais, tutores, professores particulares e reforço escolar buscam material pronto para acompanhar aprendizagem.",
-        "examples": ["Tarefas de Casa", "Caderno de Reforço", "Leitura", "Tabuada", "Interpretação"],
+        "why": "Produtos de controle financeiro, orçamento familiar, metas, dívidas e planilhas simples têm apelo amplo. Use linguagem educativa, sem prometer enriquecimento.",
+        "examples": ["Planner financeiro", "Desafio 52 semanas", "Controle de dívidas", "Planilha de orçamento"],
         "price": "R$ 17,00 a R$ 67,00",
     },
     {
-        "name": "Datas comemorativas e projetos escolares",
-        "score": 87,
-        "why": "Produtos sazonais podem vender bem em épocas específicas: volta às aulas, festa junina, consciência negra, meio ambiente e natal.",
-        "examples": ["Projetos Prontos", "Murais", "Sequências Didáticas", "Atividades Temáticas"],
+        "name": "Pequenos negócios e MEI",
+        "score": 96,
+        "why": "Público grande que precisa vender melhor, organizar preço, estoque, agenda, atendimento e divulgação sem contratar agência.",
+        "examples": ["Kit MEI organizado", "Calculadora de preço", "Agenda de clientes", "Pacote de posts"],
+        "price": "R$ 27,00 a R$ 147,00",
+    },
+    {
+        "name": "Beleza, estética e atendimento",
+        "score": 94,
+        "why": "Manicures, designers de sobrancelha, barbeiros, cabeleireiras e esteticistas usam muito WhatsApp e Instagram. Vendem bem kits de agenda, fichas, posts e mensagens prontas.",
+        "examples": ["Agenda de clientes", "Fichas de atendimento", "Posts para Instagram", "Scripts WhatsApp"],
+        "price": "R$ 19,90 a R$ 97,00",
+    },
+    {
+        "name": "Casa, organização e rotina",
+        "score": 92,
+        "why": "Planner de limpeza, cardápio semanal, lista de compras, rotina familiar e organização doméstica têm público amplo, principalmente em redes sociais visuais.",
+        "examples": ["Planner da casa", "Cardápio semanal", "Lista de compras", "Rotina familiar"],
         "price": "R$ 12,90 a R$ 49,90",
+    },
+    {
+        "name": "Culinária, marmitas e confeitaria",
+        "score": 91,
+        "why": "Receitas, fichas técnicas, precificação, cardápios, marmitas e confeitaria são produtos práticos para quem quer economizar ou vender comida.",
+        "examples": ["Receitas econômicas", "Ficha técnica", "Cardápio de marmitas", "Precificação de bolos"],
+        "price": "R$ 19,90 a R$ 97,00",
+    },
+    {
+        "name": "Carreira, currículo e renda extra",
+        "score": 90,
+        "why": "Modelos de currículo, roteiro de entrevista, organização de estudos e guias práticos atraem público grande. Evite promessa de emprego garantido.",
+        "examples": ["Kit currículo", "LinkedIn básico", "Roteiro de entrevista", "Planner de carreira"],
+        "price": "R$ 17,00 a R$ 67,00",
+    },
+    {
+        "name": "Templates, design e redes sociais",
+        "score": 90,
+        "why": "Templates, calendários, legendas, bio, anúncios e identidade simples são fáceis de vender para autônomos, lojas e prestadores de serviço.",
+        "examples": ["Pack Canva", "Calendário de posts", "Legendas prontas", "Kit identidade simples"],
+        "price": "R$ 19,90 a R$ 97,00",
+    },
+    {
+        "name": "Pets e rotina de cuidados",
+        "score": 87,
+        "why": "Produtos para tutores de pets podem vender bem: organização, rotina, banho, checklist, gastos e agenda. Não substitui orientação veterinária.",
+        "examples": ["Planner pet", "Controle de gastos", "Rotina de cuidados", "Checklist de viagem"],
+        "price": "R$ 12,90 a R$ 49,90",
+    },
+    {
+        "name": "Educação - todas as disciplinas",
+        "score": 86,
+        "why": "Continua sendo uma categoria boa, mas agora é apenas uma das opções. Serve para professores, reforço escolar, pais, escolas pequenas e materiais pedagógicos.",
+        "examples": ["Mega Kit Atividades", "Banco de Questões", "Simulados", "Pacote Bimestral"],
+        "price": "R$ 27,00 a R$ 97,00",
     },
 ]
 
 PRODUCT_TYPES = [
+    "Pack de prompts IA",
+    "Planner PDF",
+    "Checklist prático",
+    "Planilha simples",
+    "Kit de templates",
+    "Calendário de conteúdo",
+    "Roteiros de vídeos curtos",
+    "Scripts de WhatsApp",
+    "Ebook guia prático",
+    "Apostila editável",
+    "Pacote completo ZIP",
     "Mega kit de atividades",
-    "Pacote bimestral",
     "Banco de questões",
     "Simulado com gabarito",
-    "Apostila editável",
     "Sequência didática",
-    "Planner/Checklist",
-    "Ebook PDF",
-    "Pack de templates",
 ]
 
 SUBJECTS = [
+    "Não se aplica / produto geral",
     "Todas as disciplinas",
     "Português",
     "Matemática",
@@ -407,6 +442,13 @@ SUBJECTS = [
 ]
 
 SCHOOL_LEVELS = [
+    "Não se aplica / público geral",
+    "Iniciantes",
+    "Público geral",
+    "MEI e autônomos",
+    "Pequenos negócios",
+    "Profissionais de beleza",
+    "Famílias e organização doméstica",
     "Educação infantil",
     "Ensino fundamental anos iniciais",
     "Ensino fundamental anos finais",
@@ -735,6 +777,311 @@ def template_social_posts(title: str, target: str, niche: str, promise: str, dis
     ])
 
 
+
+# ----------------------------- Multinichos profissionais -----------------------------
+
+EDU_KEYWORDS = [
+    "educação", "ensino", "escolar", "professor", "professores", "bncc", "enem",
+    "fundamental", "médio", "disciplina", "questões", "simulado", "reforço", "aluno", "aula"
+]
+
+GENERAL_CONTENT_MODELS = {
+    "IA para pequenos negócios": {
+        "modules": ["Diagnóstico rápido do negócio", "Prompts prontos para atendimento", "Prompts para posts e anúncios", "Roteiros de Reels e Shorts", "Checklist semanal de execução", "Calendário de 30 dias"],
+        "examples": ["prompt para responder cliente indeciso", "roteiro de vídeo mostrando produto", "mensagem de pós-venda", "ideia de promoção honesta"],
+        "warning": "Use os prompts como apoio. Revise tudo antes de publicar e não automatize spam.",
+    },
+    "Finanças pessoais e organização": {
+        "modules": ["Diagnóstico financeiro simples", "Controle de entradas e saídas", "Planejamento de dívidas", "Metas mensais", "Desafio de economia", "Revisão semanal"],
+        "examples": ["lista de gastos fixos", "quadro de dívidas", "meta de reserva", "checklist de compras conscientes"],
+        "warning": "Material educativo de organização. Não é consultoria financeira, investimento ou promessa de enriquecimento.",
+    },
+    "Pequenos negócios e MEI": {
+        "modules": ["Organização do negócio", "Precificação simples", "Controle de clientes", "Atendimento no WhatsApp", "Divulgação semanal", "Indicadores básicos"],
+        "examples": ["modelo de cadastro de cliente", "ficha de produto", "mensagem de orçamento", "checklist de venda do dia"],
+        "warning": "Adapte os modelos à realidade do negócio e às regras fiscais/contábeis locais.",
+    },
+    "Beleza, estética e atendimento": {
+        "modules": ["Agenda de clientes", "Ficha de atendimento", "Mensagens para WhatsApp", "Posts de antes/depois", "Pacotes e promoções", "Pós-atendimento"],
+        "examples": ["mensagem de confirmação", "modelo de ficha simples", "checklist de materiais", "roteiro para divulgar horários"],
+        "warning": "Não substitui orientação profissional, técnica, sanitária ou regulamentar da área.",
+    },
+    "Casa, organização e rotina": {
+        "modules": ["Rotina semanal", "Lista de limpeza", "Cardápio da semana", "Lista de compras", "Organização por cômodo", "Planejamento familiar"],
+        "examples": ["checklist da cozinha", "cronograma de limpeza", "cardápio econômico", "lista de tarefas por dia"],
+        "warning": "Modelo de organização pessoal. Adapte conforme sua casa, renda e rotina.",
+    },
+    "Culinária, marmitas e confeitaria": {
+        "modules": ["Planejamento de receitas", "Lista de ingredientes", "Ficha técnica", "Precificação simples", "Cardápio de venda", "Divulgação e entrega"],
+        "examples": ["ficha de bolo", "cardápio semanal de marmitas", "controle de encomendas", "mensagem de venda por WhatsApp"],
+        "warning": "Respeite normas de higiene, validade, alergênicos e legislação local para alimentos.",
+    },
+    "Carreira, currículo e renda extra": {
+        "modules": ["Diagnóstico de perfil", "Modelo de currículo", "Carta de apresentação", "Roteiro de entrevista", "Plano de busca de vagas", "Checklist de melhoria"],
+        "examples": ["currículo simples", "bio profissional", "respostas de entrevista", "rotina de candidaturas"],
+        "warning": "Material educativo. Não promete emprego, aprovação ou renda garantida.",
+    },
+    "Templates, design e redes sociais": {
+        "modules": ["Identidade simples", "Calendário de conteúdo", "Legendas prontas", "Roteiros de vídeo", "Checklist de publicação", "Métricas básicas"],
+        "examples": ["bio do Instagram", "legenda de promoção", "roteiro para Reels", "checklist de carrossel"],
+        "warning": "Os modelos devem ser adaptados à marca. Evite copiar marcas, imagens ou promessas de terceiros.",
+    },
+    "Pets e rotina de cuidados": {
+        "modules": ["Rotina do pet", "Controle de gastos", "Agenda de cuidados", "Checklist de passeio", "Checklist de viagem", "Observações importantes"],
+        "examples": ["agenda de banho", "lista de compras pet", "controle de vacina a conferir", "rotina de alimentação"],
+        "warning": "Material de organização para tutores. Não substitui veterinário ou orientação técnica.",
+    },
+}
+
+
+def is_education_product(niche: str = "", product_type: str = "", discipline: str = "", school_level: str = "") -> bool:
+    text = f"{niche} {product_type} {discipline} {school_level}".lower()
+    if "não se aplica" in text and not any(k in text for k in ["bncc", "escolar", "professor", "ensino"]):
+        return False
+    return any(k in text for k in EDU_KEYWORDS)
+
+
+def general_model_for(niche: str) -> Dict[str, Any]:
+    if niche in GENERAL_CONTENT_MODELS:
+        return GENERAL_CONTENT_MODELS[niche]
+    return {
+        "modules": ["Diagnóstico do público", "Passo a passo principal", "Modelos prontos", "Checklist de aplicação", "Calendário de execução", "Próximos passos"],
+        "examples": ["modelo prático", "checklist editável", "roteiro simples", "plano semanal"],
+        "warning": "Material educativo e editável. Revise antes de vender, aplicar ou publicar.",
+    }
+
+
+def build_prompt_pack_general(title: str, niche: str, product_type: str, target: str, pages: int, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    model = general_model_for(niche)
+    modules = "\n".join([f"- {m}" for m in model["modules"]])
+    examples = "\n".join([f"- {e}" for e in model["examples"]])
+    return f"""
+PROMPT 1 — Criar produto digital vendável e realista
+Crie um {product_type} chamado "{title}".
+Nicho: {niche}.
+Público-alvo: {target}.
+Objetivo do produto: {promise}.
+Quantidade aproximada: {pages} páginas.
+Linguagem: brasileira, simples, direta, profissional e sem promessas milagrosas.
+
+Estrutura recomendada:
+{modules}
+
+Exemplos que devem aparecer no produto:
+{examples}
+
+Regras:
+1. Criar capa textual, apresentação, sumário e instruções de uso.
+2. Gerar modelos prontos para copiar, preencher ou adaptar.
+3. Criar checklist final de aplicação.
+4. Criar uma amostra grátis de 1 a 3 páginas.
+5. Não prometer dinheiro fácil, cura, resultado financeiro garantido, emprego garantido, emagrecimento garantido ou solução mágica.
+6. Incluir aviso responsável: {model['warning']}
+
+PROMPT 2 — Página de venda honesta
+Crie uma página de venda para "{title}" com título, subtítulo, problema do público, o que recebe, benefícios, bônus, garantia honesta, FAQ e chamada para ação.
+
+PROMPT 3 — Divulgação
+Crie 20 legendas, 10 mensagens de WhatsApp e 10 roteiros curtos de Reels/TikTok/Shorts para vender "{title}" sem spam e sem promessa exagerada.
+""".strip()
+
+
+def template_content_general(title: str, niche: str, product_type: str, target: str, pages: int, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    today = date.today().strftime("%d/%m/%Y")
+    model = general_model_for(niche)
+    body = [
+        f"# {title}",
+        f"**Tipo:** {product_type}",
+        f"**Nicho:** {niche}",
+        f"**Público-alvo:** {target}",
+        f"**Criado em:** {today}",
+        "",
+        "## Apresentação profissional",
+        f"Este produto digital foi organizado para ajudar {target.lower()} com uma solução prática: {promise}.",
+        "A proposta é entregar um material claro, editável e fácil de usar, sem depender de conhecimento técnico avançado.",
+        "",
+        "## Aviso importante",
+        model["warning"],
+        "",
+        "## O que vem neste produto",
+    ]
+    for m in model["modules"]:
+        body.append(f"- {m}")
+    body += ["", "## Como usar", "1. Leia a apresentação e identifique sua necessidade principal.", "2. Escolha o modelo ou checklist mais útil para sua situação.", "3. Preencha os campos com seus dados reais.", "4. Revise a linguagem antes de enviar, publicar ou usar com clientes.", "5. Guarde uma cópia e atualize semanalmente.", "", "---", ""]
+
+    for idx, module in enumerate(model["modules"], 1):
+        example = model["examples"][(idx - 1) % len(model["examples"])]
+        body += [
+            f"## {idx}. {module}",
+            f"**Objetivo:** ajudar {target.lower()} a aplicar {module.lower()} de forma prática.",
+            "",
+            "### Modelo pronto",
+            f"Use este modelo como base para: {example}.",
+            "",
+            "**Situação:** ________________________________________________",
+            "**O que preciso resolver:** ___________________________________",
+            "**Passo 1:** _________________________________________________",
+            "**Passo 2:** _________________________________________________",
+            "**Passo 3:** _________________________________________________",
+            "**Resultado esperado:** _______________________________________",
+            "",
+            "### Exemplo preenchido",
+            f"Exemplo: uma pessoa do público {target.lower()} pode usar este bloco para organizar, vender melhor, economizar tempo ou divulgar com mais clareza, conforme a proposta do produto.",
+            "",
+            "### Checklist rápido",
+            "- [ ] Entendi o objetivo deste bloco.",
+            "- [ ] Preenchi com informações reais.",
+            "- [ ] Revisei antes de usar.",
+            "- [ ] Adaptei para minha realidade.",
+            "",
+            "---",
+            "",
+        ]
+    body += [
+        "## Bônus 1: plano de 7 dias",
+        "**Dia 1:** organize seus dados principais.",
+        "**Dia 2:** escolha o primeiro modelo para aplicar.",
+        "**Dia 3:** revise e personalize.",
+        "**Dia 4:** publique, envie ou use o material.",
+        "**Dia 5:** anote dúvidas e melhorias.",
+        "**Dia 6:** teste uma segunda versão.",
+        "**Dia 7:** avalie resultados e ajuste o próximo passo.",
+        "",
+        "## Bônus 2: checklist final",
+        "- [ ] O material está com seu nome/marca quando necessário.",
+        "- [ ] As informações estão corretas.",
+        "- [ ] Não há promessa exagerada.",
+        "- [ ] O arquivo abre no celular e computador.",
+        "- [ ] O uso está claro para o comprador.",
+        "",
+        "## Conclusão",
+        "Produto digital vendável precisa resolver um problema simples, ser fácil de usar e parecer confiável. Revise, melhore e use feedback real dos compradores.",
+    ]
+    return "\n".join(body)
+
+
+def template_sales_page_general(title: str, niche: str, product_type: str, target: str, price: float, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    model = general_model_for(niche)
+    modules = "\n".join([f"- {m}" for m in model["modules"]])
+    return f"""
+# Página de Venda — {title}
+
+## Título
+{title}: material digital prático para organizar, aplicar e economizar tempo.
+
+## Subtítulo
+Um {product_type.lower()} para {target.lower()} que querem {promise.lower()}.
+
+## Para quem é
+Este produto é indicado para {target.lower()} que precisam de uma solução simples, pronta para adaptar e usar no dia a dia.
+
+## O que você recebe
+{modules}
+- Amostra grátis para conhecer por dentro.
+- Checklist de aplicação.
+- Modelos editáveis em texto.
+- Orientação de uso sem complicação.
+
+## Benefícios
+- Evita começar do zero.
+- Ajuda a organizar rotina, atendimento, conteúdo ou planejamento.
+- Linguagem simples e direta.
+- Pode ser adaptado para sua realidade.
+- Produto digital com entrega rápida pela plataforma escolhida.
+
+## Promessa honesta
+Este material ajuda você a {promise.lower()}. Ele não promete resultado automático; o resultado depende de aplicação, adaptação e consistência.
+
+## Preço sugerido
+{money(price)}
+
+## Chamada para ação
+Clique no botão de compra, baixe o material e comece pela primeira página do passo a passo.
+
+## Aviso responsável
+{model['warning']}
+
+## Perguntas frequentes
+**Recebo na hora?** Sim, a entrega pode ser feita automaticamente pela plataforma de venda.
+
+**Posso editar?** Sim, os textos e modelos foram feitos para adaptação.
+
+**Serve para iniciantes?** Sim. A linguagem é simples e o uso é guiado.
+
+**Tem garantia?** Use a política da plataforma escolhida e deixe isso claro no checkout.
+
+**É resultado garantido?** Não. O produto é uma ferramenta prática; o resultado depende de execução e contexto.
+""".strip()
+
+
+def template_social_posts_general(title: str, target: str, niche: str, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    captions = [
+        f"Você ainda começa tudo do zero? O {title} foi criado para ajudar {target.lower()} a {promise.lower()}.",
+        f"Material digital pronto, simples e editável para quem precisa organizar melhor a rotina no nicho de {niche.lower()}.",
+        f"Mostrando por dentro: o {title} vem com modelos, checklists e passo a passo para adaptar.",
+        f"Uma solução simples para economizar tempo e deixar tudo mais profissional: {title}.",
+        f"Se você trabalha com {niche.lower()}, esse material pode facilitar sua rotina sem complicação.",
+        f"Antes: começar do zero. Depois: usar um modelo pronto e adaptar. Esse é o objetivo do {title}.",
+        f"Quer uma amostra grátis do {title}? Cadastre-se na página e veja por dentro.",
+        f"Produto digital não precisa ser complicado. O {title} foi feito para uso prático e direto.",
+    ]
+    whatsapp = [
+        f"Oi! Preparei o {title}, um material digital para {target.lower()}. Ele ajuda a {promise.lower()}. Quer que eu te mande uma amostra?",
+        f"Tenho um kit pronto no nicho de {niche.lower()}: {title}. É digital, simples e fácil de adaptar. Posso te enviar o link?",
+        f"Se você quer economizar tempo, esse material pode ajudar: {title}. Ele vem com modelos e checklist para usar no dia a dia.",
+        f"Estou divulgando uma amostra grátis do {title}. Se fizer sentido para você, posso mandar o link.",
+    ]
+    scripts = [
+        f"Roteiro 1: 'Você perde tempo criando tudo do zero? Eu preparei o {title} para facilitar sua rotina.'",
+        f"Roteiro 2: 'Três coisas que esse material resolve: organização, clareza e rapidez. O nome é {title}.'",
+        f"Roteiro 3: 'Mostrando por dentro: esse é o {title}. Ele foi feito para {target.lower()}.'",
+        f"Roteiro 4: 'Antes e depois: antes você improvisava; agora usa um modelo pronto e adapta.'",
+        f"Roteiro 5: 'Quer testar antes? Baixe a amostra grátis e veja se serve para você.'",
+    ]
+    return "\n".join([
+        "# Posts e mensagens de divulgação",
+        "",
+        "## Legendas para Instagram/Facebook",
+        *[f"{i+1}. {c}" for i, c in enumerate(captions)],
+        "",
+        "## Mensagens para WhatsApp",
+        *[f"{i+1}. {w}" for i, w in enumerate(whatsapp)],
+        "",
+        "## Roteiros curtos para TikTok/Reels",
+        *[f"{i+1}. {r}" for i, r in enumerate(scripts)],
+    ])
+
+
+# Guarda as versões educacionais originais e redefine as funções principais com suporte a produto geral.
+_build_prompt_pack_educacional = build_prompt_pack
+_template_content_educacional = template_content
+_template_sales_page_educacional = template_sales_page
+_template_social_posts_educacional = template_social_posts
+
+
+def build_prompt_pack(title: str, niche: str, product_type: str, target: str, pages: int, promise: str, discipline: str = "Todas as disciplinas", school_level: str = "Ensino fundamental") -> str:
+    if is_education_product(niche, product_type, discipline, school_level):
+        return _build_prompt_pack_educacional(title, niche, product_type, target, pages, promise, discipline, school_level)
+    return build_prompt_pack_general(title, niche, product_type, target, pages, promise, discipline, school_level)
+
+
+def template_content(title: str, niche: str, product_type: str, target: str, pages: int, promise: str, discipline: str = "Todas as disciplinas", school_level: str = "Ensino fundamental") -> str:
+    if is_education_product(niche, product_type, discipline, school_level):
+        return _template_content_educacional(title, niche, product_type, target, pages, promise, discipline, school_level)
+    return template_content_general(title, niche, product_type, target, pages, promise, discipline, school_level)
+
+
+def template_sales_page(title: str, niche: str, product_type: str, target: str, price: float, promise: str, discipline: str = "Todas as disciplinas", school_level: str = "Ensino fundamental") -> str:
+    if is_education_product(niche, product_type, discipline, school_level):
+        return _template_sales_page_educacional(title, niche, product_type, target, price, promise, discipline, school_level)
+    return template_sales_page_general(title, niche, product_type, target, price, promise, discipline, school_level)
+
+
+def template_social_posts(title: str, target: str, niche: str, promise: str, discipline: str = "Todas as disciplinas", school_level: str = "Ensino fundamental") -> str:
+    if is_education_product(niche, "", discipline, school_level):
+        return _template_social_posts_educacional(title, target, niche, promise, discipline, school_level)
+    return template_social_posts_general(title, target, niche, promise, discipline, school_level)
+
 def optional_openai_generate(title: str, niche: str, product_type: str, target: str, pages: int, promise: str, discipline: str = "Todas as disciplinas", school_level: str = "Ensino fundamental") -> Optional[Dict[str, str]]:
     """Geração automática opcional. Se não houver chave, retorna None e usamos templates locais."""
     if not OPENAI_API_KEY:
@@ -746,8 +1093,8 @@ def optional_openai_generate(title: str, niche: str, product_type: str, target: 
         response = client.responses.create(
             model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
             input=(
-                "Você é um especialista em produtos digitais educacionais no Brasil. "
-                "Crie conteúdo útil, claro, honesto e adaptável para escolas, professores, pais e reforço escolar. "
+                "Você é um especialista em produtos digitais vendáveis no Brasil, incluindo educação, pequenos negócios, IA, organização, templates, beleza, culinária, carreira e finanças pessoais educativas. "
+                "Crie conteúdo útil, claro, honesto e adaptável para o público indicado. "
                 "Não invente códigos específicos de currículo e não prometa resultado garantido.\n\n" + prompt
             ),
         )
@@ -852,114 +1199,127 @@ def make_markdown(product: Dict[str, Any], section: str = "content") -> Path:
 
 PRODUCT_IDEAS = [
     {
-        "title": "Mega Kit Professor Total - Atividades para Todas as Disciplinas",
+        "title": "Kit IA para Pequenos Negócios — Prompts, Posts e WhatsApp",
+        "niche": "IA para pequenos negócios",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Pequenos negócios",
+        "product_type": "Pack de prompts IA",
+        "target": "MEIs, autônomos, vendedores, lojas pequenas e prestadores de serviço",
+        "price": 47.00,
+        "promise": "criar mensagens, posts e roteiros de venda com mais rapidez usando IA de forma simples",
+        "channel": "TikTok, Instagram, WhatsApp, Facebook e grupos de empreendedores",
+        "difficulty": "baixa",
+    },
+    {
+        "title": "Planner Financeiro Familiar — Controle de Gastos e Metas",
+        "niche": "Finanças pessoais e organização",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Público geral",
+        "product_type": "Planner PDF",
+        "target": "famílias, casais, jovens e pessoas que querem organizar dinheiro sem planilha complicada",
+        "price": 27.00,
+        "promise": "organizar gastos, dívidas, metas e compras do mês com um passo a passo simples",
+        "channel": "Reels, TikTok, Pinterest, Facebook e WhatsApp",
+        "difficulty": "baixa",
+    },
+    {
+        "title": "Kit MEI Organizado — Clientes, Preços, Estoque e Divulgação",
+        "niche": "Pequenos negócios e MEI",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "MEI e autônomos",
+        "product_type": "Pacote completo ZIP",
+        "target": "MEIs, autônomos, vendedores locais e pequenos prestadores de serviço",
+        "price": 67.00,
+        "promise": "organizar clientes, preço, atendimento, divulgação e rotina do negócio em modelos simples",
+        "channel": "Instagram, WhatsApp, Facebook, grupos de MEI e comunidades locais",
+        "difficulty": "média",
+    },
+    {
+        "title": "Pack Canva e Legendas para Pequenos Negócios",
+        "niche": "Templates, design e redes sociais",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Pequenos negócios",
+        "product_type": "Kit de templates",
+        "target": "lojas, salões, delivery, autônomos e pequenos negócios que postam no Instagram",
+        "price": 37.00,
+        "promise": "postar com mais frequência usando modelos de legendas, ideias de conteúdo e estrutura visual simples",
+        "channel": "Instagram, TikTok, Pinterest e WhatsApp",
+        "difficulty": "baixa",
+    },
+    {
+        "title": "Agenda Profissional de Beleza — Clientes, Fichas e WhatsApp",
+        "niche": "Beleza, estética e atendimento",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Profissionais de beleza",
+        "product_type": "Planner PDF",
+        "target": "manicures, cabeleireiras, barbeiros, designers de sobrancelha e profissionais de estética",
+        "price": 39.90,
+        "promise": "organizar agenda, atendimento, retorno de clientes, mensagens e divulgação semanal",
+        "channel": "Instagram, TikTok, grupos de beleza, WhatsApp e Facebook",
+        "difficulty": "baixa",
+    },
+    {
+        "title": "Planner da Casa — Limpeza, Cardápio, Compras e Rotina",
+        "niche": "Casa, organização e rotina",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Famílias e organização doméstica",
+        "product_type": "Planner PDF",
+        "target": "famílias, donas de casa, casais, mães e pessoas que querem organizar a rotina",
+        "price": 19.90,
+        "promise": "organizar limpeza, cardápio, compras, tarefas e rotina semanal de forma simples",
+        "channel": "Pinterest, TikTok, Reels, Facebook e WhatsApp",
+        "difficulty": "baixa",
+    },
+    {
+        "title": "Kit Marmitas e Confeitaria — Cardápio, Ficha Técnica e Preço",
+        "niche": "Culinária, marmitas e confeitaria",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Iniciantes",
+        "product_type": "Planilha simples",
+        "target": "pessoas que vendem marmitas, bolos, doces, salgados e comida caseira",
+        "price": 47.00,
+        "promise": "organizar receitas, custos, preço, cardápio, pedidos e divulgação de forma prática",
+        "channel": "TikTok, Instagram, WhatsApp, Facebook e grupos locais",
+        "difficulty": "média",
+    },
+    {
+        "title": "Kit Currículo e Entrevista — Modelos Prontos para Editar",
+        "niche": "Carreira, currículo e renda extra",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Iniciantes",
+        "product_type": "Ebook guia prático",
+        "target": "jovens, trabalhadores, pessoas buscando recolocação e primeiro emprego",
+        "price": 27.00,
+        "promise": "montar currículo, bio profissional e respostas de entrevista com modelos simples",
+        "channel": "TikTok, Instagram, Facebook, WhatsApp e grupos de emprego",
+        "difficulty": "baixa",
+    },
+    {
+        "title": "Planner Pet — Rotina, Gastos, Cuidados e Checklist",
+        "niche": "Pets e rotina de cuidados",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Público geral",
+        "product_type": "Planner PDF",
+        "target": "tutores de cães e gatos que querem organizar rotina e gastos do pet",
+        "price": 17.00,
+        "promise": "organizar alimentação, banho, passeios, gastos, consultas e checklist de viagem",
+        "channel": "TikTok, Instagram, Pinterest, Facebook e grupos de pets",
+        "difficulty": "baixa",
+    },
+    {
+        "title": "Mega Kit Professor Total — Atividades para Todas as Disciplinas",
         "niche": "Educação - todas as disciplinas",
         "discipline": "Todas as disciplinas",
         "school_level": "Ensino fundamental anos iniciais",
         "product_type": "Mega kit de atividades",
         "target": "professores do 1º ao 5º ano, reforço escolar e pais",
         "price": 47.00,
-        "promise": "economizar tempo com atividades prontas de Português, Matemática, Ciências, História, Geografia, Inglês, Artes e Educação Física",
+        "promise": "economizar tempo com atividades prontas, gabaritos, orientações e material escolar organizado por disciplina",
         "channel": "TikTok, Instagram, Facebook, WhatsApp e grupos de professores",
         "difficulty": "baixa",
     },
-    {
-        "title": "Banco de Questões Fundamental - 6º ao 9º Ano",
-        "niche": "Ensino fundamental anos finais",
-        "discipline": "Todas as disciplinas",
-        "school_level": "Ensino fundamental anos finais",
-        "product_type": "Banco de questões",
-        "target": "professores do 6º ao 9º ano e reforço escolar",
-        "price": 67.00,
-        "promise": "montar provas, revisões e simulados com questões prontas e gabarito separado",
-        "channel": "grupos de professores, Instagram, Facebook e WhatsApp",
-        "difficulty": "média",
-    },
-    {
-        "title": "Pacote Bimestral Pronto - Português e Matemática",
-        "niche": "Ensino fundamental anos iniciais",
-        "discipline": "Todas as disciplinas",
-        "school_level": "Ensino fundamental anos iniciais",
-        "product_type": "Pacote bimestral",
-        "target": "professores dos anos iniciais e reforço escolar",
-        "price": 39.90,
-        "promise": "ter um pacote organizado para trabalhar leitura, interpretação, escrita, operações e problemas matemáticos",
-        "channel": "WhatsApp, grupos de pedagogia, Instagram e Pinterest",
-        "difficulty": "baixa",
-    },
-    {
-        "title": "Kit Redação Nota Melhor - Temas, Modelos e Correção Guiada",
-        "niche": "Ensino médio e ENEM",
-        "discipline": "Redação",
-        "school_level": "ENEM e vestibulares",
-        "product_type": "Apostila editável",
-        "target": "estudantes, professores de redação e cursinhos",
-        "price": 57.00,
-        "promise": "organizar treino de redação com temas, repertórios, estrutura e checklist de revisão",
-        "channel": "TikTok, Instagram Reels, YouTube Shorts e grupos de estudos",
-        "difficulty": "média",
-    },
-    {
-        "title": "Simulados ENEM por Área - Ciências da Natureza e Matemática",
-        "niche": "Ensino médio e ENEM",
-        "discipline": "Todas as disciplinas",
-        "school_level": "ENEM e vestibulares",
-        "product_type": "Simulado com gabarito",
-        "target": "estudantes do ensino médio, professores e reforço escolar",
-        "price": 77.00,
-        "promise": "treinar com simulados organizados, gabarito comentado e plano de revisão",
-        "channel": "TikTok, Instagram, grupos de estudo e WhatsApp",
-        "difficulty": "média",
-    },
-    {
-        "title": "Caderno de Reforço Escolar para Pais - Português e Matemática",
-        "niche": "Reforço escolar e pais",
-        "discipline": "Todas as disciplinas",
-        "school_level": "Reforço escolar",
-        "product_type": "Apostila editável",
-        "target": "pais, mães, tutores e professores particulares",
-        "price": 29.90,
-        "promise": "ajudar crianças em casa com atividades simples de leitura, escrita, tabuada e problemas",
-        "channel": "Facebook, WhatsApp, Instagram e comunidades locais",
-        "difficulty": "baixa",
-    },
-    {
-        "title": "Kit Ciências na Prática - Experimentos Simples e Atividades",
-        "niche": "Ensino fundamental anos finais",
-        "discipline": "Ciências",
-        "school_level": "Ensino fundamental anos finais",
-        "product_type": "Sequência didática",
-        "target": "professores de Ciências, reforço escolar e escolas pequenas",
-        "price": 37.00,
-        "promise": "aplicar atividades e experiências simples com materiais acessíveis e orientação clara",
-        "channel": "Instagram, TikTok, YouTube Shorts e grupos de professores",
-        "difficulty": "média",
-    },
-    {
-        "title": "Projetos Escolares Prontos - Datas Comemorativas do Ano",
-        "niche": "Datas comemorativas e projetos escolares",
-        "discipline": "Todas as disciplinas",
-        "school_level": "Ensino fundamental anos iniciais",
-        "product_type": "Sequência didática",
-        "target": "professores, coordenação pedagógica e escolas pequenas",
-        "price": 47.00,
-        "promise": "ter projetos prontos para trabalhar temas do calendário escolar com atividades e culminância",
-        "channel": "Pinterest, Instagram, Facebook e grupos de pedagogia",
-        "difficulty": "baixa",
-    },
-    {
-        "title": "Pack História e Geografia - Mapas, Linha do Tempo e Atividades",
-        "niche": "Ensino fundamental anos finais",
-        "discipline": "História",
-        "school_level": "Ensino fundamental anos finais",
-        "product_type": "Banco de questões",
-        "target": "professores de História e Geografia",
-        "price": 39.90,
-        "promise": "economizar tempo com atividades de leitura, mapas, linha do tempo, paisagem e sociedade",
-        "channel": "Instagram, Facebook, WhatsApp e grupos de professores",
-        "difficulty": "média",
-    },
 ]
+
 
 DAILY_PLAN = [
     ("Definir o público e escolher 1 problema real para resolver", "Sem público claro, a oferta fica genérica."),
@@ -1005,12 +1365,12 @@ def estimate_offer_score(title: str, target: str, promise: str, price: float, ch
         reasons.append("Nome do produto está específico.")
     else:
         reasons.append("Nome ainda está curto; deixe claro para quem é e o que entrega.")
-    if any(w in text for w in ["professor", "escola", "pais", "reforço", "pedagogia", "atividade", "questões", "simulado", "redação", "matemática", "português", "ciências", "história", "geografia", "enem"]):
+    if any(w in text for w in ["professor", "escola", "pais", "reforço", "pedagogia", "atividade", "questões", "simulado", "redação", "matemática", "português", "ciências", "história", "geografia", "enem", "mei", "autônomo", "beleza", "cliente", "whatsapp", "instagram", "negócio", "finanças", "gastos", "casa", "rotina", "marmita", "confeitaria", "currículo", "pet", "templates", "ia", "prompt"]):
         score += 12
         reasons.append("Público tem sinal de necessidade prática.")
     else:
         reasons.append("Público parece amplo; nichar mais pode aumentar conversão.")
-    if any(w in text for w in ["economizar", "pronto", "organizar", "evitar", "melhorar", "gabarito", "checklist"]):
+    if any(w in text for w in ["economizar", "pronto", "organizar", "evitar", "melhorar", "gabarito", "checklist", "modelo", "template", "roteiro", "controle", "planejar", "clientes", "posts", "mensagens"]):
         score += 14
         reasons.append("Promessa tem benefício prático e honesto.")
     else:
