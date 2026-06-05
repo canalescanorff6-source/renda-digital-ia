@@ -5,5 +5,6 @@ ENV PYTHONUNBUFFERED=1
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-ENV PORT=5000
-CMD ["bash", "start.sh"]
+RUN chmod +x start.sh
+EXPOSE 8080
+CMD ["./start.sh"]

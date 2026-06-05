@@ -1,48 +1,24 @@
-# Atualização RunSite
+# Atualização RunSite v9.4
 
-Correções aplicadas nesta versão:
+Correção focada no deploy que entrava em CrashLoopBackOff.
 
-- Corrige CrashLoopBackOff causado pela criação simultânea do usuário admin no SQLite.
-- Ajusta o start.sh para usar 1 worker por padrão, mais seguro com SQLite em hospedagem simples.
-- Mantém compatibilidade se a hospedagem usar mais de 1 worker, usando INSERT OR IGNORE no admin.
-- Limpa termos visíveis pouco profissionais na interface.
-- Adiciona .gitignore e .dockerignore para evitar subir banco, cache, .env e arquivos gerados.
+Arquivos alterados:
+- Dockerfile
+- start.sh
+- Procfile
 
-## Variáveis no RunSite
+O que mudou:
+- Removido `ENV PORT=5000` do Dockerfile.
+- O app agora usa a porta definida pelo RunSite (`$PORT`).
+- Se o RunSite não enviar `$PORT`, usa 8080.
+- Banco e exportações usam `/tmp/renda_digital_ia` por padrão para evitar erro de permissão em hospedagem.
+- O start imprime logs de diagnóstico antes de iniciar o Gunicorn.
 
-Use apenas:
+Variáveis recomendadas no RunSite:
 
-```text
 SECRET_KEY=sua_chave_grande
-ADMIN_EMAIL=seu_email
-ADMIN_PASSWORD=sua_senha
+ADMIN_EMAIL=thiago01268230@gmail.com
+ADMIN_PASSWORD=sua_senha_nova
 FLASK_ENV=production
-```
 
-Não crie a variável APP_NAME no RunSite.
-
-## Start Command
-
-```bash
-gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 180
-```
-
-Ou:
-
-```bash
-bash start.sh
-```
-
-## Testes após deploy
-
-Abra primeiro:
-
-```text
-/healthz
-```
-
-Depois:
-
-```text
-/login
-```
+Não crie APP_NAME.
