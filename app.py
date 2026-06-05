@@ -3279,6 +3279,606 @@ def product_professional_package(product_id):
     return send_file(out, as_attachment=True, download_name=out.name)
 
 
+# ---------------------------------------------------------------------------
+# v11 — Motor premium de conteúdo, multinichos e páginas extras
+# Esta camada melhora os textos gerados para parecerem produto pago, com
+# organização comercial, criativos, bônus, funil e biblioteca de ideias.
+# ---------------------------------------------------------------------------
+
+PREMIUM_NOTICE = (
+    "Estrutura premium realista: produto bonito, promessa clara, bônus, amostra, "
+    "copy, funil e calendário. Sem prometer dinheiro fácil ou resultado garantido."
+)
+
+TRENDING_BLUEPRINTS = [
+    {
+        "title": "Kit IA para Pequenos Negócios — Prompts, WhatsApp e Posts Prontos",
+        "niche": "IA para pequenos negócios",
+        "product_type": "Pacote completo ZIP",
+        "target_audience": "MEIs, autônomos, lojas pequenas e prestadores de serviço que querem usar IA sem complicação",
+        "promise": "economizar tempo criando mensagens, posts, respostas para clientes, ideias de promoção e organização de atendimento",
+        "price": "47.00",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "MEI e autônomos",
+        "angle": "IA prática para vender e atender melhor, sem linguagem técnica.",
+    },
+    {
+        "title": "Pack Social Media para Salão, Manicure e Barbearia — Posts, Legendas e WhatsApp",
+        "niche": "Beleza, estética e atendimento",
+        "product_type": "Kit de templates",
+        "target_audience": "manicures, barbeiros, cabeleireiras, designers de sobrancelha e profissionais de estética",
+        "promise": "deixar o Instagram e o WhatsApp mais profissionais com posts, legendas, agenda e mensagens prontas",
+        "price": "37.00",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Profissionais de beleza",
+        "angle": "Visual de negócio organizado para atrair confiança e facilitar atendimento.",
+    },
+    {
+        "title": "Planner Financeiro da Família — Controle de Gastos, Dívidas e Metas",
+        "niche": "Finanças pessoais e organização",
+        "product_type": "Planner PDF",
+        "target_audience": "famílias, casais e pessoas que querem organizar gastos sem planilhas complicadas",
+        "promise": "enxergar para onde o dinheiro está indo, organizar contas, planejar compras e acompanhar metas mensais",
+        "price": "27.00",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Público geral",
+        "angle": "Organização financeira educativa, simples e visual, sem promessa de riqueza.",
+    },
+    {
+        "title": "Cardápio Econômico da Semana — Lista de Compras, Marmitas e Rotina da Cozinha",
+        "niche": "Casa, organização e rotina",
+        "product_type": "Checklist prático",
+        "target_audience": "famílias, donas de casa, estudantes e pessoas que querem organizar alimentação e compras",
+        "promise": "planejar refeições, evitar desperdício, montar lista de compras e organizar marmitas da semana",
+        "price": "19.90",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Famílias e organização doméstica",
+        "angle": "Economia de tempo e organização doméstica com material bonito e imprimível.",
+    },
+    {
+        "title": "Kit Marmitas para Vender — Cardápio, Precificação e Atendimento",
+        "niche": "Culinária, marmitas e confeitaria",
+        "product_type": "Pacote completo ZIP",
+        "target_audience": "pessoas que vendem ou querem organizar a venda de marmitas, lanches e comidas caseiras",
+        "promise": "organizar cardápio, ficha técnica, preço, divulgação e atendimento pelo WhatsApp de forma mais profissional",
+        "price": "47.00",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Público geral",
+        "angle": "Material prático para organizar operação e divulgação, sem prometer lucro garantido.",
+    },
+    {
+        "title": "Kit Currículo, Entrevista e LinkedIn Básico — Modelos Prontos para Adaptar",
+        "niche": "Carreira, currículo e renda extra",
+        "product_type": "Ebook guia prático",
+        "target_audience": "jovens, trabalhadores, estudantes e pessoas procurando melhorar currículo e apresentação profissional",
+        "promise": "montar currículo mais claro, preparar respostas de entrevista e organizar perfil profissional básico",
+        "price": "27.00",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Iniciantes",
+        "angle": "Ajuda prática para apresentação profissional, sem prometer emprego garantido.",
+    },
+    {
+        "title": "Pack Canva para Lojas e Prestadores — Posts, Bio, Promoções e Calendário",
+        "niche": "Templates, design e redes sociais",
+        "product_type": "Calendário de conteúdo",
+        "target_audience": "lojas pequenas, MEIs, autônomos e prestadores de serviço que precisam postar com aparência profissional",
+        "promise": "organizar 30 dias de conteúdo com ideias de posts, legendas, chamadas e estrutura visual para adaptar",
+        "price": "47.00",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Pequenos negócios",
+        "angle": "Aparência de agência para quem ainda não pode contratar uma.",
+    },
+    {
+        "title": "Planner Pet Completo — Rotina, Gastos, Vacinas e Cuidados do Dia a Dia",
+        "niche": "Pets e rotina de cuidados",
+        "product_type": "Planner PDF",
+        "target_audience": "tutores de cães e gatos que querem organizar rotina, gastos e cuidados básicos do pet",
+        "promise": "centralizar informações do pet, controlar gastos, rotina, consultas e lembretes importantes",
+        "price": "19.90",
+        "discipline": "Não se aplica / produto geral",
+        "school_level": "Público geral",
+        "angle": "Organização afetuosa para tutores, sem substituir veterinário.",
+    },
+    {
+        "title": "Mega Kit Professor Total Premium — Atividades, Provas e Materiais Editáveis",
+        "niche": "Educação - todas as disciplinas",
+        "product_type": "Mega kit de atividades",
+        "target_audience": "professores, reforço escolar, escolas pequenas e pais que acompanham estudos em casa",
+        "promise": "economizar tempo com atividades, gabaritos, orientações, avaliações rápidas e materiais por disciplina",
+        "price": "67.00",
+        "discipline": "Todas as disciplinas",
+        "school_level": "Ensino fundamental anos iniciais",
+        "angle": "Produto educacional organizado e revisável, com campos BNCC editáveis.",
+    },
+]
+
+# Mais nichos para o seletor. Mantém os antigos e acrescenta ideias comerciais amplas.
+_EXTRA_PREMIUM_NICHES = [
+    {"name":"Vendas pelo WhatsApp para negócios locais","score":98,"why":"Negócios pequenos precisam responder melhor, apresentar oferta e organizar atendimento sem parecer amador.","examples":["Scripts de atendimento","Respostas prontas","Catálogo textual","Follow-up"],"price":"R$ 27,00 a R$ 97,00"},
+    {"name":"Festas, eventos e papelaria digital","score":89,"why":"Convites, checklists, roteiros e organização de festa têm apelo visual e compra rápida.","examples":["Planner de festa","Checklist de aniversário","Mensagens para convidados","Roteiro de evento"],"price":"R$ 17,00 a R$ 67,00"},
+    {"name":"Produtividade pessoal e rotina","score":91,"why":"Planners, rotina semanal, metas e organização visual vendem bem como produto digital simples.","examples":["Planner semanal","Rotina de estudos","Mapa de metas","Checklist diário"],"price":"R$ 12,90 a R$ 49,90"},
+]
+try:
+    _names = {n.get("name") for n in NICHES}
+    for _n in _EXTRA_PREMIUM_NICHES:
+        if _n["name"] not in _names:
+            NICHES.insert(0, _n)
+except Exception:
+    pass
+
+
+def _premium_model_for(niche: str) -> Dict[str, Any]:
+    base = general_model_for(niche)
+    premium_by_niche = {
+        "IA para pequenos negócios": {
+            "promise_word":"usar IA no atendimento, nos posts e na organização do negócio sem complicação",
+            "deliverables":["100 prompts separados por finalidade", "30 respostas prontas para WhatsApp", "30 ideias de posts", "roteiro de atendimento", "checklist de implantação em 7 dias", "bônus: calendário de campanhas"],
+            "modules":["Comece por aqui: como usar o kit", "Prompts para atendimento", "Prompts para Instagram e Facebook", "Mensagens para WhatsApp", "Ideias de promoções simples", "Calendário de 30 dias", "Checklist de revisão antes de publicar"],
+            "warning":"Material educativo e editável. Não promete aumento automático de vendas; o resultado depende de oferta, público, atendimento e divulgação.",
+        },
+        "Finanças pessoais e organização": {
+            "promise_word":"organizar gastos, dívidas, contas e metas de forma simples e visual",
+            "deliverables":["planner mensal", "controle de contas", "mapa de dívidas", "desafio de economia", "lista de compras consciente", "checklist de fechamento do mês"],
+            "modules":["Diagnóstico financeiro simples", "Mapa de gastos fixos", "Controle de contas e vencimentos", "Plano para dívidas", "Metas e reserva", "Rotina semanal de revisão", "Fechamento do mês"],
+            "warning":"Material educativo de organização financeira. Não é consultoria financeira e não promete enriquecimento.",
+        },
+        "Beleza, estética e atendimento": {
+            "promise_word":"deixar atendimento, agenda, mensagens e divulgação com aparência mais profissional",
+            "deliverables":["agenda de clientes", "ficha de atendimento", "mensagens para remarcar", "posts para Instagram", "script de confirmação", "checklist do atendimento premium"],
+            "modules":["Identidade simples do atendimento", "Agenda e confirmação", "Ficha de cliente", "Mensagens prontas", "Posts de antes/depois sem exagero", "Pacotes e combos", "Pós-atendimento e fidelização"],
+            "warning":"Material de organização e comunicação. Procedimentos técnicos devem seguir capacitação profissional e normas aplicáveis.",
+        },
+        "Casa, organização e rotina": {
+            "promise_word":"organizar a rotina da casa, compras, cardápio e tarefas da semana",
+            "deliverables":["planner da casa", "cardápio semanal", "lista de compras", "rotina de limpeza", "divisão de tarefas", "checklist de domingo"],
+            "modules":["Diagnóstico da rotina", "Cardápio semanal", "Lista de compras", "Rotina de limpeza", "Organização de documentos", "Tarefas da família", "Plano de 7 dias"],
+            "warning":"Material de organização doméstica e rotina. Adapte conforme sua casa, orçamento e necessidades.",
+        },
+        "Culinária, marmitas e confeitaria": {
+            "promise_word":"organizar cardápio, precificação, divulgação e atendimento para vender comida com mais clareza",
+            "deliverables":["ficha técnica", "cardápio semanal", "modelo de preço", "mensagens para clientes", "checklist de produção", "controle de pedidos"],
+            "modules":["Cardápio enxuto", "Ficha técnica", "Precificação básica", "Controle de pedidos", "WhatsApp de atendimento", "Divulgação local", "Checklist de higiene e organização"],
+            "warning":"Material de organização comercial. Siga normas sanitárias locais e não prometa lucro garantido.",
+        },
+        "Carreira, currículo e renda extra": {
+            "promise_word":"melhorar apresentação profissional com currículo, perfil e respostas de entrevista mais claros",
+            "deliverables":["modelo de currículo", "roteiro de entrevista", "bio profissional", "mensagem para enviar currículo", "checklist LinkedIn básico", "plano de 7 dias"],
+            "modules":["Diagnóstico profissional", "Currículo objetivo", "Perfil e bio", "Mensagens de candidatura", "Perguntas de entrevista", "Organização de vagas", "Plano de melhoria"],
+            "warning":"Material educativo de carreira. Não garante emprego, entrevista ou contratação.",
+        },
+        "Templates, design e redes sociais": {
+            "promise_word":"criar uma presença digital mais organizada com posts, legendas e calendário prontos para adaptar",
+            "deliverables":["30 ideias de posts", "30 legendas", "bio de Instagram", "chamadas de venda", "calendário editorial", "checklist visual"],
+            "modules":["Posicionamento simples", "Bio e apresentação", "Pilares de conteúdo", "Legendas prontas", "Calendário de 30 dias", "Campanhas e ofertas", "Checklist antes de postar"],
+            "warning":"Material de comunicação e organização. Resultados dependem de constância, oferta e relacionamento com o público.",
+        },
+        "Pets e rotina de cuidados": {
+            "promise_word":"organizar rotina, gastos, documentos e cuidados básicos do pet em um só lugar",
+            "deliverables":["ficha do pet", "controle de gastos", "agenda de vacinas", "rotina de alimentação", "checklist de viagem", "contatos importantes"],
+            "modules":["Ficha completa do pet", "Rotina diária", "Agenda de saúde", "Gastos e compras", "Checklist de passeio", "Checklist de viagem", "Cuidados e observações"],
+            "warning":"Material de organização para tutores. Não substitui atendimento veterinário.",
+        },
+    }
+    custom = premium_by_niche.get(niche, {})
+    return {**base, **custom}
+
+
+def _premium_bonus_stack(title: str, niche: str) -> List[str]:
+    return [
+        "Bônus 1 — Amostra grátis para captar interessados",
+        "Bônus 2 — Checklist de uso rápido em 7 dias",
+        "Bônus 3 — Mensagens de WhatsApp prontas",
+        "Bônus 4 — Calendário de conteúdo de 30 dias",
+        "Bônus 5 — Manual do comprador com passo a passo",
+        "Bônus 6 — Página de oferta pronta para copiar",
+    ]
+
+
+def template_content_general(title: str, niche: str, product_type: str, target: str, pages: int, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    today = date.today().strftime("%d/%m/%Y")
+    model = _premium_model_for(niche)
+    modules = model.get("modules") or general_model_for(niche).get("modules", [])
+    deliverables = model.get("deliverables") or general_model_for(niche).get("examples", [])
+    warning = model.get("warning") or general_model_for(niche).get("warning", "Material educativo e editável.")
+    promise_word = model.get("promise_word") or promise
+    body = [
+        f"# {title}",
+        "",
+        "## Capa do produto",
+        f"**Produto:** {title}",
+        f"**Formato:** {product_type}",
+        f"**Nicho:** {niche}",
+        f"**Público-alvo:** {target}",
+        f"**Versão:** Premium editável — {today}",
+        "",
+        "---",
+        "",
+        "# Apresentação",
+        f"Este material foi pensado para {target.lower()} que precisam de uma solução pronta, bonita e organizada para {promise.lower()}.",
+        "A proposta não é entregar um texto genérico. A proposta é entregar um pacote com estrutura de produto pago: orientação, modelos, exemplos, checklists, bônus e uma ordem clara de uso.",
+        "",
+        "## Resultado prático esperado",
+        f"Ao usar este material, o comprador terá um caminho mais claro para {promise_word}. O resultado depende de adaptação, execução e realidade de cada pessoa ou negócio.",
+        "",
+        "## Aviso responsável",
+        warning,
+        "",
+        "---",
+        "",
+        "# O que vem no pacote",
+    ]
+    for item in deliverables:
+        body.append(f"- **{item}**")
+    body += ["", "# Como usar este material em 15 minutos", "1. Leia a página de apresentação.", "2. Escolha o módulo mais urgente para sua realidade.", "3. Copie o modelo pronto.", "4. Substitua os campos pelos seus dados.", "5. Revise antes de publicar, enviar ou imprimir.", "6. Salve uma versão final para reutilizar.", "", "---", "", "# Sumário premium"]
+    for i, module in enumerate(modules, 1):
+        body.append(f"{i}. {module}")
+    body += ["", "---", ""]
+
+    for idx, module in enumerate(modules, 1):
+        example = deliverables[(idx - 1) % len(deliverables)] if deliverables else "modelo editável"
+        body += [
+            f"# Módulo {idx} — {module}",
+            "",
+            "## Objetivo do módulo",
+            f"Ajudar {target.lower()} a aplicar **{module.lower()}** com rapidez, clareza e aparência profissional.",
+            "",
+            "## Por que isso chama atenção do comprador",
+            "Produtos digitais vendem melhor quando o comprador percebe que não está comprando apenas informação, mas sim economia de tempo, organização e um modelo pronto para adaptar.",
+            "",
+            "## Modelo pronto para copiar e adaptar",
+            f"**Uso principal:** {example}",
+            "",
+            "**Situação atual:** ________________________________________________",
+            "**Problema que preciso resolver:** _________________________________",
+            "**Minha versão personalizada:** ____________________________________",
+            "**Próximo passo prático:** _________________________________________",
+            "**Data para revisar:** ____/____/______",
+            "",
+            "## Exemplo preenchido",
+            f"Exemplo: uma pessoa do público {target.lower()} usa este bloco para organizar a rotina, melhorar a comunicação, divulgar com mais clareza ou economizar tempo sem começar tudo do zero.",
+            "",
+            "## Checklist premium do módulo",
+            "- [ ] O modelo foi preenchido com dados reais.",
+            "- [ ] A linguagem está simples e confiável.",
+            "- [ ] A promessa não está exagerada.",
+            "- [ ] O conteúdo pode ser usado no celular e no computador.",
+            "- [ ] O comprador entende o próximo passo.",
+            "",
+            "## Versão rápida para WhatsApp ou redes sociais",
+            f"Estou usando um material pronto para {promise.lower()}. Ele traz {example.lower()} e pode ser adaptado para a minha realidade.",
+            "",
+            "---",
+            "",
+        ]
+
+    body += [
+        "# Bônus premium",
+    ]
+    for b in _premium_bonus_stack(title, niche):
+        body.append(f"- {b}")
+    body += [
+        "",
+        "# Amostra grátis sugerida",
+        "Use as próximas páginas como isca digital para captar interessados antes de oferecer o produto completo.",
+        "",
+        "## Página de amostra",
+        f"Você está vendo uma amostra do **{title}**. O pacote completo inclui modelos, checklists, mensagens prontas, calendário e orientação de uso.",
+        "",
+        "## Mini-checklist da amostra",
+        "- [ ] Entendi para quem é o produto.",
+        "- [ ] Vi um exemplo por dentro.",
+        "- [ ] Sei como adaptar para minha realidade.",
+        "- [ ] Posso decidir se quero o pacote completo.",
+        "",
+        "# Manual de entrega ao comprador",
+        "1. Baixe o arquivo ZIP/PDF na plataforma de pagamento.",
+        "2. Abra primeiro o arquivo 'Comece por aqui'.",
+        "3. Escolha o módulo mais urgente.",
+        "4. Preencha os modelos com calma.",
+        "5. Use o checklist final antes de publicar, enviar ou imprimir.",
+        "",
+        "# Checklist final de qualidade",
+        "- [ ] Título claro e específico.",
+        "- [ ] Produto com começo, meio e fim.",
+        "- [ ] Modelos prontos para adaptar.",
+        "- [ ] Bônus com valor percebido.",
+        "- [ ] Aviso responsável incluído.",
+        "- [ ] Linguagem simples, brasileira e profissional.",
+        "",
+        "# Conclusão",
+        "Um produto digital com aparência profissional precisa parecer útil antes mesmo da compra. Nome claro, entrega organizada, bônus coerentes, página de venda honesta e criativos fortes aumentam a confiança do comprador.",
+    ]
+    return "\n".join(body)
+
+
+def template_sales_page_general(title: str, niche: str, product_type: str, target: str, price: float, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    model = _premium_model_for(niche)
+    deliverables = model.get("deliverables") or general_model_for(niche).get("examples", [])
+    warning = model.get("warning") or "Material educativo e editável."
+    bullets = "\n".join([f"- {d}" for d in deliverables])
+    bonuses = "\n".join([f"- {b}" for b in _premium_bonus_stack(title, niche)])
+    return f"""
+# Página de Venda Premium — {title}
+
+## Headline principal
+{title}: o pacote digital pronto para {target.lower()} que querem {promise.lower()} sem começar do zero.
+
+## Subheadline
+Um {product_type.lower()} com modelos, checklists, mensagens, calendário e orientação prática para deixar tudo mais organizado, bonito e fácil de aplicar.
+
+## Abertura emocional
+Você já percebeu como é cansativo montar tudo do zero? Procurar modelo, criar texto, organizar ideias, revisar e ainda tentar deixar com aparência profissional toma tempo. Este material foi criado para encurtar esse caminho.
+
+## Problema que o produto resolve
+O público de {niche.lower()} normalmente precisa de três coisas: clareza, rapidez e organização. O {title} entrega uma estrutura pronta para adaptar, diminuindo improviso e aumentando a confiança na hora de usar, postar, enviar ou imprimir.
+
+## O que você recebe no pacote completo
+{bullets}
+
+## Bônus incluídos
+{bonuses}
+
+## Para quem é
+- Para quem quer um material pronto e organizado.
+- Para quem não quer perder horas criando tudo sozinho.
+- Para quem precisa de algo simples, bonito e editável.
+- Para quem quer testar uma estrutura profissional antes de investir em algo maior.
+
+## Para quem não é
+- Não é para quem procura promessa milagrosa.
+- Não é para quem quer resultado sem aplicar.
+- Não é substituto de profissional especializado quando o assunto exigir orientação técnica.
+
+## Benefícios práticos
+- Economiza tempo de criação.
+- Ajuda a organizar ideias e rotina.
+- Melhora a apresentação do material.
+- Facilita divulgação e comunicação.
+- Pode ser adaptado para a realidade do comprador.
+
+## Como funciona
+1. Compre pela plataforma segura.
+2. Receba o arquivo digital.
+3. Abra o manual 'Comece por aqui'.
+4. Escolha o modelo que precisa usar primeiro.
+5. Personalize com seus dados.
+6. Use o checklist antes de publicar ou enviar.
+
+## Preço de lançamento sugerido
+**{money(price)}**
+
+## Chamada para ação
+Clique no botão de compra, baixe o material e comece hoje pela primeira página do passo a passo.
+
+## Garantia honesta
+Use a garantia da plataforma escolhida e deixe claro no checkout. O produto é digital e foi feito para ajudar na organização e execução, mas o resultado depende do uso correto.
+
+## Aviso responsável
+{warning}
+
+## FAQ
+**Recebo na hora?** Sim, a entrega pode ser automática pela Kiwify, Hotmart ou plataforma escolhida.
+
+**Posso editar?** Sim. O material foi pensado para adaptação.
+
+**Serve para iniciantes?** Sim. A linguagem é simples e guiada.
+
+**É resultado garantido?** Não. O produto ajuda no processo; não garante vendas, emprego, lucro, cura, aprovação ou qualquer resultado automático.
+
+**Posso usar no celular?** Sim, o material foi pensado para abrir no celular e computador, dependendo do formato exportado.
+""".strip()
+
+
+def template_social_posts_general(title: str, target: str, niche: str, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    hooks = [
+        f"Você ainda cria tudo do zero? O {title} foi feito para cortar esse caminho.",
+        f"Se você trabalha com {niche.lower()}, esse kit pode deixar sua rotina mais organizada em poucos minutos.",
+        f"Antes: improviso. Depois: modelos prontos, checklist e um passo a passo para adaptar.",
+        f"Mostrando por dentro: veja como o {title} entrega estrutura, modelos e ideias prontas.",
+        f"O erro de muita gente é vender ou divulgar sem organização. Esse material ajuda a arrumar isso.",
+        f"Quer uma amostra grátis antes de comprar? Eu preparei uma página para você ver por dentro.",
+        f"Produto digital bom não é texto jogado. É organização, modelo pronto, exemplo e caminho de uso.",
+        f"Se você precisa {promise.lower()}, esse pacote foi criado para facilitar sua vida.",
+        f"Pare de perder tempo procurando modelo solto. Use uma estrutura completa e adaptável.",
+        f"Esse é o tipo de material que parece simples, mas muda a forma como você organiza o trabalho.",
+    ]
+    captions = []
+    for i, h in enumerate(hooks, 1):
+        captions.append(f"{h}\n\nO {title} traz modelos, checklists, mensagens e orientação de uso para {target.lower()}. Não é promessa mágica; é material pronto para adaptar e aplicar.\n\nComente EU QUERO ou acesse o link para ver a amostra grátis.\n\n#produtodigital #organização #negociodigital #mei #whatsapp #instagram")
+    whatsapp = [
+        f"Oi! Preparei o {title}. É um material digital para {target.lower()} que querem {promise.lower()}. Quer que eu te envie uma amostra grátis para ver por dentro?",
+        f"Tenho um pacote pronto que pode te ajudar com {niche.lower()}: {title}. Ele vem com modelos, checklists e mensagens prontas. Posso te mandar o link?",
+        f"Passando para te mostrar um material novo: {title}. A ideia é economizar tempo e deixar tudo mais profissional, sem começar do zero.",
+        f"Se você quiser, te envio a amostra grátis primeiro. Assim você vê se o {title} faz sentido para sua realidade antes de comprar.",
+        f"O pacote completo está com preço de lançamento e entrega digital. Ele inclui material principal, bônus, calendário e mensagens prontas.",
+    ]
+    scripts = [
+        f"Roteiro 1 — Dor direta: 'Você ainda perde tempo criando tudo do zero? Eu preparei o {title}, um pacote pronto para {target.lower()}.' Mostre 3 páginas do material e finalize: 'baixe a amostra grátis no link'.",
+        f"Roteiro 2 — Por dentro: 'Olha o que vem dentro do {title}'. Mostre módulos, bônus e checklist. CTA: 'quer receber a amostra?'",
+        f"Roteiro 3 — Antes e depois: 'Antes você improvisava. Depois você usa um modelo pronto e adapta'. Mostre a transformação visual.",
+        f"Roteiro 4 — Lista rápida: '3 coisas que esse kit resolve: organização, rapidez e apresentação profissional'. Feche com link do checkout.",
+        f"Roteiro 5 — Oferta honesta: 'Não é milagre. É material pronto para economizar tempo e aplicar com mais clareza'.",
+        f"Roteiro 6 — Objeção: 'Será que serve para iniciante?' Responda mostrando o manual comece por aqui.",
+        f"Roteiro 7 — Amostra grátis: 'Antes de comprar, veja por dentro'. Mostre a página pública e peça cadastro.",
+        f"Roteiro 8 — Bônus: 'Além do material principal, você recebe mensagens, calendário e checklist'.",
+    ]
+    return "\n".join([
+        "# Kit de divulgação premium",
+        "",
+        "## Ganchos para Reels/TikTok/Shorts",
+        *[f"{i}. {h}" for i, h in enumerate(hooks, 1)],
+        "",
+        "## Legendas prontas",
+        *[f"### Legenda {i}\n{c}" for i, c in enumerate(captions, 1)],
+        "",
+        "## Mensagens para WhatsApp",
+        *[f"{i}. {w}" for i, w in enumerate(whatsapp, 1)],
+        "",
+        "## Roteiros de vídeo",
+        *[f"{i}. {s}" for i, s in enumerate(scripts, 1)],
+        "",
+        "## Hashtags base",
+        "#produtodigital #rendaextra #mei #empreendedorismo #whatsappbusiness #instagramparanegocios #organização #templates #ia",
+    ])
+
+
+def build_prompt_pack_general(title: str, niche: str, product_type: str, target: str, pages: int, promise: str, discipline: str = "Não se aplica / produto geral", school_level: str = "Público geral") -> str:
+    model = _premium_model_for(niche)
+    modules = "\n".join([f"- {m}" for m in model.get("modules", [])])
+    deliverables = "\n".join([f"- {d}" for d in model.get("deliverables", [])])
+    return f"""
+PROMPT PREMIUM — Criar produto digital com aparência de produto pago
+
+Crie um {product_type} chamado "{title}".
+Nicho: {niche}
+Público-alvo: {target}
+Promessa honesta: {promise}
+Quantidade aproximada: {pages} páginas
+Linguagem: brasileira, clara, comercial, organizada e confiável.
+
+Objetivo: criar um produto que pareça pago, útil e bem estruturado, não um texto simples.
+
+Módulos obrigatórios:
+{modules}
+
+Entregáveis obrigatórios:
+{deliverables}
+
+Estrutura obrigatória:
+1. Capa textual profissional
+2. Apresentação com dor do público
+3. Promessa honesta sem exagero
+4. Sumário organizado
+5. Módulos com objetivo, modelo pronto, exemplo preenchido e checklist
+6. Bônus com valor percebido
+7. Amostra grátis
+8. Manual do comprador
+9. Checklist final
+10. Página de venda completa
+11. 10 ganchos de vídeo
+12. 10 legendas
+13. 5 mensagens de WhatsApp
+14. Aviso responsável: {model.get('warning', 'Material educativo e editável.')}
+
+Proibições:
+- Não prometer dinheiro fácil.
+- Não prometer lucro garantido.
+- Não prometer emprego garantido.
+- Não prometer cura, emagrecimento ou resultado de saúde.
+- Não usar depoimentos falsos.
+""".strip()
+
+
+def build_premium_copy(product: Dict[str, Any]) -> Dict[str, List[str]]:
+    title = product.get("title", "Produto Digital")
+    target = product.get("target_audience", "público-alvo")
+    promise = product.get("promise", "resolver um problema prático")
+    niche = product.get("niche", "produto digital")
+    headlines = [
+        f"{title}: o pacote pronto para {target.lower()} que querem {promise.lower()} sem começar do zero",
+        f"Organize sua rotina com o {title}: modelos, checklists e mensagens prontas para adaptar",
+        f"Pare de improvisar: use um material digital completo, bonito e pronto para aplicar",
+        f"Tudo que você precisa para {promise.lower()} em um único pacote digital",
+        f"O atalho organizado para {target.lower()} economizarem tempo com aparência profissional",
+    ]
+    bullets = [
+        "Modelos prontos para copiar, preencher e adaptar",
+        "Checklist final para evitar improviso",
+        "Amostra grátis para gerar confiança antes da compra",
+        "Mensagens de WhatsApp e legendas para divulgar",
+        "Manual de uso para o comprador começar sem dúvida",
+        "Oferta honesta, sem promessa milagrosa",
+    ]
+    objections = [
+        "Não sei se serve para mim → Baixe a amostra grátis e veja por dentro antes de comprar.",
+        "Não tenho experiência → O material vem com passo a passo e exemplos preenchidos.",
+        "Tenho medo de ser complicado → A estrutura foi feita para uso simples no celular ou computador.",
+        "Será que vale o preço? → O pacote economiza tempo e já vem organizado com bônus e modelos.",
+    ]
+    ctas = [
+        "Baixar amostra grátis",
+        "Ver o pacote completo",
+        "Quero receber o material",
+        "Comprar com entrega digital",
+        "Começar agora pelo passo a passo",
+    ]
+    return {"headlines": headlines, "bullets": bullets, "objections": objections, "ctas": ctas, "niche": [niche]}
+
+
+def _insert_product_from_form(form: Dict[str, Any]) -> int:
+    assets = generate_product_assets(form)
+    now = datetime.utcnow().isoformat()
+    conn = db_conn()
+    title = form["title"]
+    slug = unique_public_slug(title, conn)
+    lead_content = build_lead_magnet({**form, **assets, "public_slug": slug})
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO products (title, niche, product_type, discipline, school_level, target_audience, promise, price, status, checkout_link, platform, content, sales_page, social_posts, prompt_pack, public_slug, public_enabled, lead_magnet_title, lead_magnet_content, guarantee_days, bonus_stack, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            title, form.get("niche"), form.get("product_type"), form.get("discipline", "Não se aplica / produto geral"), form.get("school_level", "Público geral"), form.get("target_audience"), form.get("promise"), float(form.get("price") or 47),
+            "rascunho", "", "Manual", assets["content"], assets["sales_page"], assets["social_posts"], assets["prompt_pack"], slug, 1,
+            f"Amostra grátis — {title}", lead_content, 7, "; ".join(_premium_bonus_stack(title, form.get("niche", ""))), now, now,
+        ),
+    )
+    product_id = cur.lastrowid
+    conn.commit(); conn.close()
+    return product_id
+
+
+@app.route("/biblioteca-premium")
+@login_required
+def premium_library():
+    return render_template("premium_library.html", title="Biblioteca premium", blueprints=TRENDING_BLUEPRINTS, notice=PREMIUM_NOTICE)
+
+
+@app.route("/biblioteca-premium/criar/<int:index>", methods=["POST"])
+@login_required
+def premium_library_create(index: int):
+    if index < 0 or index >= len(TRENDING_BLUEPRINTS):
+        abort(404)
+    form = dict(TRENDING_BLUEPRINTS[index])
+    product_id = _insert_product_from_form(form)
+    flash("Produto premium criado com textos mais completos. Revise, coloque checkout e divulgue a página pública.", "success")
+    return redirect(url_for("product_detail", product_id=product_id))
+
+
+@app.route("/copy-premium")
+@login_required
+def copy_premium_page():
+    selected_id = request.args.get("produto", type=int)
+    conn = db_conn()
+    products = [row_to_dict(r) for r in conn.execute("SELECT * FROM products ORDER BY created_at DESC LIMIT 30").fetchall()]
+    selected = None
+    if selected_id:
+        selected = row_to_dict(conn.execute("SELECT * FROM products WHERE id=?", (selected_id,)).fetchone())
+    elif products:
+        selected = products[0]
+    conn.close()
+    copy = build_premium_copy(selected) if selected else None
+    return render_template("copy_premium.html", title="Copy premium", products=products, selected=selected, copy=copy)
+
+
+@app.route("/funil-profissional")
+@login_required
+def professional_funnel_page():
+    selected_id = request.args.get("produto", type=int)
+    conn = db_conn()
+    products = [row_to_dict(r) for r in conn.execute("SELECT * FROM products ORDER BY created_at DESC LIMIT 30").fetchall()]
+    selected = None
+    if selected_id:
+        selected = row_to_dict(conn.execute("SELECT * FROM products WHERE id=?", (selected_id,)).fetchone())
+    elif products:
+        selected = products[0]
+    conn.close()
+    funnel = build_sales_funnel(selected) if selected else "Nenhum produto criado."
+    checklist = build_offer_checklist(selected) if selected else "Crie um produto primeiro."
+    return render_template("funnel_profissional.html", title="Funil profissional", products=products, selected=selected, funnel=funnel, checklist=checklist)
+
+
 ensure_social_tables()
 
 

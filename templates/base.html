@@ -20,19 +20,29 @@
           <span>Plataforma Comercial</span>
         </div>
       </div>
-      <nav>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Operação</div>
         <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
-        <a href="{{ url_for('professional_center') }}" class="nav-link highlight">Central profissional</a>
-        <a href="{{ url_for('venda_real_page') }}" class="nav-link highlight">Central comercial</a>
-        <a href="{{ url_for('social_automation') }}" class="nav-link highlight">Campanhas e vídeos</a>
-        <a href="{{ url_for('niches') }}" class="nav-link">Pesquisa de nichos</a>
-        <a href="{{ url_for('discipline_center') }}" class="nav-link">Áreas escolares</a>
-        <a href="{{ url_for('bncc_center') }}" class="nav-link">BNCC</a>
-        <a href="{{ url_for('income_machine') }}" class="nav-link">Central de produtos</a>
-        <a href="{{ url_for('offer_lab') }}" class="nav-link">Análise de oferta</a>
-        <a href="{{ url_for('plan_30_days') }}" class="nav-link">Plano 30 dias</a>
+        <a href="{{ url_for('premium_library') }}" class="nav-link highlight">Biblioteca premium</a>
         <a href="{{ url_for('product_new') }}" class="nav-link highlight">+ Criar produto</a>
         <a href="{{ url_for('products') }}" class="nav-link">Meus produtos</a>
+
+        <div class="nav-section-label">Venda</div>
+        <a href="{{ url_for('professional_center') }}" class="nav-link highlight">Central profissional</a>
+        <a href="{{ url_for('venda_real_page') }}" class="nav-link highlight">Central comercial</a>
+        <a href="{{ url_for('copy_premium_page') }}" class="nav-link">Copy premium</a>
+        <a href="{{ url_for('professional_funnel_page') }}" class="nav-link">Funil profissional</a>
+        <a href="{{ url_for('social_automation') }}" class="nav-link highlight">Campanhas e vídeos</a>
+        <a href="{{ url_for('offer_lab') }}" class="nav-link">Análise de oferta</a>
+        <a href="{{ url_for('plan_30_days') }}" class="nav-link">Plano 30 dias</a>
+
+        <div class="nav-section-label">Pesquisa</div>
+        <a href="{{ url_for('niches') }}" class="nav-link">Pesquisa de nichos</a>
+        <a href="{{ url_for('income_machine') }}" class="nav-link">Central de produtos</a>
+        <a href="{{ url_for('discipline_center') }}" class="nav-link">Áreas escolares</a>
+        <a href="{{ url_for('bncc_center') }}" class="nav-link">BNCC</a>
+
+        <div class="nav-section-label">Controle</div>
         <a href="{{ url_for('sales') }}" class="nav-link">Vendas</a>
         <a href="{{ url_for('leads_page') }}" class="nav-link">Leads</a>
         <a href="{{ url_for('settings_page') }}" class="nav-link">Configuração</a>

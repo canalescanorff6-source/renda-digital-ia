@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Biblioteca premium</span>
+    <h1>Produtos prontos para nichos vendáveis</h1>
+    <p>Escolha uma ideia com apelo comercial e o sistema gera um produto mais completo, com texto de venda, bônus, amostra, posts e estrutura de entrega.</p>
+  </div>
+  <a class="btn ghost" href="{{ url_for('product_new') }}">Criar manualmente</a>
+</header>
+
+<div class="alert-soft"><strong>Estratégia:</strong> escolha um produto simples de entender, preço de entrada e público com dor clara. Depois teste título, vídeo e oferta.</div>
+
+<section class="premium-blueprint-grid">
+  {% for b in blueprints %}
+  <article class="glass-card premium-blueprint-card">
+    <div class="blueprint-top">
+      <span class="badge">{{ b.niche }}</span>
+      <strong>{{ b.price|replace('.', ',') }}</strong>
+    </div>
+    <h2>{{ b.title }}</h2>
+    <p>{{ b.angle }}</p>
+    <div class="info-list compact">
+      <div><span>Público</span><strong>{{ b.target_audience }}</strong></div>
+      <div><span>Entrega</span><strong>{{ b.product_type }}</strong></div>
+      <div><span>Promessa</span><strong>{{ b.promise }}</strong></div>
+    </div>
+    <form method="post" action="{{ url_for('premium_library_create', index=loop.index0) }}">
+      <button class="btn primary full" type="submit">Gerar este produto premium</button>
+    </form>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

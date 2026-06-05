@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Copy premium</span>
+    <h1>Textos que chamam atenção</h1>
+    <p>Headlines, benefícios, objeções e chamadas para usar na página de venda, WhatsApp, Reels, TikTok e anúncios simples.</p>
+  </div>
+  <a class="btn primary" href="{{ url_for('premium_library') }}">Biblioteca premium</a>
+</header>
+
+<section class="glass-card filters-card">
+  <form method="get" class="filters-form">
+    <label>Produto
+      <select name="produto" onchange="this.form.submit()">
+        {% for p in products %}
+        <option value="{{ p.id }}" {% if selected and selected.id == p.id %}selected{% endif %}>{{ p.title }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </form>
+</section>
+
+{% if selected and copy %}
+<section class="two-cols">
+  <div class="glass-card gradient-card">
+    <span class="badge">{{ selected.niche }}</span>
+    <h2>{{ selected.title }}</h2>
+    <p>{{ selected.promise }}</p>
+    <div class="copy-box"><code id="public-link">{{ url_for('public_product_page', slug=selected.public_slug, _external=True) }}</code><button class="btn ghost" onclick="copyText('public-link')">Copiar link</button></div>
+  </div>
+  <div class="glass-card">
+    <h2>Como usar</h2>
+    <ol class="steps">
+      <li>Use uma headline no topo da página.</li>
+      <li>Use os bullets na área “o que recebe”.</li>
+      <li>Use objeções no FAQ.</li>
+      <li>Use CTAs nos botões e vídeos.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="premium-copy-grid">
+  <div class="glass-card"><h2>Headlines</h2><ol class="clean-list">{% for item in copy.headlines %}<li>{{ item }}</li>{% endfor %}</ol></div>
+  <div class="glass-card"><h2>Benefícios</h2><ol class="clean-list">{% for item in copy.bullets %}<li>{{ item }}</li>{% endfor %}</ol></div>
+  <div class="glass-card"><h2>Objeções e respostas</h2><ol class="clean-list">{% for item in copy.objections %}<li>{{ item }}</li>{% endfor %}</ol></div>
+  <div class="glass-card"><h2>Botões/CTA</h2><ol class="clean-list">{% for item in copy.ctas %}<li>{{ item }}</li>{% endfor %}</ol></div>
+</section>
+{% else %}
+<section class="glass-card empty-state"><p>Nenhum produto criado ainda.</p><a class="btn primary" href="{{ url_for('premium_library') }}">Criar produto premium</a></section>
+{% endif %}
+{% endblock %}

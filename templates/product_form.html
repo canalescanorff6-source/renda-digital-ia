@@ -2,16 +2,17 @@
 {% block content %}
 <header class="page-header">
   <div>
-    <span class="eyebrow">Criador IA multinichos</span>
-    <h1>Novo produto digital</h1>
-    <p>Crie produtos digitais para nichos vendáveis: IA para negócios, finanças pessoais, MEI, beleza, casa, culinária, carreira, pets, templates e também educação.</p>
+    <span class="eyebrow">Criador premium multinichos</span>
+    <h1>Novo produto digital com aparência profissional</h1>
+    <p>Gere um produto mais completo: capa textual, módulos, modelos prontos, exemplos, bônus, amostra grátis, página de venda, copy e posts para divulgação.</p>
   </div>
 </header>
 
 <form method="post" class="glass-card form-grid wide-form">
   <div class="field span-2">
     <label>Nome do produto</label>
-    <input name="title" required placeholder="Ex: Kit IA para Pequenos Negócios - Prompts, Posts e WhatsApp" value="{{ preset_data.title }}">
+    <input name="title" required placeholder="Ex: Kit IA para Pequenos Negócios - Prompts, Posts, WhatsApp e Calendário" value="{{ preset_data.title }}">
+    <small class="field-help">Dica: use nome específico com público + entrega + benefício. Ex: “Pack Social Media para Manicure — Posts, Legendas e WhatsApp”.</small>
   </div>
   <div class="field">
     <label>Nicho</label>
@@ -53,7 +54,8 @@
   </div>
   <div class="field span-2">
     <label>Promessa honesta do produto</label>
-    <input name="promise" placeholder="Ex: economizar tempo com modelos, checklists, prompts, posts e materiais prontos para adaptar" value="{{ preset_data.promise }}">
+    <input name="promise" placeholder="Ex: economizar tempo com modelos, checklists, prompts, posts, mensagens e materiais prontos para adaptar" value="{{ preset_data.promise }}">
+    <small class="field-help">Evite promessa de dinheiro fácil. Prefira: economizar tempo, organizar rotina, melhorar apresentação, facilitar atendimento ou ter modelos prontos.</small>
   </div>
   <div class="field">
     <label>Status</label>
@@ -99,7 +101,8 @@
   </div>
   <div class="span-2 action-row">
     <a class="btn ghost" href="{{ url_for('products') }}">Cancelar</a>
-    <button class="btn primary" type="submit">Gerar produto agora</button>
+    <a class="btn ghost" href="{{ url_for('premium_library') }}">Ver ideias premium</a>
+    <button class="btn primary" type="submit">Gerar produto premium agora</button>
   </div>
 </form>
 {% endblock %}

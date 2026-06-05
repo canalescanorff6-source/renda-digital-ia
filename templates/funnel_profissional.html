@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Funil profissional</span>
+    <h1>Estrutura para vender com mais organização</h1>
+    <p>Veja a ordem da oferta: amostra grátis, produto principal, bônus, checkout, pós-venda e rotina de divulgação.</p>
+  </div>
+  <a class="btn primary" href="{{ url_for('social_automation') }}">Campanhas e vídeos</a>
+</header>
+
+<section class="glass-card filters-card">
+  <form method="get" class="filters-form">
+    <label>Produto
+      <select name="produto" onchange="this.form.submit()">
+        {% for p in products %}<option value="{{ p.id }}" {% if selected and selected.id == p.id %}selected{% endif %}>{{ p.title }}</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+</section>
+
+{% if selected %}
+<section class="metric-grid metric-grid-wide">
+  <div class="metric-card purple"><span>Produto</span><strong>{{ selected.price|money }}</strong><small>preço atual</small></div>
+  <div class="metric-card"><span>Amostra</span><strong>Lead</strong><small>captura interessados</small></div>
+  <div class="metric-card"><span>Checkout</span><strong>{% if selected.checkout_link %}OK{% else %}Falta{% endif %}</strong><small>Kiwify/Hotmart</small></div>
+  <div class="metric-card"><span>Bônus</span><strong>{{ (selected.bonus_stack or '').split(';')|length }}</strong><small>itens percebidos</small></div>
+  <div class="metric-card"><span>Página</span><strong>{% if selected.public_enabled %}Ativa{% else %}Off{% endif %}</strong><small>link público</small></div>
+  <div class="metric-card"><span>Status</span><strong>{{ selected.status }}</strong><small>produto</small></div>
+</section>
+
+<section class="two-cols detail-layout">
+  <article class="glass-card"><h2>Funil recomendado</h2><pre class="content-preview">{{ funnel }}</pre></article>
+  <article class="glass-card"><h2>Checklist antes de vender</h2><pre class="content-preview">{{ checklist }}</pre></article>
+</section>
+{% else %}
+<section class="glass-card empty-state"><p>Crie um produto primeiro.</p><a class="btn primary" href="{{ url_for('premium_library') }}">Abrir Biblioteca Premium</a></section>
+{% endif %}
+{% endblock %}
