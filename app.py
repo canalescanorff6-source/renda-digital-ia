@@ -6,6 +6,8 @@ import csv
 import io
 import sqlite3
 import textwrap
+import unicodedata
+import traceback
 from datetime import datetime, date
 from functools import wraps
 from pathlib import Path
@@ -248,6 +250,55 @@ def add_security_headers(response):
     return response
 
 
+@app.errorhandler(404)
+def handle_404(exc):
+    return (
+        "<h1>Página não encontrada</h1>"
+        "<p>Esse link não existe ou o produto ainda não foi criado nesta base.</p>"
+        "<p><a href='/dashboard'>Voltar ao painel</a></p>",
+        404,
+    )
+
+
+@app.errorhandler(500)
+def handle_500(exc):
+    traceback.print_exc()
+    return (
+        "<h1>Erro interno corrigível</h1>"
+        "<p>O sistema encontrou um erro ao processar esta ação. Volte ao painel, tente novamente e confira os logs do RunSite se persistir.</p>"
+        "<p><a href='/dashboard'>Voltar ao painel</a></p>",
+        500,
+    )
+
+
+@app.route("/diagnostico")
+@login_required
+def diagnostico():
+    checks = []
+    def add(nome, ok, detalhe=""):
+        checks.append({"nome": nome, "ok": bool(ok), "detalhe": detalhe})
+    try:
+        conn = db_conn(); conn.execute("SELECT 1").fetchone(); conn.close(); add("Banco de dados", True, str(DB_PATH))
+    except Exception as exc:
+        add("Banco de dados", False, str(exc))
+    add("Pasta storage gravável", os.access(STORAGE_DIR, os.W_OK), str(STORAGE_DIR))
+    add("Pasta exports gravável", os.access(EXPORT_DIR, os.W_OK), str(EXPORT_DIR))
+    add("ReportLab PDF", REPORTLAB_OK, "PDF ativo" if REPORTLAB_OK else "Instale reportlab")
+    try:
+        from PIL import Image  # noqa
+        import imageio.v2 as imageio  # noqa
+        import numpy as np  # noqa
+        add("Vídeos MP4", True, "Pillow + imageio + numpy OK")
+    except Exception as exc:
+        add("Vídeos MP4", False, str(exc))
+    try:
+        conn = db_conn(); total = conn.execute("SELECT COUNT(*) AS n FROM products").fetchone()["n"]; conn.close(); add("Produtos cadastrados", True, str(total))
+    except Exception as exc:
+        add("Produtos cadastrados", False, str(exc))
+    html = "<h1>Diagnóstico do sistema</h1><ul>" + "".join([f"<li>{'✅' if c['ok'] else '❌'} <b>{c['nome']}</b> — {c['detalhe']}</li>" for c in checks]) + "</ul><p><a href='/dashboard'>Voltar</a></p>"
+    return html
+
+
 @app.route("/healthz")
 def healthz():
     return {"status": "ok", "app": APP_NAME, "database": str(DB_PATH.name)}
@@ -302,11 +353,48 @@ self.addEventListener('fetch', event => {
 
 
 def slugify(text: str) -> str:
-    text = text.lower().strip()
-    text = re.sub(r"[^a-z0-9áàãâéêíóôõúçñ\s-]", "", text)
-    text = text.replace("ç", "c").replace("ã", "a").replace("õ", "o")
-    text = re.sub(r"\s+", "-", text)
+    """Gera slugs seguros para URL e nomes de arquivos.
+
+    V19: remove acentos e caracteres especiais para evitar links públicos
+    com caracteres difíceis em hospedagens, WhatsApp e checkouts.
+    """
+    text = str(text or "produto").lower().strip()
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    text = re.sub(r"[^a-z0-9\s-]", "", text)
+    text = re.sub(r"[\s_-]+", "-", text)
     return text[:70].strip("-") or "produto"
+
+
+def safe_float(value, default: float = 0.0) -> float:
+    try:
+        if value is None or str(value).strip() == "":
+            return default
+        raw = str(value).replace("R$", "").strip()
+        if "," in raw:
+            raw = raw.replace(".", "").replace(",", ".")
+        return float(raw)
+    except Exception:
+        return default
+
+
+def safe_int(value, default: int = 0) -> int:
+    try:
+        if value is None or str(value).strip() == "":
+            return default
+        return int(float(str(value).strip()))
+    except Exception:
+        return default
+
+
+def form_or_existing(form: Dict[str, Any], key: str, existing: Dict[str, Any], default: Any = "") -> Any:
+    """Usa valor enviado no formulário; se o campo não veio, preserva o antigo.
+
+    Isso evita apagar textos premium ao salvar só preço/checkout/status por scripts ou telas parciais.
+    """
+    if key in form:
+        return form.get(key)
+    return existing.get(key, default)
 
 
 def unique_public_slug(title: str, conn, product_id: Optional[int] = None) -> str:
@@ -1127,7 +1215,7 @@ def generate_product_assets(form: Dict[str, Any]) -> Dict[str, str]:
     target = form.get("target_audience") or "professores, reforço escolar, escolas e pais"
     promise = form.get("promise") or "economizar tempo com atividades, provas, gabaritos e materiais prontos para adaptar"
     pages = int(form.get("pages") or 30)
-    price = float(str(form.get("price") or 47.00).replace(",", "."))
+    price = safe_float(form.get("price"), 47.00)
 
     ai = optional_openai_generate(title, niche, product_type, target, pages, promise, discipline, school_level)
     if ai:
@@ -2103,7 +2191,7 @@ def product_new():
         school_level = form.get("school_level") or "Ensino fundamental anos iniciais"
         target = form.get("target_audience") or "professores, reforço escolar, escolas e pais"
         promise = form.get("promise") or "economizar tempo com atividades, provas, gabaritos e materiais prontos para adaptar"
-        price = float(str(form.get("price") or 47.00).replace(",", "."))
+        price = safe_float(form.get("price"), 47.00)
         assets = generate_product_assets({**form, "title": title, "niche": niche, "product_type": product_type, "discipline": discipline, "school_level": school_level, "target_audience": target, "promise": promise, "price": price})
         now = datetime.utcnow().isoformat()
         conn = db_conn()
@@ -2172,14 +2260,33 @@ def product_edit(product_id):
         conn.execute(
             """
             UPDATE products SET title=?, niche=?, product_type=?, discipline=?, school_level=?, target_audience=?, promise=?, price=?,
-            status=?, checkout_link=?, platform=?, content=?, sales_page=?, social_posts=?, public_slug=?, public_enabled=?, lead_magnet_title=?, lead_magnet_content=?, guarantee_days=?, bonus_stack=?, updated_at=?
+            status=?, checkout_link=?, platform=?, content=?, sales_page=?, social_posts=?, prompt_pack=?, public_slug=?, public_enabled=?, lead_magnet_title=?, lead_magnet_content=?, guarantee_days=?, bonus_stack=?, updated_at=?
             WHERE id=?
             """,
             (
-                form.get("title"), form.get("niche"), form.get("product_type"), form.get("discipline"), form.get("school_level"), form.get("target_audience"),
-                form.get("promise"), float(str(form.get("price") or 0).replace(",", ".")), form.get("status"),
-                form.get("checkout_link"), form.get("platform"), form.get("content"), form.get("sales_page"),
-                form.get("social_posts"), public_slug, int(form.get("public_enabled", "0") == "1"), form.get("lead_magnet_title"), form.get("lead_magnet_content"), int(form.get("guarantee_days") or 7), form.get("bonus_stack"), now, product_id,
+                form_or_existing(form, "title", product, product["title"]),
+                form_or_existing(form, "niche", product, product["niche"]),
+                form_or_existing(form, "product_type", product, product["product_type"]),
+                form_or_existing(form, "discipline", product, product.get("discipline") or "Não se aplica / produto geral"),
+                form_or_existing(form, "school_level", product, product.get("school_level") or "Público geral"),
+                form_or_existing(form, "target_audience", product, product.get("target_audience") or "público geral"),
+                form_or_existing(form, "promise", product, product.get("promise") or "material pronto para adaptar"),
+                safe_float(form.get("price"), float(product.get("price") or 47)),
+                form_or_existing(form, "status", product, product.get("status") or "rascunho"),
+                form_or_existing(form, "checkout_link", product, product.get("checkout_link") or ""),
+                form_or_existing(form, "platform", product, product.get("platform") or "Manual"),
+                form_or_existing(form, "content", product, product.get("content") or ""),
+                form_or_existing(form, "sales_page", product, product.get("sales_page") or ""),
+                form_or_existing(form, "social_posts", product, product.get("social_posts") or ""),
+                form_or_existing(form, "prompt_pack", product, product.get("prompt_pack") or ""),
+                public_slug,
+                int(form.get("public_enabled", "1" if product.get("public_enabled") != 0 else "0") == "1"),
+                form_or_existing(form, "lead_magnet_title", product, product.get("lead_magnet_title") or f"Amostra grátis — {product['title']}"),
+                form_or_existing(form, "lead_magnet_content", product, product.get("lead_magnet_content") or ""),
+                safe_int(form.get("guarantee_days"), int(product.get("guarantee_days") or 7)),
+                form_or_existing(form, "bonus_stack", product, product.get("bonus_stack") or ""),
+                now,
+                product_id,
             ),
         )
         conn.commit()
@@ -2220,7 +2327,19 @@ def product_regenerate(product_id):
 @app.route("/produtos/<int:product_id>/baixar/<section>/<fmt>")
 @login_required
 def product_download(product_id, section, fmt):
-    if section not in {"content", "sales_page", "social_posts", "prompt_pack", "bncc_map"}:
+    aliases = {
+        "produto": "content",
+        "pagina": "sales_page",
+        "venda": "sales_page",
+        "posts": "social_posts",
+        "prompts": "prompt_pack",
+        "bncc": "bncc_map",
+        "amostra": "lead_magnet_content",
+    }
+    section = aliases.get(section, section)
+    if section not in {"content", "sales_page", "social_posts", "prompt_pack", "bncc_map", "lead_magnet_content"}:
+        abort(400)
+    if fmt not in {"pdf", "md"}:
         abort(400)
     product = get_product(product_id)
     if not product:
@@ -3814,12 +3933,47 @@ def build_premium_copy(product: Dict[str, Any]) -> Dict[str, List[str]]:
 
 
 def _insert_product_from_form(form: Dict[str, Any]) -> int:
-    assets = generate_product_assets(form)
+    """Cria um produto a partir da Biblioteca Premium.
+
+    Correção v18: algumas versões anteriores da biblioteca usavam o campo
+    ``target`` em vez de ``target_audience``. Em produção isso causava erro
+    500 por causa da coluna obrigatória ``target_audience`` no SQLite.
+    Aqui normalizamos todos os campos antes de gerar e salvar o produto.
+    """
+    title = (form.get("title") or "Produto digital premium").strip()
+    niche = (form.get("niche") or "Produto digital").strip()
+    product_type = (form.get("product_type") or "Pacote digital").strip()
+    target = (
+        form.get("target_audience")
+        or form.get("target")
+        or form.get("audience")
+        or "pessoas interessadas em uma solução prática, organizada e pronta para adaptar"
+    )
+    promise = (form.get("promise") or "economizar tempo com um material pronto, bonito e organizado").strip()
+    discipline = (form.get("discipline") or "Não se aplica / produto geral").strip()
+    school_level = (form.get("school_level") or "Público geral").strip()
+    try:
+        price = float(str(form.get("price") or 47).replace(",", "."))
+    except Exception:
+        price = 47.0
+
+    normalized = {
+        **form,
+        "title": title,
+        "niche": niche,
+        "product_type": product_type,
+        "target_audience": target,
+        "promise": promise,
+        "discipline": discipline,
+        "school_level": school_level,
+        "price": price,
+    }
+
+    assets = generate_product_assets(normalized)
     now = datetime.utcnow().isoformat()
     conn = db_conn()
-    title = form["title"]
     slug = unique_public_slug(title, conn)
-    lead_content = build_lead_magnet({**form, **assets, "public_slug": slug})
+    lead_content = build_lead_magnet({**normalized, **assets, "public_slug": slug})
     cur = conn.cursor()
     cur.execute(
         """
@@ -3827,9 +3981,9 @@ def _insert_product_from_form(form: Dict[str, Any]) -> int:
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            title, form.get("niche"), form.get("product_type"), form.get("discipline", "Não se aplica / produto geral"), form.get("school_level", "Público geral"), form.get("target_audience"), form.get("promise"), float(form.get("price") or 47),
+            title, niche, product_type, discipline, school_level, target, promise, price,
             "rascunho", "", "Manual", assets["content"], assets["sales_page"], assets["social_posts"], assets["prompt_pack"], slug, 1,
-            f"Amostra grátis — {title}", lead_content, 7, "; ".join(_premium_bonus_stack(title, form.get("niche", ""))), now, now,
+            f"Amostra grátis — {title}", lead_content, 7, "; ".join(_premium_bonus_stack(title, niche)), now, now,
         ),
     )
     product_id = cur.lastrowid
@@ -3849,7 +4003,12 @@ def premium_library_create(index: int):
     if index < 0 or index >= len(TRENDING_BLUEPRINTS):
         abort(404)
     form = dict(TRENDING_BLUEPRINTS[index])
-    product_id = _insert_product_from_form(form)
+    try:
+        product_id = _insert_product_from_form(form)
+    except Exception as exc:
+        traceback.print_exc()
+        flash(f"Não foi possível criar este produto agora: {exc}. Tente outro modelo ou veja os logs do RunSite.", "danger")
+        return redirect(url_for("premium_library"))
     flash("Produto premium criado com textos mais completos. Revise, coloque checkout e divulgue a página pública.", "success")
     return redirect(url_for("product_detail", product_id=product_id))
 
@@ -4954,12 +5113,12 @@ def product_video_test(product_id):
 
 # Atualiza biblioteca premium com modelos mais fortes.
 TRENDING_BLUEPRINTS = [
-    {"title":"Kit IA para Pequenos Negócios — Prompts, Posts e WhatsApp","niche":"IA para pequenos negócios","product_type":"Pack premium de prompts","target":"MEIs, autônomos, lojas pequenas e prestadores de serviço","promise":"criar posts, mensagens de atendimento, respostas e ofertas com ajuda da IA sem começar do zero","price":47.00,"angle":"🤖 IA simples para vender, atender e divulgar melhor no dia a dia."},
-    {"title":"Planner Financeiro Visual — Gastos, Dívidas e Metas","niche":"Finanças pessoais e organização","product_type":"Planner PDF editável","target":"famílias, casais, jovens e pessoas que querem organizar dinheiro","promise":"organizar gastos, contas, dívidas e metas com páginas visuais simples","price":27.00,"angle":"💰 Organização financeira sem promessa de riqueza e sem planilha complicada."},
-    {"title":"Kit MEI Organizado — Clientes, Preços e Divulgação","niche":"Pequenos negócios e MEI","product_type":"Pacote digital completo","target":"MEIs, vendedores locais, autônomos e pequenos prestadores","promise":"organizar clientes, pedidos, preços, WhatsApp e divulgação local","price":67.00,"angle":"🛍️ Rotina comercial mais bonita, clara e organizada."},
-    {"title":"Agenda Premium para Beleza — Clientes, Posts e Atendimento","niche":"Beleza, estética e atendimento","product_type":"Planner + templates","target":"manicures, designers de sobrancelha, cabeleireiras e profissionais da beleza","promise":"organizar agenda, atendimento, mensagens e posts para clientes","price":47.00,"angle":"✨ Atendimento com aparência mais profissional."},
-    {"title":"Kit Marmitaria Lucrativa Organizada — Cardápio, Pedidos e Preços","niche":"Culinária, marmitas e confeitaria","product_type":"Pack de organização","target":"vendedores de marmita, bolos, doces e comida caseira","promise":"organizar cardápio, pedidos, lista de compras e divulgação","price":47.00,"angle":"🍲 Mais clareza para vender comida por encomenda."},
-    {"title":"Kit Currículo e Entrevista — Apresentação Profissional","niche":"Carreira, currículo e renda extra","product_type":"Templates + roteiro","target":"pessoas buscando emprego, primeiro trabalho ou recolocação","promise":"organizar currículo, LinkedIn, mensagens e preparação para entrevista","price":37.00,"angle":"💼 Melhor apresentação profissional, sem garantir contratação."},
-    {"title":"Pack Redes Sociais 30 Dias — Posts, Legendas e Calendário","niche":"Templates, design e redes sociais","product_type":"Calendário + legendas","target":"empreendedores, criadores e pequenos negócios","promise":"organizar 30 dias de conteúdo com ideias, legendas e chamadas prontas","price":37.00,"angle":"🎨 Conteúdo visual mais organizado para divulgar com constância."},
-    {"title":"Mega Kit Professor Total — Atividades por Disciplinas","niche":"Educação - todas as disciplinas","product_type":"Mega kit pedagógico editável","target":"professores, reforço escolar, escolas pequenas e pais","promise":"economizar tempo com atividades, gabaritos, orientações e campos BNCC editáveis","price":47.00,"angle":"📚 Material pedagógico editável com revisão necessária."},
+    {"title":"Kit IA para Pequenos Negócios — Prompts, Posts e WhatsApp","niche":"IA para pequenos negócios","product_type":"Pack premium de prompts","target_audience":"MEIs, autônomos, lojas pequenas e prestadores de serviço","promise":"criar posts, mensagens de atendimento, respostas e ofertas com ajuda da IA sem começar do zero","price":47.00,"angle":"🤖 IA simples para vender, atender e divulgar melhor no dia a dia."},
+    {"title":"Planner Financeiro Visual — Gastos, Dívidas e Metas","niche":"Finanças pessoais e organização","product_type":"Planner PDF editável","target_audience":"famílias, casais, jovens e pessoas que querem organizar dinheiro","promise":"organizar gastos, contas, dívidas e metas com páginas visuais simples","price":27.00,"angle":"💰 Organização financeira sem promessa de riqueza e sem planilha complicada."},
+    {"title":"Kit MEI Organizado — Clientes, Preços e Divulgação","niche":"Pequenos negócios e MEI","product_type":"Pacote digital completo","target_audience":"MEIs, vendedores locais, autônomos e pequenos prestadores","promise":"organizar clientes, pedidos, preços, WhatsApp e divulgação local","price":67.00,"angle":"🛍️ Rotina comercial mais bonita, clara e organizada."},
+    {"title":"Agenda Premium para Beleza — Clientes, Posts e Atendimento","niche":"Beleza, estética e atendimento","product_type":"Planner + templates","target_audience":"manicures, designers de sobrancelha, cabeleireiras e profissionais da beleza","promise":"organizar agenda, atendimento, mensagens e posts para clientes","price":47.00,"angle":"✨ Atendimento com aparência mais profissional."},
+    {"title":"Kit Marmitaria Lucrativa Organizada — Cardápio, Pedidos e Preços","niche":"Culinária, marmitas e confeitaria","product_type":"Pack de organização","target_audience":"vendedores de marmita, bolos, doces e comida caseira","promise":"organizar cardápio, pedidos, lista de compras e divulgação","price":47.00,"angle":"🍲 Mais clareza para vender comida por encomenda."},
+    {"title":"Kit Currículo e Entrevista — Apresentação Profissional","niche":"Carreira, currículo e renda extra","product_type":"Templates + roteiro","target_audience":"pessoas buscando emprego, primeiro trabalho ou recolocação","promise":"organizar currículo, LinkedIn, mensagens e preparação para entrevista","price":37.00,"angle":"💼 Melhor apresentação profissional, sem garantir contratação."},
+    {"title":"Pack Redes Sociais 30 Dias — Posts, Legendas e Calendário","niche":"Templates, design e redes sociais","product_type":"Calendário + legendas","target_audience":"empreendedores, criadores e pequenos negócios","promise":"organizar 30 dias de conteúdo com ideias, legendas e chamadas prontas","price":37.00,"angle":"🎨 Conteúdo visual mais organizado para divulgar com constância."},
+    {"title":"Mega Kit Professor Total — Atividades por Disciplinas","niche":"Educação - todas as disciplinas","product_type":"Mega kit pedagógico editável","target_audience":"professores, reforço escolar, escolas pequenas e pais","promise":"economizar tempo com atividades, gabaritos, orientações e campos BNCC editáveis","price":47.00,"angle":"📚 Material pedagógico editável com revisão necessária."},
 ]
