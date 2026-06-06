@@ -2339,6 +2339,9 @@ def product_download(product_id, section, fmt):
     section = aliases.get(section, section)
     if section not in {"content", "sales_page", "social_posts", "prompt_pack", "bncc_map", "lead_magnet_content"}:
         abort(400)
+    # Compatibilidade: alguns botões/links antigos usam txt, mas o gerador real é markdown.
+    if fmt == "txt":
+        fmt = "md"
     if fmt not in {"pdf", "md"}:
         abort(400)
     product = get_product(product_id)
@@ -4455,6 +4458,101 @@ def v15_theme_for(niche: str = "", title: str = "") -> Dict[str, Any]:
         return V15_VISUAL_THEMES["educacao"]
     return V15_VISUAL_THEMES["default"]
 
+
+
+def _css_rgb(value, fallback="34, 245, 208"):
+    """Converte tupla/lista RGB para string segura de CSS."""
+    try:
+        if isinstance(value, (tuple, list)) and len(value) >= 3:
+            return f"{int(value[0])}, {int(value[1])}, {int(value[2])}"
+        text = str(value or "").strip()
+        return text if text else fallback
+    except Exception:
+        return fallback
+
+
+def product_theme(product=None) -> Dict[str, Any]:
+    """Tema visual usado pela página pública.
+
+    Corrige erro 500 quando o template chama product_theme(product).
+    Retorna valores prontos para CSS e textos de venda por nicho.
+    """
+    try:
+        if isinstance(product, sqlite3.Row):
+            p = row_to_dict(product)
+        elif isinstance(product, dict):
+            p = product
+        else:
+            p = {}
+        niche = p.get("niche", "") or ""
+        title = p.get("title", "") or ""
+        base = v15_theme_for(niche, title)
+        model = v15_model_for(niche, title) if "v15_model_for" in globals() else {}
+        icons = base.get("icons") or [base.get("emoji", "🚀")]
+        return {
+            "emoji": base.get("emoji", "🚀"),
+            "icon": icons[0] if icons else base.get("emoji", "🚀"),
+            "label": base.get("label", "Produto Digital"),
+            "accent": _css_rgb(base.get("accent"), "34, 245, 208"),
+            "accent2": _css_rgb(base.get("accent2"), "168, 85, 247"),
+            "bg": _css_rgb(base.get("bg"), "8, 10, 25"),
+            "hook": model.get("hook", "Material digital organizado, bonito e pronto para adaptar."),
+        }
+    except Exception:
+        return {
+            "emoji": "🚀", "icon": "🚀", "label": "Produto Digital",
+            "accent": "34, 245, 208", "accent2": "168, 85, 247", "bg": "8, 10, 25",
+            "hook": "Material digital organizado, bonito e pronto para adaptar.",
+        }
+
+
+def public_bullets(product=None) -> List[str]:
+    """Lista de benefícios usada na página pública.
+
+    Mantém a página de venda viva e evita erro 500 quando o template chama public_bullets(product).
+    """
+    try:
+        if isinstance(product, sqlite3.Row):
+            p = row_to_dict(product)
+        elif isinstance(product, dict):
+            p = product
+        else:
+            p = {}
+        niche = p.get("niche", "") or ""
+        title = p.get("title", "") or ""
+        model = v15_model_for(niche, title)
+        deliverables = list(model.get("deliverables") or [])
+        theme = product_theme(p)
+        bullets = []
+        for item in deliverables[:6]:
+            item = str(item).strip()
+            if item:
+                bullets.append(f"✅ {item[0].upper() + item[1:]}")
+        if not bullets:
+            bullets = [
+                "✅ Guia principal organizado em módulos práticos",
+                "✅ Modelos prontos para copiar, adaptar e usar",
+                "✅ Checklists para aplicar sem começar do zero",
+                "✅ Mensagens e chamadas para divulgação",
+                "✅ Amostra grátis para conhecer antes de comprar",
+                "✅ Manual de uso com próximos passos",
+            ]
+        # Ajuste final para parecer produto pago sem exagero.
+        if theme.get("emoji") and len(bullets) < 7:
+            bullets.append(f"{theme['emoji']} Identidade visual e estrutura temática do nicho")
+        return bullets[:7]
+    except Exception:
+        return [
+            "✅ Guia principal organizado",
+            "✅ Modelos prontos para adaptar",
+            "✅ Checklists práticos",
+            "✅ Amostra grátis",
+            "✅ Manual de uso",
+        ]
+
+
+# Funções disponíveis dentro dos templates Jinja.
+app.jinja_env.globals.update(product_theme=product_theme, public_bullets=public_bullets)
 
 def v15_model_for(niche: str, title: str = "") -> Dict[str, Any]:
     theme = v15_theme_for(niche, title)

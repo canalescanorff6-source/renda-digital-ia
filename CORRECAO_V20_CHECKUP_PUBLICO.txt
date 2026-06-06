@@ -1,0 +1,37 @@
+Correção v20 — Checkup geral após erro 500
+
+Erros encontrados no projeto enviado:
+1. A página pública do produto (/p/<slug>) dava erro 500 porque o template chamava product_theme(product), mas a função não estava registrada no Jinja.
+2. A página pública também chamava public_bullets(product), mas a função não existia no Jinja.
+3. Links antigos de download usando /txt davam 400; agora txt é aceito como apelido de md.
+
+Testes realizados:
+- Import do app: OK
+- Gunicorn/start.sh: OK
+- /healthz: OK
+- /login: OK
+- /dashboard: OK
+- /biblioteca-premium: OK
+- Criação dos 8 produtos premium: OK
+- Página do produto: OK
+- Página pública /p/<slug>: OK
+- Captura de lead: OK
+- Downloads PDF/MD/TXT: OK
+- Vídeo MP4: OK
+- Pacote cliente ZIP: OK
+- Pacote profissional ZIP: OK
+- Pacote lançamento ZIP: OK
+- Pacote social ZIP: OK
+- Estúdio visual: OK
+- Campanhas: OK
+- Robô comercial: OK
+- Cron do robô: OK
+
+Como aplicar:
+1. Extraia o patch dentro da pasta do projeto no Git.
+2. Rode:
+   git add .
+   git commit -m "corrige pagina publica e checkup geral v20"
+   git push
+3. Aguarde o RunSite fazer o deploy.
+4. Teste /healthz, /biblioteca-premium, crie um produto e abra a página pública.
