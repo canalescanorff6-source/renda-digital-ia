@@ -1,0 +1,32 @@
+1) Extraia este patch dentro da pasta do projeto no Git:
+C:\Users\Administrator\Documents\GitHub\renda-digital-ia
+
+2) No terminal, rode:
+
+git add .
+git commit -m "finaliza runsite variaveis e robo comercial"
+git push
+
+3) No RunSite, use:
+
+Build/Install Command:
+pip install -r requirements.txt
+
+Start Command:
+gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 180
+
+4) Cole as variáveis do arquivo RUNSITE_VARIAVEIS_PRONTAS.txt.
+
+5) Teste:
+https://renda-digital-ia.runsite.app/healthz
+https://renda-digital-ia.runsite.app/login
+https://renda-digital-ia.runsite.app/estudio-visual
+https://renda-digital-ia.runsite.app/robo-comercial
+
+6) Para começar a vender:
+- Crie um produto em Biblioteca premium ou Criar produto.
+- Abra Estúdio visual e gere o material premium.
+- Gere o vídeo.
+- Cadastre o produto na Kiwify/Hotmart.
+- Cole o checkout no produto.
+- Use Campanhas e vídeos para postar manualmente ou fila do robô.

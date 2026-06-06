@@ -1,0 +1,16 @@
+V17 PRONTO RUNSITE + ROBÔ COMERCIAL
+
+Correções:
+- Start mais direto para evitar rollback por inicialização lenta.
+- Gunicorn com 1 worker para SQLite.
+- Favicon corrigido para remover 404 no navegador.
+- Tela do Robô Comercial mostrando variáveis prontas reais.
+- Arquivo RUNSITE_VARIAVEIS_PRONTAS.txt com o que colar no RunSite.
+- Guia rápido COMO_SUBIR_AGORA_GIT_RUNSITE.txt.
+
+Depois de subir, teste:
+/healthz
+/login
+/estudio-visual
+/robo-comercial
+/api/robo-comercial/cron?secret=RoboRenda2026Luiz9xK72p

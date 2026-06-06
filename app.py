@@ -253,6 +253,14 @@ def healthz():
     return {"status": "ok", "app": APP_NAME, "database": str(DB_PATH.name)}
 
 
+@app.route("/favicon.ico")
+def favicon():
+    icon_path = BASE_DIR / "static" / "icons" / "icon-192.png"
+    if icon_path.exists():
+        return send_file(icon_path, mimetype="image/png")
+    return ("", 204)
+
+
 @app.route("/manifest.webmanifest")
 def web_manifest():
     data = {
@@ -263,7 +271,7 @@ def web_manifest():
         "display": "standalone",
         "background_color": "#070917",
         "theme_color": "#19f5d0",
-        "description": "Plataforma para criar, organizar e divulgar produtos digitais educacionais.",
+        "description": "Plataforma comercial para criar, organizar, divulgar e vender produtos digitais em múltiplos nichos.",
         "icons": [
             {"src": url_for("static", filename="icons/icon-192.png"), "sizes": "192x192", "type": "image/png"},
             {"src": url_for("static", filename="icons/icon-512.png"), "sizes": "512x512", "type": "image/png"}
