@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Estúdio visual</p>
+    <h1>Vídeo gerado com sucesso</h1>
+    <p class="muted">Agora você pode assistir, baixar e postar no TikTok, Reels, Shorts e Facebook.</p>
+  </div>
+  <div class="actions">
+    <a class="btn ghost" href="{{ url_for('product_detail', product_id=product.id) }}">Voltar ao produto</a>
+    <a class="btn primary" href="{{ url_for('video_download_safe', product_id=product.id) }}">Baixar MP4</a>
+  </div>
+</section>
+
+<div class="grid two">
+  <section class="card">
+    <h2>Prévia do vídeo</h2>
+    <p class="muted">Produto: <strong>{{ product.title }}</strong></p>
+    <video controls playsinline style="width:100%;max-height:720px;border-radius:24px;background:#000" src="{{ url_for('video_stream_safe', product_id=product.id) }}"></video>
+    <p class="muted small">Arquivo: {{ video_file }} • {{ (video_size / 1024 / 1024)|round(2) }} MB</p>
+  </section>
+  <section class="card">
+    <h2>Como usar para vender</h2>
+    <div class="stack">
+      <div class="mini-card"><strong>1. Baixe o MP4</strong><br><span>Use o botão roxo acima.</span></div>
+      <div class="mini-card"><strong>2. Poste manualmente primeiro</strong><br><span>TikTok, Instagram Reels, YouTube Shorts e Status do WhatsApp.</span></div>
+      <div class="mini-card"><strong>3. Use a legenda do sistema</strong><br><span>Abra Campanhas e vídeos para copiar a legenda do produto.</span></div>
+      <div class="mini-card"><strong>4. Coloque o link de compra</strong><br><span>Cadastre na Kiwify/Hotmart e cole o checkout no produto.</span></div>
+    </div>
+    <div class="alert info">Se o vídeo não carregar no navegador, clique em <strong>Baixar MP4</strong>. Em hospedagem grátis, a prévia pode demorar alguns segundos.</div>
+  </section>
+</div>
+{% endblock %}

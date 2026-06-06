@@ -2946,11 +2946,61 @@ def generate_social_queue(product_id):
 @app.route("/produtos/<int:product_id>/video-venda.mp4")
 @login_required
 def download_sales_video(product_id):
+    """Compatibilidade com links antigos .mp4.
+    Em algumas hospedagens, links terminados em .mp4 podem ser tratados de forma diferente.
+    Por isso a interface nova usa /gerar-video e /baixar-video, mas mantemos esta rota.
+    """
     product = get_product(product_id)
     if not product:
         abort(404)
-    out = generate_sales_video(product)
-    return send_file(out, as_attachment=True, download_name=out.name, mimetype="video/mp4")
+    try:
+        out = generate_sales_video(product)
+        return send_file(out, as_attachment=True, download_name=out.name, mimetype="video/mp4", conditional=False, max_age=0)
+    except Exception as exc:
+        flash(f"Não foi possível gerar o vídeo agora: {exc}", "error")
+        return redirect(url_for("product_detail", product_id=product_id))
+
+
+@app.route("/produtos/<int:product_id>/gerar-video")
+@login_required
+def video_generate_page(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    try:
+        out = generate_sales_video(product)
+        return render_template("video_result.html", title="Vídeo gerado", product=product, video_file=out.name, video_size=out.stat().st_size)
+    except Exception as exc:
+        flash(f"Erro ao gerar vídeo: {exc}", "error")
+        return redirect(url_for("product_detail", product_id=product_id))
+
+
+@app.route("/produtos/<int:product_id>/baixar-video")
+@login_required
+def video_download_safe(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    try:
+        out = generate_sales_video(product)
+        return send_file(out, as_attachment=True, download_name=out.name, mimetype="video/mp4", conditional=False, max_age=0)
+    except Exception as exc:
+        flash(f"Erro ao baixar vídeo: {exc}", "error")
+        return redirect(url_for("product_detail", product_id=product_id))
+
+
+@app.route("/produtos/<int:product_id>/assistir-video")
+@login_required
+def video_stream_safe(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    try:
+        out = generate_sales_video(product)
+        return send_file(out, mimetype="video/mp4", conditional=False, max_age=0)
+    except Exception as exc:
+        flash(f"Erro ao abrir vídeo: {exc}", "error")
+        return redirect(url_for("product_detail", product_id=product_id))
 
 
 @app.route("/v/<int:product_id>/video-venda.mp4")
@@ -2959,7 +3009,7 @@ def public_sales_video(product_id):
     if not product or not product.get("public_enabled"):
         abort(404)
     out = generate_sales_video(product)
-    return send_file(out, mimetype="video/mp4")
+    return send_file(out, mimetype="video/mp4", conditional=False, max_age=0)
 
 
 @app.route("/produtos/<int:product_id>/pacote-social-auto")

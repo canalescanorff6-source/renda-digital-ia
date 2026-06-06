@@ -45,8 +45,8 @@
               <input type="hidden" name="days" value="30">
               <button class="btn primary" type="submit">Criar fila 30 dias</button>
             </form>
-            <a class="btn ghost" href="{{ url_for('download_sales_video', product_id=p.id) }}">Baixar vídeo MP4</a>
-            <a class="btn ghost" href="{{ url_for('product_video_test', product_id=p.id) }}" target="_blank">Testar vídeo</a>
+            <a class="btn ghost" href="{{ url_for('video_generate_page', product_id=p.id) }}">Baixar vídeo MP4</a>
+            <a class="btn ghost" href="{{ url_for('video_generate_page', product_id=p.id) }}" target="_blank">Testar vídeo</a>
             <a class="btn ghost" href="{{ url_for('download_social_auto_package', product_id=p.id) }}">Pacote social ZIP</a>
           </div>
         </div>

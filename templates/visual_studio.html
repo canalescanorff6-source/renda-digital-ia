@@ -49,8 +49,8 @@
               <form method="post" action="{{ url_for('product_regenerate_premium_v15', product_id=p.id) }}" onsubmit="return confirm('Substituir os textos por versão premium v15?')">
                 <button class="btn primary" type="submit">Regenerar premium v15</button>
               </form>
-              <a class="btn ghost" href="{{ url_for('download_sales_video', product_id=p.id) }}">Baixar vídeo</a>
-              <a class="btn ghost" href="{{ url_for('product_video_test', product_id=p.id) }}" target="_blank">Testar vídeo</a>
+              <a class="btn ghost" href="{{ url_for('video_generate_page', product_id=p.id) }}">Baixar vídeo</a>
+              <a class="btn ghost" href="{{ url_for('video_generate_page', product_id=p.id) }}" target="_blank">Testar vídeo</a>
             </div>
           </td>
         </tr>
