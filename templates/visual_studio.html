@@ -1,50 +1,77 @@
 {% extends 'base.html' %}
 {% block content %}
-<header class="page-header">
+<section class="page-header">
   <div>
-    <span class="eyebrow">Estúdio visual</span>
-    <h1>Temas, emojis, ícones e identidade por nicho</h1>
-    <p>Use esta área para conferir se o produto está com linguagem visual coerente com o nicho. A v14 aplica esses temas em textos, página pública, campanhas e vídeos.</p>
+    <div class="eyebrow">Aparência premium</div>
+    <h1>Estúdio visual</h1>
+    <p>Veja o tema de cada produto, a nota da oferta e gere uma versão mais chamativa com emojis moderados, ícones, copy forte e vídeo temático.</p>
   </div>
-</header>
-
-<section class="glass-card gradient-card">
-  <h2>Regra profissional</h2>
-  <p class="muted">Emojis e ícones podem melhorar muito, mas precisam ser usados com equilíbrio: gancho, benefícios, CTA e blocos importantes. Exagero deixa o produto com aparência amadora ou spam.</p>
+  <div class="header-actions">
+    <a class="btn ghost" href="{{ url_for('premium_library') }}">Biblioteca premium</a>
+    <a class="btn primary" href="{{ url_for('product_new') }}">Criar produto</a>
+  </div>
 </section>
 
-<section class="theme-grid">
-  {% for key, theme in themes.items() %}
-  <article class="glass-card theme-preview" style="--theme-accent: {{ theme.accent }}; --theme-accent2: {{ theme.accent2 }};">
-    <div class="theme-preview-top">
-      <span class="theme-preview-icon">{{ theme.icon }}</span>
-      <strong>{{ theme.emoji }} {{ theme.label }}</strong>
-    </div>
-    <p>{{ theme.hook }}</p>
-    <div class="chips">
-      {% for b in theme.bullets[:4] %}<span>{{ b }}</span>{% endfor %}
-    </div>
-    <small class="muted">{{ theme.bg }}</small>
-  </article>
-  {% endfor %}
+<div class="alert-soft">
+  <strong>Correção v15:</strong> use o botão <b>Regenerar premium v15</b> nos produtos antigos. Ele substitui textos simples por páginas mais completas, posts mais chamativos e vídeo com fundo temático conforme o nicho.
+</div>
+
+<section class="metric-grid metric-grid-wide">
+  <div class="metric-card purple"><span>Produtos</span><strong>{{ products|length }}</strong><small>analisados</small></div>
+  <div class="metric-card"><span>Vídeo</span><strong>MP4</strong><small>vertical 720x1280</small></div>
+  <div class="metric-card"><span>Textos</span><strong>Premium</strong><small>emojis + ícones</small></div>
+  <div class="metric-card"><span>Temas</span><strong>10</strong><small>por nicho</small></div>
 </section>
 
 <section class="glass-card">
-  <h2>Produtos recentes</h2>
-  {% if products %}
-  <div class="table-wrap"><table><thead><tr><th>Produto</th><th>Nicho</th><th>Tema aplicado</th><th>Ações</th></tr></thead><tbody>
-  {% for p in products %}
-    {% set th = product_theme(p) %}
-    <tr>
-      <td>{{ p.title }}</td>
-      <td>{{ p.niche }}</td>
-      <td>{{ th.emoji }} {{ th.label }}</td>
-      <td><a class="btn ghost" href="{{ url_for('product_detail', product_id=p.id) }}">Abrir</a></td>
-    </tr>
+  <h2>Produtos e qualidade visual</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Produto</th><th>Tema</th><th>Nota</th><th>O que falta</th><th>Ações</th></tr></thead>
+      <tbody>
+      {% for row in products %}
+        {% set p = row.product %}
+        {% set theme = row.theme %}
+        {% set audit = row.audit %}
+        <tr>
+          <td><strong>{{ p.title }}</strong><br><small>{{ p.niche }} • {{ p.price|money }}</small></td>
+          <td><span class="badge">{{ theme.emoji }} {{ theme.label }}</span><br><small>{{ theme.icons|join(' ') }}</small></td>
+          <td><strong>{{ audit.score }}/100</strong></td>
+          <td>
+            {% for c in audit.checks %}
+              {% if not c.ok %}<small class="danger-text">• {{ c.name }}: {{ c.fix }}</small><br>{% endif %}
+            {% endfor %}
+            {% if audit.score >= 85 %}<small>Oferta pronta para testar tráfego e venda.</small>{% endif %}
+          </td>
+          <td>
+            <div class="card-actions">
+              <a class="btn ghost" href="{{ url_for('product_detail', product_id=p.id) }}">Abrir</a>
+              <form method="post" action="{{ url_for('product_regenerate_premium_v15', product_id=p.id) }}" onsubmit="return confirm('Substituir os textos por versão premium v15?')">
+                <button class="btn primary" type="submit">Regenerar premium v15</button>
+              </form>
+              <a class="btn ghost" href="{{ url_for('download_sales_video', product_id=p.id) }}">Baixar vídeo</a>
+              <a class="btn ghost" href="{{ url_for('product_video_test', product_id=p.id) }}" target="_blank">Testar vídeo</a>
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5">Nenhum produto criado ainda. Crie pela Biblioteca premium.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="glass-card">
+  <h2>Temas disponíveis</h2>
+  <div class="idea-grid">
+  {% for key, t in themes.items() if key != 'default' %}
+    <div class="idea-card">
+      <span class="badge">{{ t.emoji }} {{ t.label }}</span>
+      <h3>{{ t.icons|join(' ') }}</h3>
+      <p>Fundo temático, mockup, cards, CTA e linguagem própria para esse nicho.</p>
+    </div>
   {% endfor %}
-  </tbody></table></div>
-  {% else %}
-  <p class="muted">Crie um produto primeiro para visualizar o tema aplicado.</p>
-  {% endif %}
+  </div>
 </section>
 {% endblock %}
