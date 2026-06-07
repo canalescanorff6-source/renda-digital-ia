@@ -1,0 +1,27 @@
+V26 - VIDEO ESTAVEL PARA RUNSITE
+
+Esta versao tira a geracao pesada de MP4 do RunSite.
+O sistema passa a gerar um Kit de video para CapCut/Canva com roteiro, cenas, legendas, prompts e checklist.
+
+COMO APLICAR:
+1) Extraia este patch dentro da pasta do projeto:
+   C:\Users\Administrator\Documents\GitHub\renda-digital-ia
+
+2) Rode:
+   git add .
+   git commit -m "ativa video estavel capcut canva"
+   git push
+
+3) Aguarde o RunSite ficar Running no commit novo.
+
+4) Teste:
+   https://renda-digital-ia.runsite.app/healthz
+   https://renda-digital-ia.runsite.app/diagnostico
+
+5) Para video:
+   Meus produtos -> abrir produto -> Kit video CapCut/Canva
+
+O link novo e:
+   /kit-video/1
+
+Os links antigos de video agora redirecionam para o kit estavel.

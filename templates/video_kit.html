@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Estúdio visual estável</span>
+    <h1>Kit de vídeo para CapCut/Canva</h1>
+    <p>{{ notice }}</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn ghost" href="{{ url_for('product_detail', product_id=product.id) }}">Voltar ao produto</a>
+    <a class="btn primary" href="{{ url_for('product_video_kit_download', product_id=product.id) }}">Baixar pacote ZIP</a>
+    <a class="btn ghost" href="{{ url_for('product_video_script_txt', product_id=product.id) }}">Baixar roteiro</a>
+  </div>
+</header>
+
+<section class="two-cols detail-layout">
+  <div class="glass-card">
+    <h2>{{ theme.emoji }} Identidade do vídeo</h2>
+    <div class="info-list">
+      <div><span>Produto</span><strong>{{ product.title }}</strong></div>
+      <div><span>Nicho</span><strong>{{ product.niche }}</strong></div>
+      <div><span>Tema visual</span><strong>{{ theme.label }}</strong></div>
+      <div><span>Promessa</span><strong>{{ theme.main_promise }}</strong></div>
+      <div><span>Formato</span><strong>9:16 vertical para Reels, TikTok, Shorts e Status</strong></div>
+      <div><span>Modo seguro</span><strong>Sem renderizar MP4 no RunSite</strong></div>
+    </div>
+    <div class="alert info" style="margin-top:16px">
+      O RunSite fica estável gerando roteiro, cenas e arquivos de postagem. O MP4 final você monta no CapCut/Canva, usando seu celular ou PC.
+    </div>
+  </div>
+
+  <div class="glass-card">
+    <h2>Como usar agora</h2>
+    <div class="stack">
+      <div class="mini-card"><strong>1. Baixe o pacote ZIP</strong><br><span>Ele vem com roteiro, cenas, legendas, prompt e checklist.</span></div>
+      <div class="mini-card"><strong>2. Abra no CapCut ou Canva</strong><br><span>Use o modelo 9:16 e cole uma cena por tela.</span></div>
+      <div class="mini-card"><strong>3. Exporte em MP4</strong><br><span>Publique em TikTok, Reels, Shorts e WhatsApp.</span></div>
+      <div class="mini-card"><strong>4. Use o link de venda</strong><br><span>Coloque o link da Kiwify/Hotmart na bio, legenda ou WhatsApp.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="glass-card">
+  <h2>Storyboard profissional</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cena</th><th>Duração</th><th>Gancho</th><th>Texto principal</th><th>Visual sugerido</th></tr></thead>
+      <tbody>
+      {% for s in scenes %}
+        <tr>
+          <td>{{ s.scene }}</td>
+          <td>{{ s.duration }}</td>
+          <td>{{ s.tag }}</td>
+          <td><strong>{{ s.text }}</strong><br><span class="muted">{{ s.small }}</span></td>
+          <td>{{ s.visual }}<br><span class="muted">{{ s.transition }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="glass-card">
+  <h2>O que vem no ZIP</h2>
+  <div class="download-grid">
+    <div class="download-card">01 roteiro de cenas</div>
+    <div class="download-card">02 legendas prontas</div>
+    <div class="download-card">03 storyboard CSV</div>
+    <div class="download-card">04 guia CapCut</div>
+    <div class="download-card">05 guia Canva</div>
+    <div class="download-card">06 prompt para vídeo com IA</div>
+    <div class="download-card">07 textos de capa</div>
+    <div class="download-card">08 checklist de postagem</div>
+    <div class="download-card">09 mensagem WhatsApp</div>
+  </div>
+</section>
+{% endblock %}

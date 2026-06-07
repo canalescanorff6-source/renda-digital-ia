@@ -284,13 +284,7 @@ def diagnostico():
     add("Pasta storage gravável", os.access(STORAGE_DIR, os.W_OK), str(STORAGE_DIR))
     add("Pasta exports gravável", os.access(EXPORT_DIR, os.W_OK), str(EXPORT_DIR))
     add("ReportLab PDF", REPORTLAB_OK, "PDF ativo" if REPORTLAB_OK else "Instale reportlab")
-    try:
-        from PIL import Image  # noqa
-        import imageio.v2 as imageio  # noqa
-        import numpy as np  # noqa
-        add("Vídeos MP4", True, "Pillow + imageio + numpy OK")
-    except Exception as exc:
-        add("Vídeos MP4", False, str(exc))
+    add("Kit de vídeo estável", True, "Modo RunSite seguro: roteiro + cenas + pacote CapCut/Canva, sem renderizar MP4 no servidor")
     try:
         conn = db_conn(); total = conn.execute("SELECT COUNT(*) AS n FROM products").fetchone()["n"]; conn.close(); add("Produtos cadastrados", True, str(total))
     except Exception as exc:
@@ -334,7 +328,7 @@ def web_manifest():
 @app.route("/service-worker.js")
 def service_worker():
     js = """
-const CACHE_NAME = 'renda-digital-ia-pro-v24';
+const CACHE_NAME = 'renda-digital-ia-pro-v26-estavel';
 const CORE_ASSETS = ['/', '/static/css/style.css', '/static/js/app.js'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS)).catch(() => null));
@@ -5550,6 +5544,309 @@ def generate_sales_video(product: Dict[str, Any]) -> Path:  # override v24 super
         except Exception:
             pass
         raise RuntimeError(f"Falha ao gerar MP4 leve: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# v26 — Modo estável de vídeo para RunSite
+# ---------------------------------------------------------------------------
+# Motivo: gerar MP4 dentro do RunSite causava timeout/404/rollback em planos com
+# pouca CPU/RAM. A solução estável é gerar um pacote profissional para CapCut,
+# Canva, TikTok Editor e Reels: roteiro, cenas, legendas, capa, prompts e
+# checklist. O vídeo final é montado fora do servidor, sem derrubar o site.
+
+VIDEO_STABLE_NOTICE = (
+    "Modo estável ativado: o RunSite gera roteiro, cenas, legendas e pacote para "
+    "CapCut/Canva. O MP4 final deve ser montado no celular/PC para evitar travamentos."
+)
+
+
+def _v26_theme(product: Dict[str, Any]) -> Dict[str, Any]:
+    niche = (product.get("niche") or "produto digital").lower()
+    title = (product.get("title") or "produto digital").lower()
+    try:
+        if "v15_model_for" in globals():
+            model = v15_model_for(niche, title)
+            theme = model.get("theme") or {}
+            return {
+                "emoji": theme.get("emoji", "✨"),
+                "label": theme.get("label", "Produto digital"),
+                "main_promise": model.get("main_promise", product.get("promise") or "facilitar a rotina com um material pronto e organizado"),
+                "colors": theme.get("colors", ["#8b5cf6", "#22d3ee", "#0f172a"]),
+                "icons": theme.get("icons", ["✅", "⭐", "🚀"]),
+            }
+    except Exception:
+        pass
+    if "finan" in niche:
+        return {"emoji":"💰","label":"Finanças pessoais","main_promise":"organizar gastos, metas e rotina financeira com clareza","colors":["#16a34a","#22c55e","#052e16"],"icons":["💰","📊","✅"]}
+    if "beleza" in niche or "estética" in niche:
+        return {"emoji":"✨","label":"Beleza e estética","main_promise":"atrair clientes com atendimento, posts e rotina profissional","colors":["#d946ef","#f0abfc","#3b0764"],"icons":["✨","💅","📲"]}
+    if "culin" in niche or "marmita" in niche or "confeit" in niche:
+        return {"emoji":"🍲","label":"Culinária e vendas de comida","main_promise":"organizar cardápio, pedidos, preço e divulgação","colors":["#f97316","#facc15","#431407"],"icons":["🍲","📦","🔥"]}
+    if "pet" in niche:
+        return {"emoji":"🐾","label":"Pets","main_promise":"organizar rotina, cuidados, gastos e acompanhamento do pet","colors":["#06b6d4","#67e8f9","#083344"],"icons":["🐾","🦴","✅"]}
+    if "carreira" in niche or "curr" in niche:
+        return {"emoji":"💼","label":"Carreira","main_promise":"melhorar currículo, entrevista e apresentação profissional","colors":["#2563eb","#60a5fa","#172554"],"icons":["💼","📄","⭐"]}
+    if "educ" in niche or "professor" in niche or "escolar" in niche:
+        return {"emoji":"📚","label":"Educação","main_promise":"economizar tempo com materiais claros e prontos para adaptar","colors":["#7c3aed","#22d3ee","#111827"],"icons":["📚","✏️","✅"]}
+    return {"emoji":"🚀","label":"Produto digital","main_promise":"entregar um pacote organizado, útil e com aparência profissional","colors":["#8b5cf6","#22d3ee","#0f172a"],"icons":["🚀","✅","⭐"]}
+
+
+def build_stable_video_scenes(product: Dict[str, Any]) -> List[Dict[str, str]]:
+    theme = _v26_theme(product)
+    title = product.get("title") or "Produto Digital Premium"
+    price = money(float(product.get("price") or 47))
+    public_url = product_public_url(product) if "product_public_url" in globals() else "link da página pública"
+    e = theme["emoji"]
+    return [
+        {"scene":"1", "duration":"2s", "tag":"GANCHO", "text":f"{e} Você ainda faz tudo do zero?", "small":"Existe um caminho mais simples e organizado.", "visual":"Fundo escuro premium + texto grande + zoom leve", "transition":"Corte rápido"},
+        {"scene":"2", "duration":"2s", "tag":"DOR", "text":"Conteúdo solto não passa confiança.", "small":"O comprador precisa entender valor em poucos segundos.", "visual":"Antes/depois: caos x pacote organizado", "transition":"Deslize lateral"},
+        {"scene":"3", "duration":"3s", "tag":"SOLUÇÃO", "text":title[:95], "small":theme["main_promise"][:125], "visual":"Mockup de celular/notebook com o nome do produto", "transition":"Zoom suave"},
+        {"scene":"4", "duration":"3s", "tag":"POR DENTRO", "text":"Modelos • checklists • bônus • amostra grátis", "small":"Mostre 3 páginas/prints do produto rapidamente.", "visual":"Carrossel de páginas do pacote", "transition":"Cortes no ritmo da música"},
+        {"scene":"5", "duration":"2s", "tag":"PROVA DE VALOR", "text":"Organizado para usar, adaptar e publicar", "small":"Sem promessa milagrosa: foco em praticidade e clareza.", "visual":"Cards com ícones e benefícios", "transition":"Pop-up dos ícones"},
+        {"scene":"6", "duration":"2s", "tag":"OFERTA", "text":f"Preço inicial: {price}", "small":"Entrega digital + bônus + material de apoio.", "visual":"Etiqueta de preço + bônus aparecendo", "transition":"Glow no preço"},
+        {"scene":"7", "duration":"2s", "tag":"AÇÃO", "text":"Baixe a amostra grátis e veja por dentro", "small":public_url, "visual":"Botão Link na bio / WhatsApp / Página de compra", "transition":"Final com CTA forte"},
+    ]
+
+
+def build_stable_video_package_files(product: Dict[str, Any]) -> Dict[str, str]:
+    theme = _v26_theme(product)
+    scenes = build_stable_video_scenes(product)
+    title = product.get("title") or "Produto Digital Premium"
+    price = money(float(product.get("price") or 47))
+    niche = product.get("niche") or "Produto digital"
+    public_url = product_public_url(product) if "product_public_url" in globals() else ""
+    checkout = product.get("checkout_link") or "COLE_AQUI_O_LINK_DA_KIWIFY_OU_HOTMART"
+    colors = ", ".join(theme.get("colors", []))
+    icons = " ".join(theme.get("icons", []))
+
+    roteiro = [
+        f"# Roteiro profissional — {title}",
+        "",
+        f"Nichoo/tema: {niche}",
+        f"Identidade visual sugerida: {theme['label']} {theme['emoji']}",
+        f"Cores sugeridas: {colors}",
+        f"Ícones sugeridos: {icons}",
+        f"Preço/oferta: {price}",
+        f"Página pública: {public_url}",
+        f"Checkout: {checkout}",
+        "",
+        "## Cenas do vídeo vertical",
+    ]
+    for s in scenes:
+        roteiro.append(f"\n### Cena {s['scene']} — {s['tag']} ({s['duration']})")
+        roteiro.append(f"Texto grande: {s['text']}")
+        roteiro.append(f"Texto menor: {s['small']}")
+        roteiro.append(f"Visual: {s['visual']}")
+        roteiro.append(f"Transição: {s['transition']}")
+
+    legendas = f"""# Legendas prontas para postar
+
+## Legenda 1 — Dor + solução
+{theme['emoji']} Você ainda perde tempo começando tudo do zero?
+
+O **{title}** foi organizado para facilitar sua rotina com modelos, checklists, bônus e uma amostra grátis para você ver por dentro antes de comprar.
+
+✅ Produto digital
+✅ Entrega organizada
+✅ Bônus inclusos
+✅ Link de compra: {checkout}
+
+#produtodigital #rendadigital #empreendedorismo #negociosonline #canva #capcut
+
+---
+
+## Legenda 2 — Amostra grátis
+🎁 Antes de comprar, veja por dentro.
+
+Baixe a amostra grátis do **{title}** e confira se o material combina com o que você precisa.
+
+👉 Página: {public_url}
+
+---
+
+## Legenda 3 — Oferta
+🔥 Oferta inicial: {price}
+
+O pacote vem com estrutura pronta, bônus e material de apoio para você adaptar com praticidade.
+
+Acesse pelo link: {checkout}
+"""
+
+    capcut = f"""# Como montar no CapCut
+
+1. Abra o CapCut no celular ou PC.
+2. Crie um vídeo em formato **9:16 vertical**.
+3. Use duração total entre **14 e 20 segundos**.
+4. Crie uma cena para cada bloco do arquivo `01-roteiro-cenas.md`.
+5. Use fundo com estas cores: **{colors}**.
+6. Coloque textos grandes, com 1 frase por tela.
+7. Use transições simples: corte rápido, zoom suave e deslize lateral.
+8. Adicione música de fundo leve/viral, sem atrapalhar a leitura.
+9. No final, coloque: **Baixe a amostra grátis / Link na bio / Chame no WhatsApp**.
+10. Exporte em 1080x1920 se o celular suportar, ou 720x1280 se quiser arquivo leve.
+
+Dica: não use muitos efeitos. O que vende é clareza + oferta + visual organizado.
+"""
+
+    canva = f"""# Como montar no Canva
+
+1. Entre no Canva e escolha **Vídeo para celular / Reels / TikTok**.
+2. Pesquise por modelo: "produto digital", "ebook", "curso online" ou "promoção".
+3. Troque as cores para: **{colors}**.
+4. Use os textos do arquivo `01-roteiro-cenas.md`.
+5. Adicione mockup de celular/notebook e escreva o nome do produto:
+   **{title}**
+6. Baixe em MP4.
+7. Publique no TikTok, Reels, Shorts e Status do WhatsApp.
+"""
+
+    prompt_ia = f"""# Prompt para criar vídeo com IA/Canva/CapCut
+
+Crie um vídeo vertical 9:16, premium, moderno e chamativo, para divulgar o produto digital abaixo.
+
+Produto: {title}
+Nicho: {niche}
+Tema visual: {theme['label']} {theme['emoji']}
+Cores: {colors}
+Oferta: {price}
+Objetivo: fazer a pessoa baixar a amostra grátis e depois comprar pelo checkout.
+Estilo: profissional, fundo escuro ou temático, textos grandes, poucos elementos por cena, ícones modernos e CTA forte.
+
+Cenas:
+""" + "\n".join([f"{s['scene']}. {s['text']} — {s['small']}" for s in scenes])
+
+    storyboard_csv = "cena,duracao,tag,texto_principal,texto_menor,visual,transicao\n" + "\n".join([
+        '"{scene}","{duration}","{tag}","{text}","{small}","{visual}","{transition}"'.format(**{k:str(v).replace('"','""') for k,v in s.items()})
+        for s in scenes
+    ])
+
+    capa = f"""# Textos para capa/thumbnail
+
+Opção 1: {theme['emoji']} Pare de começar do zero
+Opção 2: Produto digital pronto para adaptar
+Opção 3: Baixe a amostra grátis
+Opção 4: {title[:60]}
+Opção 5: Oferta inicial: {price}
+"""
+
+    checklist = f"""# Checklist antes de postar
+
+[ ] Vídeo em 9:16 vertical
+[ ] Texto grande legível no celular
+[ ] Mostra o produto por dentro
+[ ] Tem CTA para amostra grátis
+[ ] Link de checkout conferido: {checkout}
+[ ] Página pública conferida: {public_url}
+[ ] Legenda copiada do arquivo `02-legendas-posts.md`
+[ ] Postado em TikTok, Instagram Reels, Shorts e Status do WhatsApp
+[ ] Responder interessados com o link do produto
+"""
+
+    return {
+        "00-LEIA-PRIMEIRO.md": f"# Kit de vídeo estável\n\nEste pacote substitui a geração pesada de MP4 no RunSite. Use os arquivos para montar o vídeo no CapCut, Canva, TikTok Editor ou Reels.\n\nProduto: {title}\nPágina pública: {public_url}\nCheckout: {checkout}\n",
+        "01-roteiro-cenas.md": "\n".join(roteiro),
+        "02-legendas-posts.md": legendas,
+        "03-storyboard.csv": storyboard_csv,
+        "04-como-montar-no-capcut.md": capcut,
+        "05-como-montar-no-canva.md": canva,
+        "06-prompt-para-video-com-ia.md": prompt_ia,
+        "07-textos-capa-thumbnail.md": capa,
+        "08-checklist-postagem.md": checklist,
+        "09-mensagem-whatsapp.txt": f"Oi! 😊 Preparei uma amostra grátis do {title}. Você pode ver por dentro aqui: {public_url}\n\nSe quiser o pacote completo, o link de compra é: {checkout}",
+    }
+
+
+@app.route("/kit-video/<int:product_id>")
+@login_required
+def product_video_kit_page(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    scenes = build_stable_video_scenes(product)
+    theme = _v26_theme(product)
+    return render_template("video_kit.html", product=product, scenes=scenes, theme=theme, notice=VIDEO_STABLE_NOTICE)
+
+
+@app.route("/kit-video/<int:product_id>/baixar")
+@login_required
+def product_video_kit_download(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    out = EXPORT_DIR / f"{slugify(product['title'])}-kit-video-capcut-canva.zip"
+    with ZipFile(out, "w", ZIP_DEFLATED) as z:
+        for name, content in build_stable_video_package_files(product).items():
+            z.writestr(name, content.encode("utf-8-sig"))
+    return send_file(out, as_attachment=True, download_name=out.name)
+
+
+@app.route("/kit-video/<int:product_id>/roteiro.txt")
+@login_required
+def product_video_script_txt(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    content = build_stable_video_package_files(product)["01-roteiro-cenas.md"]
+    return send_file(io.BytesIO(content.encode("utf-8-sig")), mimetype="text/markdown", as_attachment=True, download_name=f"roteiro-video-{slugify(product['title'])}.md")
+
+
+def _redirect_to_video_kit(product_id):
+    return redirect(url_for("product_video_kit_page", product_id=product_id))
+
+
+def _download_video_kit(product_id):
+    return product_video_kit_download(product_id)
+
+# Troca os endpoints antigos de MP4 pesado por kit estável. Assim os botões e
+# links antigos não tentam mais renderizar vídeo no RunSite.
+for _endpoint in [
+    "video_generate_page", "video_direct_page", "video_regenerate_safe",
+    "video_stream_safe", "public_sales_video", "product_video_test",
+]:
+    if _endpoint in app.view_functions:
+        app.view_functions[_endpoint] = login_required(_redirect_to_video_kit)
+for _endpoint in ["video_download_safe", "video_direct_download", "download_sales_video"]:
+    if _endpoint in app.view_functions:
+        app.view_functions[_endpoint] = login_required(_download_video_kit)
+
+
+# Pacotes sociais/profissionais sem gerar MP4 no servidor.
+def _download_social_auto_package_stable(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    campaign = build_social_campaign(product, 30)
+    out = EXPORT_DIR / f"{slugify(product['title'])}-pacote-social-estavel.zip"
+    rows = io.StringIO()
+    writer = csv.writer(rows)
+    writer.writerow(["dia", "plataforma", "tipo", "legenda", "hashtags"])
+    for item in campaign:
+        writer.writerow([item.get("day"), item.get("platform"), item.get("post_type"), item.get("caption"), item.get("hashtags")])
+    with ZipFile(out, "w", ZIP_DEFLATED) as z:
+        z.writestr("01-calendario-posts-30-dias.csv", rows.getvalue().encode("utf-8-sig"))
+        z.writestr("02-legendas-e-hashtags.txt", "\n\n---\n\n".join([f"Dia {i.get('day')} - {i.get('platform')}\n{i.get('caption')}\n{i.get('hashtags')}" for i in campaign]).encode("utf-8-sig"))
+        for name, content in build_stable_video_package_files(product).items():
+            z.writestr("kit-video-capcut-canva/" + name, content.encode("utf-8-sig"))
+    return send_file(out, as_attachment=True, download_name=out.name)
+
+
+def _product_professional_package_stable(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    out = EXPORT_DIR / f"{slugify(product['title'])}-pacote-profissional-estavel.zip"
+    with ZipFile(out, "w", ZIP_DEFLATED) as z:
+        for name, content in build_professional_package_files(product).items():
+            z.writestr(name, content.encode("utf-8-sig"))
+        for name, content in build_stable_video_package_files(product).items():
+            z.writestr("09-kit-video-capcut-canva/" + name, content.encode("utf-8-sig"))
+    return send_file(out, as_attachment=True, download_name=out.name)
+
+if "download_social_auto_package" in app.view_functions:
+    app.view_functions["download_social_auto_package"] = login_required(_download_social_auto_package_stable)
+if "product_professional_package" in app.view_functions:
+    app.view_functions["product_professional_package"] = login_required(_product_professional_package_stable)
+
 
 
 if __name__ == "__main__":
