@@ -334,7 +334,7 @@ def web_manifest():
 @app.route("/service-worker.js")
 def service_worker():
     js = """
-const CACHE_NAME = 'renda-digital-ia-pro-v1';
+const CACHE_NAME = 'renda-digital-ia-pro-v24';
 const CORE_ASSETS = ['/', '/static/css/style.css', '/static/js/app.js'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS)).catch(() => null));
@@ -2943,36 +2943,66 @@ def generate_social_queue(product_id):
     return redirect(url_for("social_automation"))
 
 
+
 @app.route("/produtos/<int:product_id>/video-venda.mp4")
 @login_required
 def download_sales_video(product_id):
-    """Compatibilidade com links antigos .mp4.
-    Em algumas hospedagens, links terminados em .mp4 podem ser tratados de forma diferente.
-    Por isso a interface nova usa /gerar-video e /baixar-video, mas mantemos esta rota.
+    """Compatibilidade com links antigos.
+    No RunSite, links .mp4 podem cair no proxy; por isso o caminho recomendado é /gerar-video.
     """
     product = get_product(product_id)
     if not product:
         abort(404)
-    try:
-        out = generate_sales_video(product)
-        return send_file(out, as_attachment=True, download_name=out.name, mimetype="video/mp4", conditional=False, max_age=0)
-    except Exception as exc:
-        flash(f"Não foi possível gerar o vídeo agora: {exc}", "error")
-        return redirect(url_for("product_detail", product_id=product_id))
+    out = video_output_path(product)
+    if not out.exists() or out.stat().st_size < 1000:
+        start_video_job(product, force=False)
+        flash("O vídeo começou a ser preparado. Aguarde alguns segundos e clique em baixar.", "info")
+        return redirect(url_for("video_generate_page", product_id=product_id))
+    return send_file(out, as_attachment=True, download_name=out.name, mimetype="video/mp4", conditional=False, max_age=0)
 
 
 @app.route("/produtos/<int:product_id>/gerar-video")
 @login_required
 def video_generate_page(product_id):
+    """Tela segura de vídeo: não renderiza o MP4 dentro da requisição.
+    Ela inicia uma tarefa leve em segundo plano e a página acompanha o status.
+    """
     product = get_product(product_id)
     if not product:
         abort(404)
-    try:
-        out = generate_sales_video(product)
-        return render_template("video_result.html", title="Vídeo gerado", product=product, video_file=out.name, video_size=out.stat().st_size)
-    except Exception as exc:
-        flash(f"Erro ao gerar vídeo: {exc}", "error")
-        return redirect(url_for("product_detail", product_id=product_id))
+    status = video_job_status(product)
+    if status.get("status") not in {"ready", "processing"}:
+        status = start_video_job(product, force=False)
+    return render_template(
+        "video_result.html",
+        title="Vídeo de venda",
+        product=product,
+        video_file=status.get("file") or video_output_path(product).name,
+        video_size=status.get("size") or 0,
+        video_status=status,
+    )
+
+
+@app.route("/produtos/<int:product_id>/video-status")
+@login_required
+def video_status_api(product_id):
+    product = get_product(product_id)
+    if not product:
+        return jsonify({"ok": False, "status": "missing", "error": "Produto não encontrado"}), 404
+    status = video_job_status(product)
+    return jsonify({"ok": status.get("status") == "ready", **status})
+
+
+@app.route("/produtos/<int:product_id>/regenerar-video", methods=["POST", "GET"])
+@login_required
+def video_regenerate_safe(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    status = start_video_job(product, force=True)
+    if request.method == "POST":
+        flash("Vídeo enviado para geração em segundo plano. Aguarde a página atualizar.", "success")
+    return redirect(url_for("video_generate_page", product_id=product_id))
 
 
 @app.route("/produtos/<int:product_id>/baixar-video")
@@ -2981,12 +3011,12 @@ def video_download_safe(product_id):
     product = get_product(product_id)
     if not product:
         abort(404)
-    try:
-        out = generate_sales_video(product)
-        return send_file(out, as_attachment=True, download_name=out.name, mimetype="video/mp4", conditional=False, max_age=0)
-    except Exception as exc:
-        flash(f"Erro ao baixar vídeo: {exc}", "error")
-        return redirect(url_for("product_detail", product_id=product_id))
+    out = video_output_path(product)
+    if not out.exists() or out.stat().st_size < 1000:
+        start_video_job(product, force=False)
+        flash("O vídeo ainda está sendo preparado. Volte a baixar quando o status ficar pronto.", "info")
+        return redirect(url_for("video_generate_page", product_id=product_id))
+    return send_file(out, as_attachment=True, download_name=out.name, mimetype="video/mp4", conditional=False, max_age=0)
 
 
 @app.route("/produtos/<int:product_id>/assistir-video")
@@ -2995,12 +3025,11 @@ def video_stream_safe(product_id):
     product = get_product(product_id)
     if not product:
         abort(404)
-    try:
-        out = generate_sales_video(product)
-        return send_file(out, mimetype="video/mp4", conditional=False, max_age=0)
-    except Exception as exc:
-        flash(f"Erro ao abrir vídeo: {exc}", "error")
-        return redirect(url_for("product_detail", product_id=product_id))
+    out = video_output_path(product)
+    if not out.exists() or out.stat().st_size < 1000:
+        start_video_job(product, force=False)
+        return redirect(url_for("video_generate_page", product_id=product_id))
+    return send_file(out, mimetype="video/mp4", conditional=False, max_age=0)
 
 
 @app.route("/v/<int:product_id>/video-venda.mp4")
@@ -3008,7 +3037,13 @@ def public_sales_video(product_id):
     product = get_product(product_id)
     if not product or not product.get("public_enabled"):
         abort(404)
-    out = generate_sales_video(product)
+    out = video_output_path(product)
+    if not out.exists() or out.stat().st_size < 1000:
+        # Público não deve travar esperando. Gera só se for rápido; se ainda não estiver pronto, mostra 404 simples.
+        try:
+            out = generate_sales_video(product)
+        except Exception:
+            abort(404)
     return send_file(out, mimetype="video/mp4", conditional=False, max_age=0)
 
 
@@ -4457,8 +4492,13 @@ ensure_social_tables()
 ensure_robot_tables()
 
 
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=os.getenv("FLASK_DEBUG", "0") == "1")
+
+
 # ============================================================================
-# Motor comercial premium, textos chamativos e vídeo temático robusto
+# v15 — Motor comercial premium, textos chamativos e vídeo temático robusto
 # ============================================================================
 # Esta camada foi adicionada no final para substituir os geradores simples sem
 # quebrar as rotas antigas. As rotas continuam as mesmas, mas passam a usar estas
@@ -5266,196 +5306,232 @@ TRENDING_BLUEPRINTS = [
     {"title":"Mega Kit Professor Total — Atividades por Disciplinas","niche":"Educação - todas as disciplinas","product_type":"Mega kit pedagógico editável","target_audience":"professores, reforço escolar, escolas pequenas e pais","promise":"economizar tempo com atividades, gabaritos, orientações e campos BNCC editáveis","price":47.00,"angle":"📚 Material pedagógico editável com revisão necessária."},
 ]
 
+# -----------------------------------------------------------------------------
+# V24 — Vídeo seguro para RunSite
+# -----------------------------------------------------------------------------
+# O vídeo agora é gerado fora da requisição principal. A página /gerar-video abre
+# rápido, mostra status e consulta /video-status até o MP4 ficar pronto. Isso evita
+# timeout/404 do proxy do RunSite em planos com pouca CPU/RAM.
 
-# ============================================================================
-# v23 — Checkup final: rotas seguras, textos multinicho e execução local correta
-# ============================================================================
+import threading as _video_threading
+import json as _video_json
+import time as _video_time
 
-def _safe_float(value, default=0.0):
+_VIDEO_JOB_LOCK = _video_threading.Lock()
+_VIDEO_RUNNING = set()
+VIDEO_JOB_DIR = EXPORT_DIR / "video_jobs"
+VIDEO_JOB_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def video_output_path(product: Dict[str, Any]) -> Path:
+    title = product.get("title") or f"produto-{product.get('id', 'sem-id')}"
+    return EXPORT_DIR / f"{slugify(title)}-video-runsite-leve.mp4"
+
+
+def video_status_path(product: Dict[str, Any]) -> Path:
+    return VIDEO_JOB_DIR / f"produto-{product.get('id') or slugify(product.get('title','produto'))}.json"
+
+
+def _write_video_status(product: Dict[str, Any], status: str, **extra):
+    path = video_status_path(product)
+    data = {
+        "product_id": product.get("id"),
+        "status": status,
+        "file": video_output_path(product).name,
+        "updated_at": datetime.utcnow().isoformat(),
+        **extra,
+    }
     try:
-        return float(str(value or default).replace(',', '.'))
+        path.write_text(_video_json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     except Exception:
-        return float(default)
+        pass
+    return data
 
 
-def product_scorecard(product: Dict[str, Any]) -> Dict[str, Any]:  # override v23 multinicho
-    """Auditoria comercial para qualquer nicho, sem ficar presa apenas à educação."""
-    title = (product.get("title") or "").strip()
-    niche = (product.get("niche") or "").strip()
-    promise = (product.get("promise") or "").strip()
-    target = (product.get("target_audience") or "").strip()
-    price = _safe_float(product.get("price"), 0)
-    checkout = bool((product.get("checkout_link") or "").strip())
-    content = product.get("content") or ""
-    sales_page = product.get("sales_page") or ""
-    lead = product.get("lead_magnet_content") or ""
-    model = v15_model_for(niche, title)
-    is_edu = product_theme(product).get("label", "").lower().startswith("educação")
-    score = 0
-    items = []
-    def add(name, ok, fix, points):
-        nonlocal score
-        if ok:
-            score += points
-        items.append({"name": name, "ok": bool(ok), "fix": fix, "points": points})
-    add("Título vendável", len(title) >= 18 and any(w in title.lower() for w in ["kit", "pack", "planner", "guia", "agenda", "templates", "prompts", "calendário", "mega"]), "Use um nome com formato claro: Kit, Pack, Planner, Guia, Agenda, Templates ou Prompts.", 12)
-    add("Nicho claro", len(niche) >= 6, "Escolha um nicho específico para o comprador entender rapidamente.", 8)
-    add("Público definido", len(target) >= 18, "Escreva exatamente quem compra: MEI, autônomos, famílias, profissionais de beleza, vendedores etc.", 12)
-    add("Promessa honesta", len(promise) >= 30 and not any(w in promise.lower() for w in ["garantido", "milagroso", "100%", "enriquecer", "cura"]), "Troque promessa exagerada por organização, economia de tempo, clareza e praticidade.", 12)
-    add("Preço de entrada testável", 17 <= price <= 97, "Para começar, teste R$ 27, R$ 37, R$ 47 ou R$ 67.", 10)
-    add("Conteúdo robusto", len(content) >= 5500, "Regere pela Biblioteca Premium/Estúdio visual para sair com módulos, exemplos, checklists e bônus.", 14)
-    add("Página de venda completa", len(sales_page) >= 2600 and any(w in sales_page.lower() for w in ["perguntas", "faq", "garantia", "bônus", "bonus"]), "Inclua dor, transformação, entregáveis, bônus, FAQ, garantia e chamada para ação.", 14)
-    add("Isca grátis", len(lead) >= 500, "Mantenha uma amostra grátis para capturar interessados.", 8)
-    add("Checkout configurado", checkout, "Cadastre na Kiwify/Hotmart/Eduzz/Monetizze e cole o link do checkout no produto.", 14)
-    if is_edu:
-        add("Aviso BNCC responsável", "bncc" in content.lower() and any(w in content.lower() for w in ["revise", "revisão", "currículo"]), "Em educação, mantenha aviso para revisar BNCC e currículo local.", 6)
-    else:
-        add("Aviso responsável", not any(w in sales_page.lower() for w in ["resultado garantido", "dinheiro garantido"]), "Não use promessa de resultado garantido.", 6)
-    level = "Pronto para testar tráfego" if score >= 82 else "Quase pronto" if score >= 65 else "Precisa melhorar antes de divulgar forte"
-    return {"score": min(score, 100), "level": level, "items": items, "notice": model.get("warnings", PROFESSIONAL_NOTICE)}
+def video_job_status(product: Dict[str, Any]) -> Dict[str, Any]:
+    out = video_output_path(product)
+    if out.exists() and out.stat().st_size > 1000:
+        return {
+            "status": "ready",
+            "file": out.name,
+            "size": out.stat().st_size,
+            "message": "Vídeo pronto para assistir e baixar.",
+            "download_url": url_for("video_download_safe", product_id=product["id"]),
+            "watch_url": url_for("video_stream_safe", product_id=product["id"]),
+        }
+    path = video_status_path(product)
+    if path.exists():
+        try:
+            data = _video_json.loads(path.read_text(encoding="utf-8"))
+            # Se ficou preso em processamento por muito tempo, libera nova tentativa.
+            if data.get("status") == "processing":
+                updated = data.get("updated_at") or ""
+                try:
+                    age = (datetime.utcnow() - datetime.fromisoformat(updated)).total_seconds()
+                except Exception:
+                    age = 9999
+                if age > 240:
+                    return _write_video_status(product, "expired", message="A geração anterior demorou demais. Clique em regenerar.")
+            return data
+        except Exception:
+            pass
+    return {"status": "missing", "file": out.name, "message": "Vídeo ainda não foi gerado."}
 
 
-def build_ad_creatives(product: Dict[str, Any]) -> str:  # override v23 multinicho
-    title = product.get("title", "Produto Digital")
-    niche = product.get("niche", "Produto digital")
-    price = money(_safe_float(product.get("price"), 47))
-    checkout = product.get("checkout_link") or "COLE_AQUI_O_LINK_DO_CHECKOUT"
-    url = product_public_url(product)
-    theme = product_theme(product)
-    model = v15_model_for(niche, title)
-    deliverables = public_bullets(product)[:6]
-    hooks = [
-        f"{theme['emoji']} Você ainda perde tempo começando tudo do zero?",
-        "👀 Veja por dentro antes de comprar.",
-        "🎁 Baixe uma amostra grátis e confira se faz sentido para você.",
-        f"⚡ Um pacote organizado para {model['main_promise']}.",
-        f"💎 {title}: aparência profissional, modelos prontos e uso simples.",
-        "📲 Ideal para postar, vender, atender ou organizar melhor a rotina.",
-        f"🔥 Oferta inicial: {price}. Entrega digital.",
-        "✅ Menos improviso, mais clareza e apresentação.",
-        "🚀 Um material bonito para adaptar e usar com mais confiança.",
-        "🔗 Acesse a página, baixe a amostra e veja o que vem no pacote.",
-    ]
-    return f"""
-# Criativos premium de venda — {title}
+def start_video_job(product: Dict[str, Any], force: bool = False) -> Dict[str, Any]:
+    out = video_output_path(product)
+    if force and out.exists():
+        try:
+            out.unlink()
+        except Exception:
+            pass
+    if out.exists() and out.stat().st_size > 1000 and not force:
+        return video_job_status(product)
+    key = str(product.get("id") or product.get("title"))
+    with _VIDEO_JOB_LOCK:
+        if key in _VIDEO_RUNNING:
+            return _write_video_status(product, "processing", progress=20, message="Vídeo já está sendo gerado.")
+        _VIDEO_RUNNING.add(key)
+    _write_video_status(product, "processing", progress=5, message="Preparando cenas do vídeo...")
 
-## Posicionamento
-**Nicho:** {niche}  
-**Tema visual:** {theme['emoji']} {theme['label']}  
-**Preço inicial sugerido:** {price}  
-**Página pública:** {url}  
-**Checkout:** {checkout}
+    def _worker():
+        try:
+            _write_video_status(product, "processing", progress=25, message="Montando visual temático...")
+            generated = generate_sales_video(product)
+            _write_video_status(product, "ready", progress=100, file=generated.name, size=generated.stat().st_size, message="Vídeo pronto para baixar.")
+        except Exception as exc:
+            _write_video_status(product, "error", progress=0, error=str(exc), message="Não foi possível gerar o vídeo neste servidor.")
+        finally:
+            with _VIDEO_JOB_LOCK:
+                _VIDEO_RUNNING.discard(key)
 
-## Headline principal
-{theme['emoji']} {title}: um pacote digital bonito, organizado e pronto para adaptar.
-
-## Promessa curta
-{model['main_promise'].capitalize()} sem começar tudo do zero.
-
-## Benefícios para usar na página e nos posts
-""" + "\n".join(deliverables) + f"""
-
-## 10 chamadas prontas para Reels, TikTok, Shorts e WhatsApp
-""" + "\n".join([f"{i+1}. {h}" for i, h in enumerate(hooks)]) + f"""
-
-## Roteiro de vídeo curto
-Cena 1 — Dor: “Você ainda faz tudo no improviso?”  
-Cena 2 — Solução: “Este pacote já vem organizado por módulos.”  
-Cena 3 — Prova visual: “Modelos, checklists, mensagens e páginas prontas para adaptar.”  
-Cena 4 — Segurança: “Baixe a amostra grátis e veja por dentro.”  
-Cena 5 — Ação: “Acesse o link e escolha se faz sentido para você.”
-
-## Mensagem de WhatsApp sem spam
-Oi! Preparei uma amostra grátis do **{title}**. É um material digital organizado para {model['main_promise']}. Se quiser ver por dentro, aqui está o link: {url}
-
-## Legenda curta
-{theme['emoji']} Novo material digital pronto: **{title}**.  
-✅ organizado  
-✅ bonito  
-✅ fácil de adaptar  
-✅ com amostra grátis  
-
-Veja por dentro: {url}
-""".strip()
+    _video_threading.Thread(target=_worker, daemon=True).start()
+    return video_job_status(product)
 
 
-def build_professional_brand_kit(product: Dict[str, Any]) -> str:  # override v23 multinicho
-    title = product.get("title", "Produto Digital")
-    niche = product.get("niche", "Produto digital")
-    theme = product_theme(product)
-    model = v15_model_for(niche, title)
-    return f"""
-# Kit de marca comercial — {title}
+def generate_sales_video(product: Dict[str, Any]) -> Path:  # override v24 super leve
+    """Gera MP4 vertical leve para RunSite.
+    Resolução e FPS reduzidos de propósito para não travar 0.1 CPU/256MB.
+    """
+    try:
+        from PIL import Image, ImageDraw
+        import imageio.v2 as imageio
+        import numpy as np
+    except Exception as exc:
+        raise RuntimeError("Dependências de vídeo ausentes: pillow, imageio, imageio-ffmpeg e numpy") from exc
 
-## Identidade do produto
-- **Nicho:** {niche}
-- **Tema visual:** {theme['emoji']} {theme['label']}
-- **Promessa:** {model['main_promise']}
-- **Página pública:** {product_public_url(product)}
-- **Checkout:** {product.get('checkout_link') or 'COLE_AQUI_O_LINK_DO_CHECKOUT'}
+    title = product.get("title") or "Produto Digital Premium"
+    niche = product.get("niche") or "Produto digital"
+    price = money(float(product.get("price") or 47))
+    theme = v15_theme_for(niche, title) if "v15_theme_for" in globals() else {"emoji":"✨","label":"Produto digital","bg":(14,16,34),"accent":(139,92,246),"accent2":(34,211,238),"icons":["✓","★","→"]}
+    out = video_output_path(product)
+    if out.exists() and out.stat().st_size > 1000:
+        return out
 
-## Tom de voz
-- Claro, direto e humano.
-- Visual de produto pago, sem promessas falsas.
-- Emojis moderados para guiar a leitura, não para poluir.
-- Foco em praticidade, organização e transformação realista.
+    W, H = 544, 960
+    fps = int(os.getenv("VIDEO_FPS", "8") or 8)
+    frames_per_scene = int(os.getenv("VIDEO_FRAMES_PER_SCENE", "8") or 8)
+    max_scenes = int(os.getenv("VIDEO_MAX_SCENES", "5") or 5)
+    bg = theme.get("bg", (14,16,34))
+    accent = theme.get("accent", (139,92,246))
+    accent2 = theme.get("accent2", (34,211,238))
+    emoji = theme.get("emoji", "✨")
 
-## Frase curta da marca
-{theme['emoji']} Um pacote digital pronto para organizar, adaptar e colocar em prática.
+    scenes = [
+        {"tag":"ATENÇÃO", "text":f"{emoji} Pare de começar do zero", "small":"Use um pacote pronto, bonito e organizado."},
+        {"tag":"SOLUÇÃO", "text":title[:80], "small":f"Criado para: {niche[:55]}"},
+        {"tag":"POR DENTRO", "text":"Modelos • checklists • bônus • amostra grátis", "small":"Tudo pensado para facilitar a decisão de compra."},
+        {"tag":"OFERTA", "text":f"Preço inicial: {price}", "small":"Entrega digital. Revise, adapte e publique com segurança."},
+        {"tag":"AÇÃO", "text":"Baixe a amostra grátis", "small":"Depois acesse o pacote completo pelo link."},
+    ][:max_scenes]
 
-## Bio curta
-Produtos digitais organizados, bonitos e prontos para adaptar. Baixe a amostra grátis e veja por dentro.
+    big = _v15_font(36, True) if "_v15_font" in globals() else None
+    mid = _v15_font(22, False) if "_v15_font" in globals() else None
+    small = _v15_font(17, False) if "_v15_font" in globals() else None
+    badge_font = _v15_font(16, True) if "_v15_font" in globals() else None
 
-## Cores e atmosfera
-- Fundo temático do nicho, com contraste alto.
-- Cards com bordas suaves e efeito premium.
-- Ícones relacionados ao nicho: {' '.join(v15_theme_for(niche, title).get('icons', []))}
-- Evitar textos pequenos demais no vídeo.
+    def wrap_text(draw, text, font, max_width, max_lines=4):
+        words = str(text).split()
+        lines, line = [], ""
+        for w in words:
+            test = (line + " " + w).strip()
+            try:
+                width = draw.textbbox((0,0), test, font=font)[2]
+            except Exception:
+                width = len(test) * 10
+            if width <= max_width:
+                line = test
+            else:
+                if line:
+                    lines.append(line)
+                line = w
+            if len(lines) >= max_lines:
+                break
+        if line and len(lines) < max_lines:
+            lines.append(line)
+        return lines[:max_lines]
 
-## Promessas que pode usar
-- “Economize tempo na criação do material.”
-- “Use modelos prontos e adapte para sua realidade.”
-- “Veja por dentro antes de comprar.”
-- “Entrega digital organizada.”
+    def draw_scene(scene, idx, f):
+        img = Image.new("RGB", (W, H), bg)
+        draw = ImageDraw.Draw(img)
+        # fundo temático leve
+        for y in range(0, H, 24):
+            alpha = y / H
+            r = int(bg[0] * (1-alpha) + accent[0] * alpha * 0.32)
+            g = int(bg[1] * (1-alpha) + accent[1] * alpha * 0.32)
+            b = int(bg[2] * (1-alpha) + accent[2] * alpha * 0.32)
+            draw.rectangle((0, y, W, y+24), fill=(r, g, b))
+        pulse = int(8 * (f / max(1, frames_per_scene-1)))
+        draw.ellipse((-110-pulse, 80, 210+pulse, 400), fill=tuple(min(255, int(c*0.65+50)) for c in accent))
+        draw.ellipse((350, 610-pulse, 700, 1030+pulse), fill=tuple(min(255, int(c*0.55+35)) for c in accent2))
+        draw.rounded_rectangle((34, 52, W-34, H-52), radius=28, outline=(255,255,255), width=2)
+        # etiqueta
+        draw.rounded_rectangle((58, 84, 250, 122), radius=18, fill=accent2)
+        draw.text((76, 94), scene["tag"], font=badge_font, fill=(255,255,255))
+        # mockup simples
+        draw.rounded_rectangle((330, 145, 460, 330), radius=18, fill=(245,246,252))
+        draw.rounded_rectangle((345, 165, 445, 205), radius=10, fill=accent)
+        for i, icon in enumerate(theme.get("icons", ["✓", "★", "→"])[:3]):
+            yy = 230 + i*34
+            draw.text((350, yy), str(icon), font=mid, fill=(20,20,30))
+            draw.line((385, yy+13, 438, yy+13), fill=(90,90,110), width=3)
+        # texto principal
+        y = 375
+        for line in wrap_text(draw, scene["text"], big, W-110, 4):
+            draw.text((58, y), line, font=big, fill=(255,255,255))
+            y += 44
+        y += 12
+        for line in wrap_text(draw, scene["small"], mid, W-116, 3):
+            draw.text((60, y), line, font=mid, fill=(230,230,245))
+            y += 30
+        # CTA
+        draw.rounded_rectangle((58, 760, W-58, 820), radius=24, fill=accent)
+        draw.text((84, 779), "Ver amostra grátis • Comprar pelo link", font=small, fill=(255,255,255))
+        # progresso
+        draw.rounded_rectangle((58, 872, W-58, 884), radius=6, fill=(50,54,90))
+        pw = int(((idx * frames_per_scene + f + 1) / (len(scenes) * frames_per_scene)) * (W-116))
+        draw.rounded_rectangle((58, 872, 58+pw, 884), radius=6, fill=accent2)
+        draw.text((58, 902), "Produto digital editável. Sem promessa milagrosa.", font=small, fill=(205,205,220))
+        return img
 
-## Promessas que deve evitar
-- “Ganhe dinheiro garantido.”
-- “Resultado 100% garantido.”
-- “Produto oficial de órgão público.”
-- “Substitui orientação profissional.”
-""".strip()
-
-
-@app.route("/produtos/<int:product_id>/video")
-@app.route("/produtos/<int:product_id>/video-venda")
-@app.route("/produtos/<int:product_id>/gerar-video/")
-@login_required
-def video_generate_aliases(product_id):
-    return redirect(url_for("video_generate_page", product_id=product_id))
-
-
-@app.errorhandler(404)
-def handle_404(exc):
-    back = request.referrer or url_for("dashboard")
-    return (
-        "<h1>Página não encontrada</h1>"
-        "<p>Essa rota não existe nesta versão do sistema ou o produto foi apagado após reinício/deploy.</p>"
-        f"<p><a href='{back}'>Voltar</a> · <a href='/dashboard'>Dashboard</a> · <a href='/diagnostico'>Diagnóstico</a></p>",
-        404,
-    )
-
-
-@app.errorhandler(500)
-def handle_500_final(exc):
-    traceback.print_exc()
-    return (
-        "<h1>Erro interno corrigível</h1>"
-        "<p>O sistema encontrou um erro ao processar esta ação. Abra o Diagnóstico e confira os logs do RunSite se persistir.</p>"
-        "<p><a href='/dashboard'>Dashboard</a> · <a href='/diagnostico'>Diagnóstico</a></p>",
-        500,
-    )
+    tmp = out.with_suffix(".tmp.mp4")
+    try:
+        with imageio.get_writer(str(tmp), fps=fps, codec="libx264", quality=5, pixelformat="yuv420p", macro_block_size=16) as writer:
+            for idx, scene in enumerate(scenes):
+                for f in range(frames_per_scene):
+                    writer.append_data(np.asarray(draw_scene(scene, idx, f)))
+        tmp.replace(out)
+        return out
+    except Exception as exc:
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except Exception:
+            pass
+        raise RuntimeError(f"Falha ao gerar MP4 leve: {exc}")
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
+    port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=os.getenv("FLASK_DEBUG", "0") == "1")
+
