@@ -10,7 +10,7 @@
   <div class="actions">
     <a class="btn ghost" href="{{ url_for('product_detail', product_id=product.id) }}">Voltar ao produto</a>
     {% if status.status == 'ready' %}
-      <a class="btn primary" href="{{ url_for('video_download_safe', product_id=product.id) }}">Baixar MP4</a>
+      <a class="btn primary" href="{{ url_for('video_direct_download', product_id=product.id) }}">Baixar MP4</a>
     {% else %}
       <a class="btn primary" href="{{ url_for('video_regenerate_safe', product_id=product.id) }}">Gerar novamente</a>
     {% endif %}
@@ -34,9 +34,9 @@
     </div>
 
     <div id="video-ready-area" style="margin-top:18px;{% if status.status != 'ready' %}display:none{% endif %}">
-      <video controls playsinline preload="metadata" style="width:100%;max-height:720px;border-radius:24px;background:#000" src="{{ url_for('video_stream_safe', product_id=product.id) }}"></video>
+      <video controls playsinline preload="metadata" style="width:100%;max-height:720px;border-radius:24px;background:#000" src="{{ url_for('video_direct_stream', product_id=product.id) }}"></video>
       <p class="muted small">Arquivo: <span id="video-file-name">{{ video_file }}</span> • <span id="video-file-size">{{ ((video_size or 0) / 1024 / 1024)|round(2) }}</span> MB</p>
-      <a class="btn primary" href="{{ url_for('video_download_safe', product_id=product.id) }}">Baixar MP4</a>
+      <a class="btn primary" href="{{ url_for('video_direct_download', product_id=product.id) }}">Baixar MP4</a>
     </div>
 
     <div id="video-error-area" class="alert danger" style="margin-top:18px;{% if status.status not in ['error','expired'] %}display:none{% endif %}">
@@ -58,9 +58,9 @@
 
 <script>
 (function(){
-  const statusUrl = "{{ url_for('video_status_api', product_id=product.id) }}";
-  const watchUrl = "{{ url_for('video_stream_safe', product_id=product.id) }}";
-  const downloadUrl = "{{ url_for('video_download_safe', product_id=product.id) }}";
+  const statusUrl = "{{ url_for('video_direct_status', product_id=product.id) }}";
+  const watchUrl = "{{ url_for('video_direct_stream', product_id=product.id) }}";
+  const downloadUrl = "{{ url_for('video_direct_download', product_id=product.id) }}";
   const title = document.getElementById('video-status-title');
   const msg = document.getElementById('video-status-message');
   const bar = document.getElementById('video-progress');

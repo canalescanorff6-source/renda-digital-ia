@@ -32,15 +32,15 @@
       <a class="download-card strong" href="{{ url_for('product_customer_package', product_id=product.id) }}">Pacote cliente FINAL</a>
       <a class="download-card strong" href="{{ url_for('product_professional_package', product_id=product.id) }}">Pacote profissional</a>
       <a class="download-card strong" href="{{ url_for('product_launch_package', product_id=product.id) }}">Pacote lançamento ZIP</a>
-      <a class="download-card strong" href="{{ url_for('video_generate_page', product_id=product.id) }}">Vídeo MP4 temático</a>
-      <a class="download-card" href="{{ url_for('video_generate_page', product_id=product.id) }}" target="_blank">Testar vídeo</a>
+      <a class="download-card strong" href="{{ url_for('video_direct_page', product_id=product.id) }}">Vídeo MP4 temático</a>
+      <a class="download-card" href="{{ url_for('video_direct_page', product_id=product.id) }}" target="_blank">Testar vídeo</a>
     </div>
     <div class="header-actions stacked-actions">
-      <form method="post" action="{{ url_for('product_regenerate_premium_v15', product_id=product.id) }}" onsubmit="return confirm('Regenerar com o motor premium atual vai substituir textos atuais por uma versão mais chamativa. Continuar?')">
-        <button class="btn primary" type="submit">Regenerar premium atual</button>
+      <form method="post" action="{{ url_for('product_regenerate_premium_v15', product_id=product.id) }}" onsubmit="return confirm('Regenerar com o motor premium v15 vai substituir textos atuais por uma versão mais chamativa. Continuar?')">
+        <button class="btn primary" type="submit">Regenerar premium v15</button>
       </form>
       <form method="post" action="{{ url_for('product_regenerate', product_id=product.id) }}" onsubmit="return confirm('Regenerar conteúdo vai substituir os textos atuais. Continuar?')">
-        <button class="btn ghost" type="submit">Regenerar básico</button>
+        <button class="btn ghost" type="submit">Regenerar conteúdo simples</button>
       </form>
       <form method="post" action="{{ url_for('product_duplicate', product_id=product.id) }}">
         <button class="btn ghost" type="submit">Duplicar para testar outra oferta</button>

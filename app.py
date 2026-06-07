@@ -2983,6 +2983,32 @@ def video_generate_page(product_id):
     )
 
 
+@app.route("/video-produto/<int:product_id>")
+@app.route("/video-produto/<int:product_id>/gerar")
+@login_required
+def video_direct_page(product_id):
+    """Rota curta para vídeo. Evita problema de proxy/cache em caminhos longos do RunSite."""
+    return video_generate_page(product_id)
+
+
+@app.route("/video-produto/<int:product_id>/status")
+@login_required
+def video_direct_status(product_id):
+    return video_status_api(product_id)
+
+
+@app.route("/video-produto/<int:product_id>/baixar")
+@login_required
+def video_direct_download(product_id):
+    return video_download_safe(product_id)
+
+
+@app.route("/video-produto/<int:product_id>/assistir")
+@login_required
+def video_direct_stream(product_id):
+    return video_stream_safe(product_id)
+
+
 @app.route("/produtos/<int:product_id>/video-status")
 @login_required
 def video_status_api(product_id):
@@ -4490,11 +4516,6 @@ def commercial_robot_cron():
 
 ensure_social_tables()
 ensure_robot_tables()
-
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=os.getenv("FLASK_DEBUG", "0") == "1")
 
 
 # ============================================================================
