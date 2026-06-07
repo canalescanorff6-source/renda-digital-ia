@@ -4457,13 +4457,8 @@ ensure_social_tables()
 ensure_robot_tables()
 
 
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=os.getenv("FLASK_DEBUG", "0") == "1")
-
-
 # ============================================================================
-# v15 — Motor comercial premium, textos chamativos e vídeo temático robusto
+# Motor comercial premium, textos chamativos e vídeo temático robusto
 # ============================================================================
 # Esta camada foi adicionada no final para substituir os geradores simples sem
 # quebrar as rotas antigas. As rotas continuam as mesmas, mas passam a usar estas
@@ -5270,3 +5265,197 @@ TRENDING_BLUEPRINTS = [
     {"title":"Pack Redes Sociais 30 Dias — Posts, Legendas e Calendário","niche":"Templates, design e redes sociais","product_type":"Calendário + legendas","target_audience":"empreendedores, criadores e pequenos negócios","promise":"organizar 30 dias de conteúdo com ideias, legendas e chamadas prontas","price":37.00,"angle":"🎨 Conteúdo visual mais organizado para divulgar com constância."},
     {"title":"Mega Kit Professor Total — Atividades por Disciplinas","niche":"Educação - todas as disciplinas","product_type":"Mega kit pedagógico editável","target_audience":"professores, reforço escolar, escolas pequenas e pais","promise":"economizar tempo com atividades, gabaritos, orientações e campos BNCC editáveis","price":47.00,"angle":"📚 Material pedagógico editável com revisão necessária."},
 ]
+
+
+# ============================================================================
+# v23 — Checkup final: rotas seguras, textos multinicho e execução local correta
+# ============================================================================
+
+def _safe_float(value, default=0.0):
+    try:
+        return float(str(value or default).replace(',', '.'))
+    except Exception:
+        return float(default)
+
+
+def product_scorecard(product: Dict[str, Any]) -> Dict[str, Any]:  # override v23 multinicho
+    """Auditoria comercial para qualquer nicho, sem ficar presa apenas à educação."""
+    title = (product.get("title") or "").strip()
+    niche = (product.get("niche") or "").strip()
+    promise = (product.get("promise") or "").strip()
+    target = (product.get("target_audience") or "").strip()
+    price = _safe_float(product.get("price"), 0)
+    checkout = bool((product.get("checkout_link") or "").strip())
+    content = product.get("content") or ""
+    sales_page = product.get("sales_page") or ""
+    lead = product.get("lead_magnet_content") or ""
+    model = v15_model_for(niche, title)
+    is_edu = product_theme(product).get("label", "").lower().startswith("educação")
+    score = 0
+    items = []
+    def add(name, ok, fix, points):
+        nonlocal score
+        if ok:
+            score += points
+        items.append({"name": name, "ok": bool(ok), "fix": fix, "points": points})
+    add("Título vendável", len(title) >= 18 and any(w in title.lower() for w in ["kit", "pack", "planner", "guia", "agenda", "templates", "prompts", "calendário", "mega"]), "Use um nome com formato claro: Kit, Pack, Planner, Guia, Agenda, Templates ou Prompts.", 12)
+    add("Nicho claro", len(niche) >= 6, "Escolha um nicho específico para o comprador entender rapidamente.", 8)
+    add("Público definido", len(target) >= 18, "Escreva exatamente quem compra: MEI, autônomos, famílias, profissionais de beleza, vendedores etc.", 12)
+    add("Promessa honesta", len(promise) >= 30 and not any(w in promise.lower() for w in ["garantido", "milagroso", "100%", "enriquecer", "cura"]), "Troque promessa exagerada por organização, economia de tempo, clareza e praticidade.", 12)
+    add("Preço de entrada testável", 17 <= price <= 97, "Para começar, teste R$ 27, R$ 37, R$ 47 ou R$ 67.", 10)
+    add("Conteúdo robusto", len(content) >= 5500, "Regere pela Biblioteca Premium/Estúdio visual para sair com módulos, exemplos, checklists e bônus.", 14)
+    add("Página de venda completa", len(sales_page) >= 2600 and any(w in sales_page.lower() for w in ["perguntas", "faq", "garantia", "bônus", "bonus"]), "Inclua dor, transformação, entregáveis, bônus, FAQ, garantia e chamada para ação.", 14)
+    add("Isca grátis", len(lead) >= 500, "Mantenha uma amostra grátis para capturar interessados.", 8)
+    add("Checkout configurado", checkout, "Cadastre na Kiwify/Hotmart/Eduzz/Monetizze e cole o link do checkout no produto.", 14)
+    if is_edu:
+        add("Aviso BNCC responsável", "bncc" in content.lower() and any(w in content.lower() for w in ["revise", "revisão", "currículo"]), "Em educação, mantenha aviso para revisar BNCC e currículo local.", 6)
+    else:
+        add("Aviso responsável", not any(w in sales_page.lower() for w in ["resultado garantido", "dinheiro garantido"]), "Não use promessa de resultado garantido.", 6)
+    level = "Pronto para testar tráfego" if score >= 82 else "Quase pronto" if score >= 65 else "Precisa melhorar antes de divulgar forte"
+    return {"score": min(score, 100), "level": level, "items": items, "notice": model.get("warnings", PROFESSIONAL_NOTICE)}
+
+
+def build_ad_creatives(product: Dict[str, Any]) -> str:  # override v23 multinicho
+    title = product.get("title", "Produto Digital")
+    niche = product.get("niche", "Produto digital")
+    price = money(_safe_float(product.get("price"), 47))
+    checkout = product.get("checkout_link") or "COLE_AQUI_O_LINK_DO_CHECKOUT"
+    url = product_public_url(product)
+    theme = product_theme(product)
+    model = v15_model_for(niche, title)
+    deliverables = public_bullets(product)[:6]
+    hooks = [
+        f"{theme['emoji']} Você ainda perde tempo começando tudo do zero?",
+        "👀 Veja por dentro antes de comprar.",
+        "🎁 Baixe uma amostra grátis e confira se faz sentido para você.",
+        f"⚡ Um pacote organizado para {model['main_promise']}.",
+        f"💎 {title}: aparência profissional, modelos prontos e uso simples.",
+        "📲 Ideal para postar, vender, atender ou organizar melhor a rotina.",
+        f"🔥 Oferta inicial: {price}. Entrega digital.",
+        "✅ Menos improviso, mais clareza e apresentação.",
+        "🚀 Um material bonito para adaptar e usar com mais confiança.",
+        "🔗 Acesse a página, baixe a amostra e veja o que vem no pacote.",
+    ]
+    return f"""
+# Criativos premium de venda — {title}
+
+## Posicionamento
+**Nicho:** {niche}  
+**Tema visual:** {theme['emoji']} {theme['label']}  
+**Preço inicial sugerido:** {price}  
+**Página pública:** {url}  
+**Checkout:** {checkout}
+
+## Headline principal
+{theme['emoji']} {title}: um pacote digital bonito, organizado e pronto para adaptar.
+
+## Promessa curta
+{model['main_promise'].capitalize()} sem começar tudo do zero.
+
+## Benefícios para usar na página e nos posts
+""" + "\n".join(deliverables) + f"""
+
+## 10 chamadas prontas para Reels, TikTok, Shorts e WhatsApp
+""" + "\n".join([f"{i+1}. {h}" for i, h in enumerate(hooks)]) + f"""
+
+## Roteiro de vídeo curto
+Cena 1 — Dor: “Você ainda faz tudo no improviso?”  
+Cena 2 — Solução: “Este pacote já vem organizado por módulos.”  
+Cena 3 — Prova visual: “Modelos, checklists, mensagens e páginas prontas para adaptar.”  
+Cena 4 — Segurança: “Baixe a amostra grátis e veja por dentro.”  
+Cena 5 — Ação: “Acesse o link e escolha se faz sentido para você.”
+
+## Mensagem de WhatsApp sem spam
+Oi! Preparei uma amostra grátis do **{title}**. É um material digital organizado para {model['main_promise']}. Se quiser ver por dentro, aqui está o link: {url}
+
+## Legenda curta
+{theme['emoji']} Novo material digital pronto: **{title}**.  
+✅ organizado  
+✅ bonito  
+✅ fácil de adaptar  
+✅ com amostra grátis  
+
+Veja por dentro: {url}
+""".strip()
+
+
+def build_professional_brand_kit(product: Dict[str, Any]) -> str:  # override v23 multinicho
+    title = product.get("title", "Produto Digital")
+    niche = product.get("niche", "Produto digital")
+    theme = product_theme(product)
+    model = v15_model_for(niche, title)
+    return f"""
+# Kit de marca comercial — {title}
+
+## Identidade do produto
+- **Nicho:** {niche}
+- **Tema visual:** {theme['emoji']} {theme['label']}
+- **Promessa:** {model['main_promise']}
+- **Página pública:** {product_public_url(product)}
+- **Checkout:** {product.get('checkout_link') or 'COLE_AQUI_O_LINK_DO_CHECKOUT'}
+
+## Tom de voz
+- Claro, direto e humano.
+- Visual de produto pago, sem promessas falsas.
+- Emojis moderados para guiar a leitura, não para poluir.
+- Foco em praticidade, organização e transformação realista.
+
+## Frase curta da marca
+{theme['emoji']} Um pacote digital pronto para organizar, adaptar e colocar em prática.
+
+## Bio curta
+Produtos digitais organizados, bonitos e prontos para adaptar. Baixe a amostra grátis e veja por dentro.
+
+## Cores e atmosfera
+- Fundo temático do nicho, com contraste alto.
+- Cards com bordas suaves e efeito premium.
+- Ícones relacionados ao nicho: {' '.join(v15_theme_for(niche, title).get('icons', []))}
+- Evitar textos pequenos demais no vídeo.
+
+## Promessas que pode usar
+- “Economize tempo na criação do material.”
+- “Use modelos prontos e adapte para sua realidade.”
+- “Veja por dentro antes de comprar.”
+- “Entrega digital organizada.”
+
+## Promessas que deve evitar
+- “Ganhe dinheiro garantido.”
+- “Resultado 100% garantido.”
+- “Produto oficial de órgão público.”
+- “Substitui orientação profissional.”
+""".strip()
+
+
+@app.route("/produtos/<int:product_id>/video")
+@app.route("/produtos/<int:product_id>/video-venda")
+@app.route("/produtos/<int:product_id>/gerar-video/")
+@login_required
+def video_generate_aliases(product_id):
+    return redirect(url_for("video_generate_page", product_id=product_id))
+
+
+@app.errorhandler(404)
+def handle_404(exc):
+    back = request.referrer or url_for("dashboard")
+    return (
+        "<h1>Página não encontrada</h1>"
+        "<p>Essa rota não existe nesta versão do sistema ou o produto foi apagado após reinício/deploy.</p>"
+        f"<p><a href='{back}'>Voltar</a> · <a href='/dashboard'>Dashboard</a> · <a href='/diagnostico'>Diagnóstico</a></p>",
+        404,
+    )
+
+
+@app.errorhandler(500)
+def handle_500_final(exc):
+    traceback.print_exc()
+    return (
+        "<h1>Erro interno corrigível</h1>"
+        "<p>O sistema encontrou um erro ao processar esta ação. Abra o Diagnóstico e confira os logs do RunSite se persistir.</p>"
+        "<p><a href='/dashboard'>Dashboard</a> · <a href='/diagnostico'>Diagnóstico</a></p>",
+        500,
+    )
+
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=os.getenv("FLASK_DEBUG", "0") == "1")

@@ -13,7 +13,7 @@
 </section>
 
 <div class="alert-soft">
-  <strong>Correção v15:</strong> use o botão <b>Regenerar premium v15</b> nos produtos antigos. Ele substitui textos simples por páginas mais completas, posts mais chamativos e vídeo com fundo temático conforme o nicho.
+  <strong>Qualidade comercial:</strong> use o botão <b>Regenerar premium atual</b> nos produtos antigos. Ele troca textos fracos por páginas completas, posts chamativos e vídeo com fundo temático conforme o nicho.
 </div>
 
 <section class="metric-grid metric-grid-wide">
@@ -46,8 +46,8 @@
           <td>
             <div class="card-actions">
               <a class="btn ghost" href="{{ url_for('product_detail', product_id=p.id) }}">Abrir</a>
-              <form method="post" action="{{ url_for('product_regenerate_premium_v15', product_id=p.id) }}" onsubmit="return confirm('Substituir os textos por versão premium v15?')">
-                <button class="btn primary" type="submit">Regenerar premium v15</button>
+              <form method="post" action="{{ url_for('product_regenerate_premium_v15', product_id=p.id) }}" onsubmit="return confirm('Substituir os textos por versão premium atual?')">
+                <button class="btn primary" type="submit">Regenerar premium atual</button>
               </form>
               <a class="btn ghost" href="{{ url_for('video_generate_page', product_id=p.id) }}">Baixar vídeo</a>
               <a class="btn ghost" href="{{ url_for('video_generate_page', product_id=p.id) }}" target="_blank">Testar vídeo</a>
