@@ -2,6 +2,7 @@
 
 Rotas isoladas para preservar os fluxos existentes de produtos, leads e vendas.
 """
+from contextlib import closing
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from hmac import compare_digest
@@ -90,7 +91,7 @@ def register_monetizacao_real(app, db_conn):
             session["monetizacao_csrf"] = secrets.token_urlsafe(32)
         csrf = session["monetizacao_csrf"]
 
-        with db_conn() as conn:
+        with closing(db_conn()) as conn:
             initialize(conn)
             if request.method == "POST":
                 if not compare_digest(str(csrf), str(request.form.get("csrf", ""))):
