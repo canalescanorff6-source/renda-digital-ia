@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.renda-real { --rr-ink:#e9efff; --rr-muted:#a5b1ce; --rr-line:rgba(154,176,227,.22); --rr-panel:linear-gradient(145deg,rgba(24,35,62,.92),rgba(12,18,36,.94)); color:var(--rr-ink); max-width:1250px; margin:auto; }
+.renda-real * { box-sizing:border-box }
+.renda-real .rr-hero { border:1px solid var(--rr-line); border-radius:26px; padding:30px; background:radial-gradient(circle at 95% 0%, rgba(84,103,231,.30),transparent 46%),linear-gradient(140deg,#131e37,#11182e 70%); margin-bottom:20px; }
+.renda-real h1 { font-size:clamp(1.8rem,3.6vw,3rem); letter-spacing:-.04em; margin:.35rem 0 .8rem; line-height:1.12; color:#fff }
+.renda-real h2 { color:#fff; font-size:1.3rem; margin:0 0 .55rem }
+.renda-real h3 { color:#e9efff; font-size:1.06rem; margin:.1rem 0 .4rem }
+.renda-real p, .renda-real li { color:var(--rr-muted); line-height:1.6 }
+.renda-real a { color:#8ad8ff }
+.renda-real .rr-eyebrow { color:#91e9d8; letter-spacing:.16em; font-size:.75rem; font-weight:800; text-transform:uppercase }
+.renda-real .rr-actions,.renda-real .rr-chips { display:flex; gap:9px; flex-wrap:wrap; margin-top:17px }
+.renda-real .rr-btn { display:inline-flex; justify-content:center; align-items:center; gap:8px; text-decoration:none; font-weight:700; border-radius:12px; padding:11px 15px; border:1px solid var(--rr-line); color:#edf3ff; background:#233453; cursor:pointer }
+.renda-real .rr-btn:hover { filter:brightness(1.12) }
+.renda-real .rr-btn-main { color:#07182a; border-color:#8bf0db; background:#8bf0db }
+.renda-real .rr-chip { border:1px solid var(--rr-line); border-radius:40px; padding:5px 10px; font-size:.78rem; color:#c7d8f2 }
+.renda-real .rr-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:13px; margin:18px 0 }
+.renda-real .rr-stat,.renda-real .rr-panel,.renda-real .rr-offer { border:1px solid var(--rr-line); background:var(--rr-panel); border-radius:19px; padding:20px; min-width:0 }
+.renda-real .rr-stat span { display:block; font-size:.83rem; color:var(--rr-muted); margin-bottom:10px }
+.renda-real .rr-stat strong { display:block; font-size:1.55rem; color:#fff; overflow-wrap:anywhere }
+.renda-real .rr-stat small { display:block; font-size:.72rem; color:#a2b6d9; margin-top:5px }
+.renda-real .rr-two { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0 }
+.renda-real .rr-three { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:16px 0 }
+.renda-real .rr-panel { margin:16px 0 }
+.renda-real .rr-panel > p:first-of-type { margin-top:0 }
+.renda-real .rr-offer strong { color:#f3f6ff }
+.renda-real .rr-offer .rr-tag { display:inline-block; font-size:.75rem; border-radius:6px; padding:4px 8px; background:rgba(106,231,200,.13); color:#96f4dc; margin-bottom:10px }
+.renda-real .rr-muted { font-size:.88rem; color:#a6b6d3 }
+.renda-real .rr-note { border-left:3px solid #89e9d9; padding:10px 13px; background:rgba(73,165,167,.08); border-radius:0 9px 9px 0; color:#cad9ed; font-size:.89rem; margin:13px 0 }
+.renda-real .rr-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
+.renda-real label { display:block; color:#cedaf1; font-size:.84rem; font-weight:700; margin-bottom:4px }
+.renda-real input, .renda-real select { width:100%; border:1px solid #476080; border-radius:10px; background:#101a30; padding:11px; color:#f1f6ff; min-width:0 }
+.renda-real input:focus,.renda-real select:focus { outline:2px solid #87e9db; outline-offset:1px }
+.renda-real .rr-form-grid .wide { grid-column:1/-1 }
+.renda-real .rr-steps { padding-left:20px; margin:.4rem 0 }
+.renda-real .rr-steps li { margin:8px 0 }
+.renda-real .rr-table-wrap { overflow-x:auto }
+.renda-real table { width:100%; border-collapse:collapse; min-width:740px; }
+.renda-real th,.renda-real td { text-align:left; border-bottom:1px solid var(--rr-line); padding:10px 7px; vertical-align:top; font-size:.83rem; color:#ced9ef }
+.renda-real th { color:#94dacc; font-size:.73rem; text-transform:uppercase }
+.renda-real td input, .renda-real td select { width:95px; padding:8px 6px }
+.renda-real td .rr-small { width:120px }
+.renda-real .rr-number { font-variant-numeric:tabular-nums }
+.renda-real .rr-output { border:1px solid #388079; border-radius:14px; background:rgba(40,110,109,.16); padding:18px; margin-top:16px }
+.renda-real .rr-output strong { display:block; font-size:1.6rem; color:#a0f4e1 }
+.renda-real .rr-result-row { display:flex; justify-content:space-between; gap:12px; margin:6px 0; color:#ccdaed; font-size:.9rem }
+.renda-real .rr-title-row { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:15px }
+.renda-real .rr-separator { border:none; border-top:1px solid var(--rr-line); margin:22px 0 }
+@media(max-width:1050px){.renda-real .rr-grid { grid-template-columns:repeat(2,minmax(0,1fr)) }.renda-real .rr-three { grid-template-columns:1fr }}
+@media(max-width:750px){.renda-real .rr-two,.renda-real .rr-form-grid { grid-template-columns:1fr }.renda-real .rr-hero { padding:19px }.renda-real .rr-grid { gap:9px }.renda-real .rr-stat { padding:13px }.renda-real .rr-stat strong { font-size:1.2rem }}
+</style>
+<div class="renda-real">
+  <section class="rr-hero">
+    <span class="rr-eyebrow">Renda Digital IA • Central operacional</span>
+    <h1>Da ideia à primeira venda.<br>Com menos trabalho repetitivo.</h1>
+    <p>Escolha uma oferta verificável, publique com conteúdo original e registre os resultados. A IA ajuda na produção; o dinheiro só entra quando um cliente compra e o pagamento é confirmado.</p>
+    <div class="rr-chips"><span class="rr-chip">Sem anúncios pagos no início</span><span class="rr-chip">Produtos próprios + afiliados</span><span class="rr-chip">Revisão humana antes de publicar</span></div>
+    <div class="rr-actions">
+      <a class="rr-btn rr-btn-main" href="{{ url_for('product_new') }}">Criar meu primeiro produto</a>
+      <a class="rr-btn" href="#oportunidades">Ver programas reais</a>
+      <a class="rr-btn" href="#acompanhamento">Registrar meus testes</a>
+    </div>
+  </section>
+
+  <div class="rr-grid" aria-label="Resultados que você informou">
+    <div class="rr-stat"><span>Testes cadastrados</span><strong class="rr-number">{{ stats.experiments }}</strong><small>Campanhas em acompanhamento</small></div>
+    <div class="rr-stat"><span>Cliques informados</span><strong class="rr-number">{{ stats.clicks }}</strong><small>Conferidos manualmente</small></div>
+    <div class="rr-stat"><span>Vendas informadas</span><strong class="rr-number">{{ stats.sales }}</strong><small>Não é integração bancária</small></div>
+    <div class="rr-stat"><span>Recebido menos custos</span><strong class="rr-number">{{ stats.net|money }}</strong><small>Valores que você registrou, não auditados</small></div>
+  </div>
+
+  <div class="rr-two">
+    <section class="rr-panel">
+      <span class="rr-eyebrow">Caminho recomendado</span>
+      <h2>1. Venda um material digital que você controla</h2>
+      <p>Comece com um produto específico: por exemplo, um <strong>kit escolar editável</strong>, planner de professores ou arquivo original de papelaria. Você já tem criador de produtos, página pública e kit de divulgação no aplicativo.</p>
+      <div class="rr-note">Evite criar dezenas de produtos genéricos. Teste um material que realmente resolva um problema antes de produzir o próximo.</div>
+      <a class="rr-btn" href="{{ url_for('products') }}">Abrir meus produtos</a>
+    </section>
+    <section class="rr-panel">
+      <span class="rr-eyebrow">Segunda fonte de receita</span>
+      <h2>2. Recomende produtos de terceiros</h2>
+      <p>Afiliados não precisam de estoque. Mas você precisa ser aprovado quando exigido, usar seu link verdadeiro, produzir recomendação útil e respeitar as regras de divulgação das plataformas.</p>
+      <div class="rr-note">Nunca são gerados links de afiliado fictícios. Cadastre-se no programa oficial e use os links que a própria plataforma fornecer.</div>
+      <a class="rr-btn" href="#oportunidades">Consultar programas</a>
+    </section>
+  </div>
+
+  <section id="oportunidades" class="rr-panel">
+    <div class="rr-title-row"><div><span class="rr-eyebrow">Fontes verificadas • novembro de 2026</span><h2>Onde a comissão realmente pode ser paga</h2></div></div>
+    <div class="rr-two">
+      <article class="rr-offer">
+        <span class="rr-tag">Boa opção para começar</span><h3>Mercado Livre Afiliados</h3>
+        <p>Recomende produtos elegíveis e acompanhe compras atribuídas ao seu link. A comissão varia por categoria; campanhas por visualizações exigem aprovação e outros requisitos.</p>
+        <a href="https://www.mercadolivre.com.br/l/afiliados-home" rel="noopener noreferrer" target="_blank">Consultar programa oficial ↗</a>
+      </article>
+      <article class="rr-offer">
+        <span class="rr-tag">Produtos digitais</span><h3>Hotmart</h3>
+        <p>Ofereça materiais próprios ou seja afiliado de cursos e produtos que você analisou e conhece. As condições e comissões dependem de cada oferta.</p>
+        <a href="https://hotmart.com/pt-br/afiliados" rel="noopener noreferrer" target="_blank">Consultar programa oficial ↗</a>
+      </article>
+      <article class="rr-offer">
+        <span class="rr-tag">Se houver audiência elegível</span><h3>TikTok Shop</h3>
+        <p>Produtos marcados em vídeos e links oficiais podem gerar comissões por compras qualificadas. Verifique elegibilidade no TikTok Studio; a política brasileira cita 1.000 seguidores para criadores de comércio eletrônico.</p>
+        <a href="https://seller-br.tiktok.com/university/essay?knowledge_id=1396756526679824" rel="noopener noreferrer" target="_blank">Ver requisitos oficiais ↗</a>
+      </article>
+      <article class="rr-offer">
+        <span class="rr-tag">Para conteúdo original</span><h3>Amazon Associados</h3>
+        <p>Recomende produtos e receba por compras qualificadas. Exige conteúdo próprio, divulgação transparente e pelo menos três vendas qualificadas nos primeiros 180 dias para avaliação.</p>
+        <a href="https://associados.amazon.com.br/" rel="noopener noreferrer" target="_blank">Consultar programa oficial ↗</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="rr-two">
+    <div class="rr-panel">
+      <span class="rr-eyebrow">Calculadora de cenários</span>
+      <h2>O que seria necessário para ganhar?</h2>
+      <p>Preencha hipóteses para entender a matemática. O resultado é <strong>simulação</strong>, não renda esperada nem promessa.</p>
+      <div class="rr-form-grid" id="rr-calc">
+        <div><label for="rr-visitas">Visitas qualificadas no mês</label><input type="number" id="rr-visitas" min="0" step="1" value="100"></div>
+        <div><label for="rr-conversao">Taxa de compra hipotética (%)</label><input type="number" id="rr-conversao" min="0" max="100" step=".1" value="1"></div>
+        <div><label for="rr-comissao">Valor líquido recebido por venda (R$)</label><input type="number" id="rr-comissao" min="0" step=".01" value="10"></div>
+        <div><label for="rr-custo">Gastos mensais (R$)</label><input type="number" id="rr-custo" min="0" step=".01" value="0"></div>
+      </div>
+      <div class="rr-output" aria-live="polite">
+        <div class="rr-result-row"><span>Compras simuladas</span><b id="rr-sim-vendas">1,00</b></div>
+        <div class="rr-result-row"><span>Recebimentos simulados</span><b id="rr-sim-bruto">R$ 10,00</b></div>
+        <strong id="rr-sim-liquido">R$ 10,00</strong>
+        <small>Resultado líquido hipotético. Nenhum valor é lançado como venda real.</small>
+      </div>
+    </div>
+    <div class="rr-panel">
+      <span class="rr-eyebrow">Rotina enxuta</span>
+      <h2>Plano de validação em 7 dias</h2>
+      <ol class="rr-steps">
+        <li><b>Dia 1:</b> selecione um único problema de um público específico.</li>
+        <li><b>Dia 2:</b> monte a amostra do produto e revise a qualidade.</li>
+        <li><b>Dia 3:</b> configure checkout e teste todo o fluxo de pagamento.</li>
+        <li><b>Dia 4:</b> crie uma demonstração útil usando o kit de vídeo do app.</li>
+        <li><b>Dias 5 e 6:</b> publique conteúdo original em canais permitidos, sem spam.</li>
+        <li><b>Dia 7:</b> confira cliques, dúvidas, compras e custos; ajuste ou descarte a oferta.</li>
+      </ol>
+      <div class="rr-actions">
+        <a class="rr-btn rr-btn-main" href="{{ url_for('social_automation') }}">Criar campanha</a>
+        <a class="rr-btn" href="{{ url_for('offer_lab') }}">Analisar oferta</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="acompanhamento" class="rr-panel">
+    <span class="rr-eyebrow">Medição transparente</span>
+    <h2>Registre o que funciona</h2>
+    <p>Crie um teste para cada oferta/canal. Insira apenas números conferidos no relatório da plataforma. “Recebido” é o dinheiro efetivamente recebido, após descontos da plataforma; não informe vendas ainda pendentes.</p>
+    <form method="post" class="rr-form-grid">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="create">
+      <div><label for="rr-title">Nome da oferta *</label><input id="rr-title" name="title" minlength="3" maxlength="110" required placeholder="Ex.: kit de planejamento escolar"></div>
+      <div><label for="rr-channel">Modelo de monetização *</label><select id="rr-channel" name="channel">{% for key, label in channels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></div>
+      <div class="wide"><label for="rr-link">Link real do produto ou campanha (opcional)</label><input type="url" id="rr-link" name="reference_url" maxlength="500" placeholder="https://..."></div>
+      <div class="wide"><button type="submit" class="rr-btn rr-btn-main">Adicionar teste</button></div>
+    </form>
+    <hr class="rr-separator">
+    {% if experiments %}
+      <div class="rr-table-wrap">
+        <table>
+          <thead><tr><th>Oferta e programa</th><th>Etapa</th><th>Cliques</th><th>Vendas</th><th>Recebido (R$)</th><th>Custos (R$)</th><th></th></tr></thead>
+          <tbody>{% for e in experiments %}
+            <tr>
+              <td><strong>{{ e.title }}</strong><div class="rr-muted">{{ channels.get(e.channel, e.channel) }}</div>{% if e.reference_url %}<a href="{{ e.reference_url }}" rel="nofollow noopener noreferrer" target="_blank">Abrir link ↗</a>{% endif %}</td>
+              <td colspan="6">
+                <form method="post" class="rr-form-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));align-items:end;min-width:570px">
+                  <input type="hidden" name="csrf" value="{{ csrf }}">
+                  <input type="hidden" name="action" value="metrics">
+                  <input type="hidden" name="test_id" value="{{ e.id }}">
+                  <div><label for="rr-etapa-{{e.id}}">Etapa</label><select id="rr-etapa-{{e.id}}" name="stage" style="width:115px">{% for key, label in stages.items() %}<option value="{{key}}" {% if key==e.stage %}selected{% endif %}>{{label}}</option>{% endfor %}</select></div>
+                  <div><label for="rr-c-{{e.id}}">Cliques</label><input id="rr-c-{{e.id}}" name="clicks" type="number" min="0" value="{{e.clicks}}"></div>
+                  <div><label for="rr-v-{{e.id}}">Vendas</label><input id="rr-v-{{e.id}}" name="sales" type="number" min="0" value="{{e.sales}}"></div>
+                  <div><label for="rr-r-{{e.id}}">Recebido</label><input id="rr-r-{{e.id}}" name="received" type="number" min="0" step=".01" value="{{e.received}}"></div>
+                  <div><label for="rr-g-{{e.id}}">Custos</label><input id="rr-g-{{e.id}}" name="cost" type="number" min="0" step=".01" value="{{e.cost}}"></div>
+                  <div><button class="rr-btn" type="submit">Salvar</button></div>
+                </form>
+              </td>
+            </tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="rr-muted">Mostrando os 100 testes mais recentes. Estes números são declarados por você e não foram verificados por bancos ou programas de afiliados.</p>
+    {% else %}<p class="rr-note">Nenhum teste cadastrado ainda. Comece com uma oferta, não com uma meta financeira fictícia.</p>{% endif %}
+  </section>
+
+  <section class="rr-panel">
+    <span class="rr-eyebrow">Pesquisa e aplicação</span>
+    <h2>Aprenda com materiais rastreáveis</h2>
+    <div class="rr-three">
+      <div><h3>Vídeo oficial Mercado Livre</h3><p>Apresenta os primeiros passos do programa de afiliados.</p><a href="https://www.youtube.com/watch?v=7fe3dgqIsws" target="_blank" rel="noopener noreferrer">Assistir tutorial ↗</a></div>
+      <div><h3>Vídeo oficial Hotmart</h3><p>Como funciona o programa de afiliados para iniciantes e como escolher ofertas.</p><a href="https://www.youtube.com/watch?v=5ZfTObFtHJg" target="_blank" rel="noopener noreferrer">Assistir tutorial ↗</a></div>
+      <div><h3>Guia oficial TikTok Shop</h3><p>Cadastro, elegibilidade e participação sem depender de promessas de influenciadores.</p><a href="https://seller-br.tiktok.com/university/essay?knowledge_id=6807244117362448" target="_blank" rel="noopener noreferrer">Ver documentação ↗</a></div>
+      <div><h3>Canva — direitos comerciais</h3><p>Verifique as regras antes de vender planners, templates e elementos gráficos.</p><a href="https://www.canva.com/pt_br/help/using-canva-to-create-products-for-sale/" target="_blank" rel="noopener noreferrer">Ver regras de uso ↗</a></div>
+    </div>
+    <div class="rr-note"><strong>Publicidade precisa ser identificada.</strong> Use “publicidade” ou “publi” de maneira clara nos conteúdos com comissão, de acordo com as regras do CONAR. Não publique avaliações falsas, mensagens em massa ou vídeos copiados. Conteúdo genérico feito em escala pode impedir monetização no YouTube.</div>
+    <p class="rr-muted">Referências: <a href="https://www.conar.org.br/diretrizes" rel="noopener noreferrer" target="_blank">CONAR</a> · <a href="https://support.google.com/youtube/answer/1311392?hl=pt-BR" rel="noopener noreferrer" target="_blank">YouTube — políticas de monetização</a> · <a href="https://www.mercadolivre.com.br/l/primeiros-passos-perguntas-frequentes-para-afiliados" rel="noopener noreferrer" target="_blank">Mercado Livre — FAQ</a>.</p>
+  </section>
+</div>
+<script>
+(function(){
+  var ids=['rr-visitas','rr-conversao','rr-comissao','rr-custo'];
+  function num(id){var n=Number(document.getElementById(id).value);return Number.isFinite(n)?Math.max(0,n):0}
+  function money(n){return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n)}
+  function recalc(){
+    var visits=num(ids[0]), conversion=Math.min(100,num(ids[1])), payout=num(ids[2]), cost=num(ids[3]);
+    var sales=visits*conversion/100, gross=sales*payout;
+    document.getElementById('rr-sim-vendas').textContent=sales.toLocaleString('pt-BR',{maximumFractionDigits:2});
+    document.getElementById('rr-sim-bruto').textContent=money(gross);
+    document.getElementById('rr-sim-liquido').textContent=money(gross-cost);
+  }
+  ids.forEach(function(id){document.getElementById(id).addEventListener('input',recalc)});
+  recalc();
+})();
+</script>
+{% endblock %}
