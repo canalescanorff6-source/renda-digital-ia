@@ -225,6 +225,11 @@ def login_required(fn):
     return wrapper
 
 
+# Módulo isolado: oportunidades e testes com receitas informadas, não simuladas.
+from monetizacao_real import register_monetizacao_real
+register_monetizacao_real(app, db_conn)
+
+
 def row_to_dict(row):
     if row is None:
         return None
