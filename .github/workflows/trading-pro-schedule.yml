@@ -1,0 +1,50 @@
+name: Trading PRO — agendador de simulacao
+
+# Hourly only when operator has installed HTTPS endpoint and GitHub secrets.
+# No exchange credentials, no real orders.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '10 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trading-pro-paper-cron
+  cancel-in-progress: false
+
+jobs:
+  paper-scheduler:
+    name: Disparar apenas simulação em servidor configurado
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      TRADING_PRO_CRON_URL: ${{ secrets.TRADING_PRO_CRON_URL }}
+      TRADING_PRO_CRON_SECRET: ${{ secrets.TRADING_PRO_CRON_SECRET }}
+    steps:
+      - name: Validar configuração e chamar HTTPS sem ordens reais
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${TRADING_PRO_CRON_URL}" || -z "${TRADING_PRO_CRON_SECRET}" ]]; then
+            echo "Scheduler skipped: missing deployment URL and/or auth secret"
+            exit 0
+          fi
+          if [[ ${#TRADING_PRO_CRON_SECRET} -lt 32 ]]; then
+            echo "Scheduler refused: cron secret is too short"
+            exit 1
+          fi
+          if [[ "${TRADING_PRO_CRON_URL}" != https://*/internal/trading-pro/cron ]]; then
+            echo "Scheduler refused: HTTPS deployment cron endpoint required"
+            exit 1
+          fi
+          curl \
+            --fail-with-body --silent --show-error \
+            --proto '=https' --tlsv1.2 \
+            --max-time 80 --connect-timeout 10 \
+            --retry 1 --retry-delay 5 \
+            --request POST \
+            --header "Authorization: Bearer ${TRADING_PRO_CRON_SECRET}" \
+            --header 'Accept: application/json' \
+            "${TRADING_PRO_CRON_URL}"
