@@ -87,7 +87,7 @@
     <div class="tp-status" role="status" aria-live="polite" id="tp-auto-message"></div>
     <div class="tp-risk" style="margin-top:9px">
       <div><span>Autorização pessoal</span><strong id="tp-auto-optin">—</strong></div>
-      <div><span>Servidor agendado</span><strong id="tp-auto-server">—</strong></div>
+      <div><span>Configuração do endpoint</span><strong id="tp-auto-server">—</strong></div>
       <div><span>Status efetivo</span><strong id="tp-auto-effective">—</strong></div>
       <div><span>Última execução global</span><strong id="tp-auto-job">—</strong></div>
     </div>
@@ -195,7 +195,7 @@
     const configured=!!a.server_configured,enabled=!!a.opted_in;
     put('tp-auto-optin',enabled?'ATIVADA':'DESATIVADA');
     put('tp-auto-server',configured?'CONFIGURADO':'NÃO CONFIGURADO');
-    put('tp-auto-effective',a.will_run_when_triggered?'AGUARDA AGENDADOR':a.account_mode==='risk_paused'?'BLOQUEADO POR RISCO':'SEM EXECUÇÃO');
+    put('tp-auto-effective',a.will_run_when_triggered?'PRONTO PARA DISPARO':a.account_mode==='risk_paused'?'BLOQUEADO POR RISCO':'SEM EXECUÇÃO');
     const job=a.latest_scheduler_run;
     put('tp-auto-job',job?(job.status+' · '+new Date(job.started_at).toLocaleString('pt-BR')):'NENHUMA');
     el('tp-auto-enable').disabled=enabled;
@@ -203,7 +203,7 @@
     const lines=(a.daily_snapshots||[]).map(r=>'<tr><td>'+escape(r.day_utc)+'</td><td>'+money(r.equity)+' USDT</td><td class="'+(r.pnl<0?'tp-bad':'tp-good')+'">'+percent(r.pnl_pct)+'</td><td>'+percent(r.drawdown_pct)+'</td><td>'+r.positions_count+'</td><td>'+r.trades_count+'</td><td>'+escape(r.as_of)+'</td></tr>');
     el('tp-auto-history').innerHTML=lines.join('')||'<tr><td colspan="7" class="tp-empty">Nenhuma coleta programada confirmada até agora. Sem simular resultados.</td></tr>';
     if(enabled&&!configured)put('tp-auto-message','Autorização salva, mas o servidor ainda não foi configurado para disparar os ciclos.');
-    else if(a.will_run_when_triggered)put('tp-auto-message','Tudo habilitado. Novas operações simuladas dependem de um disparo externo do agendador.');
+    else if(a.will_run_when_triggered)put('tp-auto-message','Endpoint habilitado e autorização concedida; a execução depende do agendamento externo, que precisa estar configurado separadamente.');
     else put('tp-auto-message','A automação não está executando novas entradas.');
   }
   async function refreshAutomation(){
