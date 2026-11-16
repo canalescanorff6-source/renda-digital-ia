@@ -86,3 +86,52 @@ Tela: /trading-pro/backtest; menu lateral e painel comercial incluem um atalho.
 python -m unittest discover -s tests -p "test_trading*.py" -v
 
 O fluxo GitHub Actions também valida importação Flask, página /trading-pro/backtest e APIs autenticadas.
+
+
+---
+
+## Etapa 3 — Monitoramento programado PAPER ONLY (v3)
+
+### Funcionalidades implementadas
+
+- Controles no painel **/trading-pro** para ativar ou desativar a simulação automática **por usuário**. O padrão para todas as contas é **desativado**. A decisão fica gravada em SQLite e pode ser revertida a qualquer momento.
+- Endpoint POST **/internal/trading-pro/cron** exclusivamente para scheduler HTTPS com Bearer secret, nunca credenciais da corretora. O endpoint responde 404 enquanto TRADING_PRO_SCHEDULER_ENABLED não for 1 ou o segredo tiver menos de 32 caracteres; sem segredo correto retorna 401.
+- Execução de ciclos fictícios pelo motor Trading PRO v1. A rotina baixa cotações públicas dos pares BTCUSDT, ETHUSDT e SOLUSDT somente quando há usuários elegíveis. Exige candles horários completos, sincronizados entre pares e recentes; não inventa valores quando dados faltam.
+- Limite de processamento de **10 usuários por disparo**, com alternância por última tentativa para evitar favorecimento dos primeiros. Contas pausadas, bloqueadas por risco ou sem opt-in são excluídas. Alteração de opt-in é revalidada **dentro da transação de compra/venda simulada**.
+- Lease SQLite com expiração de 10 minutos para reduzir execuções concorrentes; idempotência por robô e candle no motor de paper trading. Não é um sistema de filas distribuídas, nem um serviço SLA 24/7.
+- Registro de atividades do agendador e snapshots diários por usuário. O snapshot corresponde ao **último ciclo ocorrido naquele dia UTC**; não é necessariamente fechamento do dia, nem cotação em tempo real. Registros incluem patrimônio fictício, saldo, drawdown, taxas estimadas, número de posições e operações acumuladas.
+- Painel com autorização individual, condição do endpoint, último job global e até 14 snapshots históricos **apenas do usuário autenticado**.
+- Workflow opcional **.github/workflows/trading-pro-schedule.yml** disparado a cada hora, minuto 10 UTC. Se URL e segredo GitHub não estiverem configurados, o workflow termina sem fazer chamada externa.
+
+### Configuração que falta ao operador (não é automática)
+
+**Nunca coloque segredos no repositório, em issues, no chat ou em parâmetros de URL.** Configure os valores nos painéis seguros do provedor, não no código.
+
+No servidor que hospeda o Flask, usando HTTPS e SQLite com disco persistente:
+
+- TRADING_PRO_SCHEDULER_ENABLED = 1
+- TRADING_PRO_CRON_SECRET = string aleatória e privada de no mínimo 32 caracteres.
+- SECRET_KEY = chave Flask forte e exclusiva; não deixe a chave de exemplo do app.
+- ADMIN_PASSWORD = senha administrativa forte e diferente da padrão.
+- DATABASE_PATH e STORAGE_DIR = locais em volume persistente, preservados entre deploys.
+
+No GitHub, em Settings > Secrets and variables > Actions > Repository secrets:
+
+- TRADING_PRO_CRON_URL = URL HTTPS exata do app + /internal/trading-pro/cron.
+- TRADING_PRO_CRON_SECRET = **o mesmo** segredo que foi definido no servidor.
+
+A pessoa autenticada precisa ainda clicar em **Ativar simulação programada** no painel. Sem as três condições (servidor configurado, secrets GitHub, opt-in individual), não ocorrerão operações programadas. A interface detecta apenas configuração do endpoint, e **não consegue confirmar** que os secrets do GitHub ou o agendamento remoto foram configurados.
+
+### Operação e segurança
+
+A cada disparo, a execução tenta consultar o mercado público, verifica frescor dos candles e permite apenas paper trading. Uma falha upstream produz status de erro e não grava novas ordens fictícias. A execução recorrente depende da hospedagem, da API pública, da disponibilidade do GitHub Actions e dos limites/termos aplicáveis.
+
+Pausar os robôs no painel também impede novas entradas do agendador; um bloqueio de risco não é liberado automaticamente. O limite de perda diária de 2% e drawdown de 8% são **gatilhos de intervenção simulada**, não garantias absolutas de perda: gaps e latência podem produzir perdas maiores.
+
+O webhook aceita POST com cabeçalho Authorization Bearer. O workflow chama obrigatoriamente **HTTPS**. Não habilite o scheduler em hospedagem sem TLS, sem segredo de aplicação forte ou sem SQLite persistente. A API pública de preço pode estar bloqueada pela hospedagem; nesse caso, tratar como impedimento de execução.
+
+Para verificar: após configurar, verifique uma execução real do workflow em Actions, o resultado do job e o histórico diário no painel. Não há comprovação de execução 24h ou de operações com capital real apenas por merge de código.
+
+### Validação automatizada
+
+GitHub Actions executa os testes das versões v1, v2 e v3, incluindo opt-in, autenticação, CSRF, bloqueio por risco, isolamento de dados entre usuários, duplicação de ciclos, falta de mercado, lock e importação de rotas Flask. Testes utilizam dados sintéticos **somente como fixtures offline**: não afirmam rentabilidade nem comprovam execução da API da Binance em produção.
