@@ -140,6 +140,16 @@ class MonitorTests(unittest.TestCase):
         monitor = get_monitor_report(self.db_conn, 10)
         self.assertEqual(monitor["market_probe"]["status"], "error")
 
+    def test_invalid_zero_price_is_rejected_even_with_fresh_bars(self):
+        markets = fixture_markets()
+        markets["BTCUSDT"]["price"] = 0
+        result, status = market_diagnostic(
+            self.db_conn, 11, fetcher=lambda: markets,
+        )
+        self.assertEqual(status, 503)
+        self.assertFalse(result["ok"])
+        self.assertNotIn("symbols", result["result"])
+
     def test_monitor_api_requires_post_token_and_is_authenticated(self):
         # The standalone Flask test app has no base.html routes; the main app
         # handles full template render in GitHub Actions integration smoke.
