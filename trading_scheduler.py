@@ -15,7 +15,7 @@ from trading_pro import BOTS, execute_cycle, fetch_markets, state_of, ensure_acc
 
 MAX_USERS_PER_TICK = 10
 MAX_CANDLE_AGE_MS = 2 * 3_600_000 + 30 * 60_000
-LEASE_SECONDS = 180
+LEASE_SECONDS = 600
 HOUR_MS = 3_600_000
 
 
