@@ -24,6 +24,14 @@ Em Settings → Build & Deploy, confirme:
 
 **Não reinicie nem troque DATABASE_PATH antes de salvar o banco existente**, se houver. Faça backup e verifique os dados; se necessário, recupere pelo shell de contêiner antes de qualquer substituição.
 
+Localize o caminho efetivo em uso no contêiner. Com o caminho confirmado, use
+`python scripts/backup_trading_database.py ORIGEM DESTINO`, informando um nome
+novo em uma área privada. A cópia inclui os dados já confirmados do WAL e
+passa pelo `integrity_check`. O comando abre a origem somente para leitura.
+Guarde uma cópia fora do contêiner antes de substituí-lo e teste a restauração
+num caminho separado. Se o serviço ou o arquivo não estiver acessível,
+investigue a conta ou a recuperação do armazenamento antes de criar outro serviço.
+
 Ative um disco persistente no Web Service, por exemplo com montagem /data. Somente após backup e migração do banco, use os seguintes valores de ambiente:
 
 | Nome no RunSite | Valor recomendado |
@@ -55,7 +63,7 @@ No GitHub Actions, selecione o workflow Publicar Trading PRO no RunSite — cont
 - public_base_url: URL HTTPS real do serviço, sem caminho
 - disk_and_security_confirmed: true **somente depois de confirmar backup, volume persistente e senha segura**
 
-O workflow valida URL e segredo, consulta o serviço pelo CLI oficial, executa o deploy e lê o marcador público /trading-pro/ping. Ele falha em 404, versão diferente de 5.0.0, redirecionamento para login ou execução diferente de PAPER_ONLY.
+O workflow confere a URL canônica, o repositório e a branch main antes de solicitar o deploy pelo CLI oficial. Ele aguarda que o deploy solicitado esteja ativo no commit do workflow e então consulta /trading-pro/ping. Um deploy anterior da mesma versão, uma página 404, um redirecionamento ou uma execução diferente de PAPER_ONLY não passam na verificação.
 
 Se o RunSite já possuir auto-deploy configurado na main, confira antes o histórico de Deploys e a URL publicada. Não é necessário forçar uma nova publicação sem diagnosticar o erro.
 
