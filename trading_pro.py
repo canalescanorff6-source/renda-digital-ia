@@ -410,6 +410,11 @@ def execute_cycle(db_conn, user_id, markets):
 
 def register_trading_pro(app, login_required, db_conn):
     init_trading_tables(db_conn)
+    from trading_backtest import (
+        SUPPORTED_DAYS, build_backtest_report, fetch_historical_bars,
+        init_backtest_tables, store_report, load_report,
+    )
+    init_backtest_tables(db_conn)
 
     def user_id():
         return int(session["user_id"])
@@ -481,3 +486,47 @@ def register_trading_pro(app, login_required, db_conn):
             return jsonify({"ok": True, "state": state_of(conn, user_id())})
         finally:
             conn.close()
+
+
+    @app.route("/trading-pro/backtest")
+    @login_required
+    def trading_backtest_page():
+        if "trading_pro_csrf" not in session:
+            session["trading_pro_csrf"] = secrets.token_urlsafe(32)
+        return render_template(
+            "trading_backtest.html", csrf=session["trading_pro_csrf"],
+            supported_days=SUPPORTED_DAYS,
+        )
+
+    @app.route("/trading-pro/api/backtest/latest")
+    @login_required
+    def trading_backtest_latest():
+        try:
+            days = int(request.args.get("days", "30"))
+            if days not in SUPPORTED_DAYS:
+                raise ValueError("Período indisponível")
+        except (ValueError, TypeError):
+            return jsonify({"ok": False, "error": "Período inválido"}), 400
+        saved = load_report(db_conn, user_id(), days)
+        return jsonify({"ok": True, "report": saved})
+
+    @app.route("/trading-pro/api/backtest/run", methods=["POST"])
+    @protected_write
+    def trading_backtest_run():
+        payload = request.get_json(silent=True) or {}
+        try:
+            days = int(payload.get("days", 30))
+            if days not in SUPPORTED_DAYS:
+                raise ValueError("Período inválido: escolha 14, 30 ou 60 dias")
+            markets = {
+                symbol: fetch_historical_bars(symbol, days)
+                for symbol in sorted({bot["symbol"] for bot in BOTS})
+            }
+            report = build_backtest_report(days, markets)
+            store_report(db_conn, user_id(), report)
+            return jsonify({"ok": True, "report": report})
+        except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as exc:
+            return jsonify({
+                "ok": False,
+                "error": "Backtest não concluído: " + str(exc)[:180],
+            }), 409

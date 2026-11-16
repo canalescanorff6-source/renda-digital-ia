@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.bt-shell{max-width:1440px;margin:auto;color:#f7f5ff}
+.bt-top{display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:20px}
+.bt-top h1{font-size:clamp(27px,4vw,45px);line-height:1.1;margin:8px 0 12px}
+.bt-eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#70f5d6;font-weight:800}
+.bt-desc{color:#bcb7d1;max-width:750px;font-size:14px;line-height:1.7}
+.bt-actions{display:flex;gap:11px;flex-wrap:wrap;align-items:center}
+.bt-actions select{min-width:145px;border:1px solid #4b435f;background:#1b1a2c;color:#fff;border-radius:13px;padding:12px 16px;font-size:14px}
+.bt-btn{min-height:45px;border:1px solid #60577c;border-radius:13px;padding:11px 18px;background:#27243f;color:#faf9ff;font-size:14px;font-weight:750;cursor:pointer;display:inline-flex;align-items:center}
+.bt-btn.primary{background:linear-gradient(125deg,#9e76ff,#6851d2);border-color:#9274ff}
+.bt-btn:disabled{opacity:.55;cursor:wait}
+.bt-notice{margin:21px 0;padding:15px 17px;border-radius:16px;color:#ffdfb0;background:#362a24;border:1px solid #70553c;line-height:1.6;font-size:13px}
+.bt-state{font-size:13px;color:#a8acc2;min-height:20px;padding:10px 0}
+.bt-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+.bt-kpi,.bt-card{border:1px solid rgba(255,255,255,.10);border-radius:19px;padding:20px;background:linear-gradient(160deg,rgba(37,33,62,.95),rgba(14,15,30,.94));min-width:0}
+.bt-kpi span{font-size:12px;color:#aaa7c0;display:block}
+.bt-kpi strong{display:block;font-size:clamp(20px,2.5vw,29px);margin-top:8px;word-break:break-word}
+.bt-kpi small{font-size:11px;color:#aaa7c0}
+.bt-split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+.bt-card h2{font-size:20px;margin:0 0 12px;color:#f5f4ff}
+.bt-card p{font-size:13px;color:#afadc9;line-height:1.6}
+.bt-tablewrap{overflow-x:auto}
+.bt-table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:13px}
+.bt-table th{text-align:left;color:#b1aec8;font-weight:650;font-size:12px}
+.bt-table th,.bt-table td{padding:14px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.bt-table td{font-variant-numeric:tabular-nums}
+.bt-table th:not(:first-child),.bt-table td:not(:first-child){text-align:right}
+.bt-green{color:#6fecb8}.bt-red{color:#ff92a6}.bt-muted{color:#afadc9}
+.bt-bots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:13px;margin-top:14px}
+.bt-bot{border-radius:17px;padding:18px;background:rgba(32,30,52,.93);border:1px solid rgba(255,255,255,.09);min-width:0}
+.bt-bot .bt-num{color:#b89fff;font-weight:900;font-size:12px}
+.bt-bot h3{font-size:18px;margin:8px 0;color:#faf8ff}
+.bt-bot small{color:#b0aec5;font-size:11px;display:block;min-height:36px;line-height:1.5}
+.bt-bot strong{display:block;font-size:24px;margin-top:16px;font-variant-numeric:tabular-nums}
+.bt-chart{width:100%;height:56px;display:block;margin-top:11px}
+.bt-vs{display:block;font-size:11px;color:#afadc9}
+.bt-helper{font-size:12px;line-height:1.65;color:#aaa8c3}
+.bt-stamp{color:#b1adcd;font-size:12px;margin:5px 0}
+.bt-label{display:inline-block;padding:6px 11px;border:1px solid #7962b9;border-radius:99px;font-size:11px;color:#c9b9ff;font-weight:700}
+.bt-empty{padding:25px 0;color:#b8b5c8;font-size:13px}
+.bt-footer{margin:21px 0;color:#a5a1b9;font-size:12px;line-height:1.7}
+@media(max-width:1280px){.bt-bots{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:900px){.bt-summary{grid-template-columns:repeat(2,1fr)}.bt-split{grid-template-columns:1fr}}
+@media(max-width:590px){.bt-bots{grid-template-columns:repeat(2,minmax(0,1fr))}.bt-kpi,.bt-card{padding:14px}.bt-bot{padding:12px}}
+@media(max-width:390px){.bt-bots{grid-template-columns:1fr}}
+</style>
+<section class="bt-shell" id="bt-root" data-csrf="{{ csrf }}">
+  <div class="bt-top">
+    <div>
+      <div class="bt-eyebrow">Renda Digital IA · Trading PRO 2.0</div>
+      <h1>Laboratório de <span style="color:#aa91ff">Backtesting</span></h1>
+      <p class="bt-desc">Descubra como os cinco robôs teriam operado nos candles históricos de BTC, ETH e SOL. Os sinais são calculados com dados anteriores à operação, e as entradas ocorrem na abertura seguinte.</p>
+      <a href="{{ url_for('trading_pro_page') }}" class="bt-helper">← Voltar para o simulador de robôs</a>
+    </div>
+    <div>
+      <div class="bt-actions">
+        <label for="bt-days" style="font-size:13px;color:#cbc5e0">Período</label>
+        <select id="bt-days">
+          {% for n in supported_days %}<option value="{{ n }}" {% if n == 30 %}selected{% endif %}>{{ n }} dias</option>{% endfor %}
+        </select>
+        <button class="bt-btn primary" id="bt-run">Executar backtest</button>
+      </div>
+      <div class="bt-state" role="status" aria-live="polite" id="bt-state">Carregando relatório anterior…</div>
+    </div>
+  </div>
+  <div class="bt-notice"><strong>RESULTADOS HIPOTÉTICOS, NÃO LUCROS REAIS.</strong> Dados públicos, execução simulada, custos estimados e estratégia fixa. Não reproduz plenamente spread, liquidez, book, latência ou impacto de mercado. A divisão dos períodos não substitui forward testing real.</div>
+  <div id="bt-results" hidden>
+    <div class="bt-summary">
+      <div class="bt-kpi"><span>Melhor retorno no período final</span><strong id="bt-best">—</strong><small id="bt-best-note">—</small></div>
+      <div class="bt-kpi"><span>Estratégias positivas no período final</span><strong id="bt-positive">—</strong><small>Não é previsão de lucro</small></div>
+      <div class="bt-kpi"><span>Maior drawdown no período final</span><strong id="bt-dd">—</strong><small>Queda máxima simulada</small></div>
+      <div class="bt-kpi"><span>Extensão total dos dados</span><strong id="bt-hours">—</strong><small id="bt-source">Fonte de mercado</small></div>
+    </div>
+    <div class="bt-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px">
+        <h2>Comparativo — janela final (30%)</h2><span class="bt-label">PERÍODO CRONOLÓGICO POSTERIOR</span>
+      </div>
+      <div class="bt-tablewrap"><table class="bt-table"><thead><tr><th>Robô</th><th>Ativo</th><th>Retorno</th><th>Comprar e manter</th><th>Drawdown</th><th>Operações</th><th>Vitórias</th><th>Fator lucro</th><th>Taxas (USDT)</th></tr></thead><tbody id="bt-validation"></tbody></table></div>
+      <p>A classificação utiliza retorno líquido simulado, não uma pontuação de inteligência artificial. O benchmark também desconta taxas e slippage estimados.</p>
+    </div>
+    <div class="bt-card" style="margin-top:14px">
+      <h2>Desempenho — primeira janela (70%)</h2>
+      <div class="bt-tablewrap"><table class="bt-table"><thead><tr><th>Robô</th><th>Ativo</th><th>Retorno</th><th>Drawdown</th><th>Sharpe anualizado*</th><th>Operações</th><th>Interrompido por risco?</th></tr></thead><tbody id="bt-evaluation"></tbody></table></div>
+      <p>*Sharpe com taxa livre de risco de 0% e retornos horários anualizados; o número pode ser muito instável em amostras curtas.</p>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:22px 0 12px">
+      <h2 style="font-size:20px;margin:0">Evolução da carteira fictícia</h2>
+      <span class="bt-label">10.000 USDT POR ROBÔ</span>
+    </div>
+    <div class="bt-bots" id="bt-bots"></div>
+    <div class="bt-split">
+      <div class="bt-card"><h2>Períodos avaliados</h2>
+        <p id="bt-dates"></p><p id="bt-created"></p><p>Os dois períodos usam saldos fictícios independentes. Não somamos os cinco resultados como se fossem uma carteira real.</p>
+      </div>
+      <div class="bt-card"><h2>Custos e proteção</h2>
+        <p id="bt-costs"></p><p>Stops são estimados com os valores OHLC: quando stop e alvo são tocados no mesmo candle, assume-se primeiro o stop. Em gaps, a saída considera a abertura desfavorável.</p>
+      </div>
+    </div>
+    <div class="bt-card"><h2>Origem e integridade dos dados</h2><p id="bt-hashes"></p><p>Os hashes identificam o conjunto recebido; os candles não são arquivados integralmente nesta versão. Um backtest repetido poderá diferir se a fonte corrigir os dados.</p></div>
+  </div>
+  <div id="bt-placeholder" class="bt-card bt-empty" style="margin-top:12px">Nenhum relatório carregado. Selecione um período e execute o backtest para consultar o histórico público.</div>
+  <p class="bt-footer">Este módulo é exclusivamente de pesquisa. Não utiliza tokens de corretoras, chaves privadas, depósitos, alavancagem ou ordens reais. Comparação retrospectiva não constitui prova de rentabilidade futura.</p>
+</section>
+<script>
+(function() {
+  'use strict';
+  const root = document.getElementById('bt-root');
+  const get = key => document.getElementById(key);
+  const write = (key,value) => { get(key).textContent = String(value); };
+  const esc = val => String(val == null ? '' : val).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','>':'&gt;',"'":'&#39;'}[c]));
+  const num = (n,d=2) => Number(n).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const signed = v => (v>0?'+':'')+num(v)+'%';
+  const metric = v => v == null?'—':num(v);
+  const cls = n => Number(n)>=0?'bt-green':'bt-red';
+  const time = v => new Date(v).toLocaleString('pt-BR',{timeZone:'UTC',hour12:false})+' UTC';
+  function sparkline(curve) {
+    if (!curve || curve.length < 2) return '';
+    const vals=curve.map(point=>Number(point.equity));
+    const min=Math.min(...vals),max=Math.max(...vals),span=max-min||1;
+    const points=vals.map((v,i)=>(i/(vals.length-1)*240).toFixed(1)+','+(49-(v-min)/span*43).toFixed(1)).join(' ');
+    const color=vals[vals.length-1]>=vals[0]?'#65e5b3':'#fc94aa';
+    return '<svg class="bt-chart" viewBox="0 0 240 56" role="img" aria-label="Curva histórica da carteira simulada"><line x1="0" y1="49" x2="240" y2="49" stroke="#57516b" stroke-width=".7"/><polyline fill="none" stroke="'+color+'" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" points="'+points+'"/></svg>';
+  }
+  function render(r) {
+    if(!r){get('bt-results').hidden=true;get('bt-placeholder').hidden=false;return;}
+    get('bt-placeholder').hidden=true;get('bt-results').hidden=false;
+    const sorted=[...r.strategies].sort((a,b)=>b.validation.return_pct-a.validation.return_pct);
+    const highest=sorted[0];
+    write('bt-best',signed(highest.validation.return_pct));
+    write('bt-best-note',highest.name+' · '+highest.symbol);
+    write('bt-positive',r.strategies.filter(x=>x.validation.return_pct>0).length+' / 5');
+    write('bt-dd',num(Math.max(...r.strategies.map(x=>x.validation.max_drawdown_pct)))+'%');
+    write('bt-hours',num(r.bars_per_symbol,0)+' candles');
+    write('bt-source',r.source);
+    get('bt-validation').innerHTML=sorted.map(x=>{
+      const s=x.validation,b=x.benchmark.validation;
+      return '<tr><td><strong>'+esc(x.name)+'</strong></td><td>'+esc(x.symbol)+'</td><td class="'+cls(s.return_pct)+'">'+signed(s.return_pct)+'</td><td class="'+cls(b.return_pct)+'">'+signed(b.return_pct)+'</td><td>'+num(s.max_drawdown_pct)+'%</td><td>'+s.closed_trades+'</td><td>'+(s.win_rate_pct==null?'—':num(s.win_rate_pct)+'%')+'</td><td>'+metric(s.profit_factor)+'</td><td>'+num(s.fees_usdt)+'</td></tr>';
+    }).join('');
+    get('bt-evaluation').innerHTML=sorted.map(x=>{
+      const s=x.evaluation;
+      return '<tr><td><strong>'+esc(x.name)+'</strong></td><td>'+esc(x.symbol)+'</td><td class="'+cls(s.return_pct)+'">'+signed(s.return_pct)+'</td><td>'+num(s.max_drawdown_pct)+'%</td><td>'+metric(s.sharpe_annualized)+'</td><td>'+s.closed_trades+'</td><td>'+(s.halted_by_risk?'Sim':'Não')+'</td></tr>';
+    }).join('');
+    get('bt-bots').innerHTML=sorted.map((x,i)=>{
+      const s=x.validation;
+      return '<article class="bt-bot"><span class="bt-num">#'+(i+1)+' · '+esc(x.symbol)+'</span><h3>'+esc(x.name)+'</h3><small>'+esc(x.strategy)+'</small><strong class="'+cls(s.return_pct)+'">'+signed(s.return_pct)+'</strong>'+
+        sparkline(s.curve)+'<span class="bt-vs">Benchmark: '+signed(x.benchmark.validation.return_pct)+'</span><span class="bt-vs">Operações: '+s.closed_trades+' · Custos: '+num(s.fees_usdt+s.slippage_usdt)+' USDT</span></article>';
+    }).join('');
+    write('bt-dates','Início das operações: '+time(r.earliest_evaluation)+'. Início da janela final: '+time(r.validation_from)+'. Último candle: '+time(r.last_closed_bar)+'.');
+    write('bt-created','Relatório gerado em '+time(r.created_at)+'. Primeira janela: '+r.sections.evaluation.bars+' candles. Segunda janela: '+r.sections.validation.bars+' candles.');
+    write('bt-costs','Taxa estimada '+num(r.fee_pct_each_side)+'% por lado, mais slippage '+num(r.slippage_pct_each_side)+'% por lado. Resultados e posições são fictícios.');
+    write('bt-hashes',Object.entries(r.fingerprints).map(([s,h])=>s+': '+h).join(' · '));
+  }
+  async function requestReport(url,config) {
+    const response=await fetch(url,{credentials:'same-origin',cache:'no-store',...config});
+    const obj=await response.json();
+    if (!response.ok || !obj.ok) throw Error(obj.error || 'Falha na API');
+    render(obj.report);
+    return obj.report;
+  }
+  async function latest() {
+    const days=Number(get('bt-days').value);
+    write('bt-state','Carregando relatório salvo…');
+    try{
+      const report=await requestReport('/trading-pro/api/backtest/latest?days='+days);
+      write('bt-state',report?'Relatório histórico salvo, não atualizado automaticamente.':'Nenhum relatório gerado para '+days+' dias.');
+    }catch(e){write('bt-state','Não foi possível carregar: '+e.message);}
+  }
+  get('bt-days').addEventListener('change',latest);
+  get('bt-run').addEventListener('click',async()=>{
+    const days=Number(get('bt-days').value);
+    const button=get('bt-run');
+    button.disabled=true;get('bt-days').disabled=true;
+    write('bt-state','Consultando dados reais e avaliando 5 estratégias; sem enviar ordens…');
+    try{
+      await requestReport('/trading-pro/api/backtest/run',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Trading-CSRF':root.dataset.csrf},
+        body:JSON.stringify({days})
+      });
+      write('bt-state','Backtest concluído e relatório salvo. Resultados retrospectivos hipotéticos.');
+    }catch(e){write('bt-state','Erro: '+e.message+'. Nenhum resultado artificial foi gerado.');}
+    finally{button.disabled=false;get('bt-days').disabled=false;}
+  });
+  latest();
+})();
+</script>
+{% endblock %}
