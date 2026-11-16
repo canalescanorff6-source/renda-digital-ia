@@ -24,8 +24,30 @@ jobs:
         with:
           python-version: "3.11"
       - name: Dependências mínimas do motor
-        run: python -m pip install Flask==3.0.3 requests==2.32.3
+        run: python -m pip install Flask==3.0.3 requests==2.32.3 python-dotenv==1.0.1
       - name: Verificação de sintaxe
         run: python -m py_compile trading_pro.py app.py
       - name: Testes offline — nenhum dinheiro real
         run: python -m unittest discover -s tests -p "test_trading_pro.py" -v
+      - name: Smoke test — importar Flask e servir dashboard autenticado
+        env:
+          DATABASE_PATH: ${{ runner.temp }}/trading-smoke.db
+          STORAGE_DIR: ${{ runner.temp }}/tp-storage
+          EXPORT_DIR: ${{ runner.temp }}/tp-exports
+          SECRET_KEY: testing-ci-only
+        run: |
+          python - <<'PY'
+          import app
+          assert "trading_pro_page" in app.app.view_functions
+          with app.app.test_client() as client:
+              with client.session_transaction() as session:
+                  session["user_id"] = 987
+                  session["user_email"] = "ci@example.test"
+              page = client.get("/trading-pro")
+              assert page.status_code == 200, page.status_code
+              assert b"PAPER TRADING" in page.data
+              api = client.get("/trading-pro/api/status")
+              assert api.status_code == 200, api.status_code
+              assert api.json["state"]["execution_mode"] == "PAPER_ONLY"
+          print("Flask smoke test OK")
+          PY
