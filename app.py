@@ -5849,6 +5849,10 @@ if "product_professional_package" in app.view_functions:
 
 
 
+from trading_pro import register_trading_pro
+register_trading_pro(app, login_required, db_conn)
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=os.getenv("FLASK_DEBUG", "0") == "1")
