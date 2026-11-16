@@ -135,3 +135,37 @@ Para verificar: após configurar, verifique uma execução real do workflow em A
 ### Validação automatizada
 
 GitHub Actions executa os testes das versões v1, v2 e v3, incluindo opt-in, autenticação, CSRF, bloqueio por risco, isolamento de dados entre usuários, duplicação de ciclos, falta de mercado, lock e importação de rotas Flask. Testes utilizam dados sintéticos **somente como fixtures offline**: não afirmam rentabilidade nem comprovam execução da API da Binance em produção.
+
+
+---
+
+## Etapa 4 — Central de Monitoramento e diagnóstico de mercado (v4)
+
+Página **/trading-pro/monitor**, acessível pelo menu do app e pelo próprio Trading PRO.
+
+### Funcionalidades
+
+- Diagnóstico do funcionamento da automação **por usuário**, sem confundir opt-in, configuração do endpoint, última tentativa de processamento e último snapshot coletado. Se uma conta optou pelo processamento mas não recebeu snapshots, mostra "Aguardando registro", não "funcionando 24h".
+- Detecta **atividade defasada** quando o snapshot mais recente do usuário tem mais de 3 horas. Não é garantia de execução a cada hora: atrasos do GitHub Actions, API e hospedagem são possíveis.
+- Exibe até 30 snapshots diários existentes por usuário. O gráfico usa valores persistidos de papel, não cotações ao vivo nem rendimentos reais.
+- Consulta indicadores do histórico de trades simulados: P&L realizado por robô, operações fechadas, taxa de acerto, taxas estimadas, profit factor e patrimônio total fictício. **P&L realizado já inclui os custos**; as posições ainda abertas estão no patrimônio e podem ter preços desatualizados.
+- Endpoint autenticado **GET /trading-pro/api/monitor** com segregação por sessão; nenhuma informação de patrimônio de outro usuário é retornada.
+- Diagnóstico manual autenticado **POST /trading-pro/api/monitor/check-market**, protegido por CSRF e intervalo mínimo de 90 segundos por usuário, usando somente a API pública da Binance. Verifica três pares, número de candles, sincronização, frescor e validade de preços. Erros mostram falha em vez de inventar cotações.
+- A verificação pública **não chama execute_cycle**, não movimenta patrimônio fictício e não envia ordens de compra/venda reais. Não requer chave privada, saldo, conta ou endereço da carteira.
+- Testes sintéticos e determinísticos de métricas, isolamento de usuário, validade de preços, limitação de chamadas, endpoint autenticado e proteção de operações.
+
+### Checklist operacional antes de afirmar que funciona
+
+1. Certificar que a versão main já está na hospedagem HTTPS (o merge, sozinho, não comprova o deploy).
+2. Confirmar senha administrativa, SECRET_KEY, armazenamento SQLite persistente e política de backup. **O projeto legado possui credenciais padrões inseguras, que precisam ser substituídas antes de exposição pública.**
+3. Abrir /trading-pro/monitor autenticado e clicar em **Testar conexão de mercado**. O resultado precisa indicar os três pares e preços válidos. Se a hospedagem estiver em jurisdição com restrições da Binance, exibir erro e não operar.
+4. Configurar o agendador opcional conforme a seção da v3, com variáveis no servidor e GitHub Actions. Não compartilhar o segredo no chat, GitHub ou screenshots.
+5. Ativar a **simulação programada** no painel Trading PRO para a conta desejada; observar a execução realmente registrada em Github Actions e o primeiro snapshot da conta. O monitor indica estado "Atividade recente" somente quando um registro individual foi persistido e ainda está no prazo.
+6. Para avaliar estratégia, acompanhar prospectivamente resultados e perdas e comparar a uma referência passiva, com capital, custos e período comparáveis. Não usar testes unitários como evidência de lucro.
+
+### Limitações
+
+- Mesmo com automação ativa, cron não é sistema hard realtime; intervalos podem falhar. Não há garantia de lucro nem de disponibilidade 24/7.
+- Testar conexão pública verifica apenas a disponibilidade naquele instante; não demonstra execução de ordens reais nem prova de rendimento.
+- O último job global pode se referir a outra conta; o sinal de saúde da conta depende do snapshot individual.
+- O profit factor fica sem valor se não houver trades negativos fechados; uma taxa de acerto alta, isoladamente, não demonstra rentabilidade.
