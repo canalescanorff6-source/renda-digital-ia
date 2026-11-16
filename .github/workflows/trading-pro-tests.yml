@@ -12,6 +12,8 @@ on:
       - "trading_deployment.py"
       - "scripts/verify_trading_deployment.py"
       - ".github/workflows/trading-pro-deploy-verify.yml"
+      - ".github/workflows/runsite-trading-pro-release.yml"
+      - "tests/test_trading_runsite_release.py"
       - ".github/workflows/trading-pro-schedule.yml"
       - "tests/test_trading_pro.py"
       - "tests/test_trading_backtest.py"

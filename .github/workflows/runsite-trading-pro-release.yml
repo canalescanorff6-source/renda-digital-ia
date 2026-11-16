@@ -1,0 +1,111 @@
+name: Publicar Trading PRO no RunSite — controlado
+
+# Deployment is intentionally manual until the RunSite persistent disk
+# and application secrets have been verified by the service owner.
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: 'Nome exato do serviço Web Service no painel do RunSite'
+        required: true
+        type: string
+        default: 'renda-digital-ia'
+      public_base_url:
+        description: 'URL base pública HTTPS do serviço (sem /trading-pro)'
+        required: true
+        type: string
+        default: 'https://renda-digital-ia.runsite.app'
+      disk_and_security_confirmed:
+        description: 'Confirme disco persistente, DATABASE_PATH, SECRET_KEY e senha admin segura'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runsite-renda-digital-ia-controlled-release
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Pré-requisitos antes da publicação
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      DEPLOY_BASE_URL: ${{ inputs.public_base_url }}
+      DEPLOY_SERVICE: ${{ inputs.service_name }}
+      CONFIRMED: ${{ inputs.disk_and_security_confirmed }}
+      RUNSITE_API_TOKEN: ${{ secrets.RUNSITE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar autorização, destino e segurança
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$CONFIRMED" != "true" ]]; then
+            echo 'BLOQUEADO: confirme o disco persistente, segredos e a senha do usuário existente no RunSite.'
+            exit 1
+          fi
+          if [[ -z "$RUNSITE_API_TOKEN" ]]; then
+            echo 'BLOQUEADO: adicione RUNSITE_API_TOKEN nos GitHub Actions Repository secrets; não publique a chave no repositório.'
+            exit 1
+          fi
+          if [[ ! "$DEPLOY_SERVICE" =~ ^[A-Za-z0-9][A-Za-z0-9_-]{0,100}$ ]]; then
+            echo 'BLOQUEADO: nome de serviço inválido.'
+            exit 1
+          fi
+          python - <<'PY'
+          import os
+          import sys
+          sys.path.insert(0, 'scripts')
+          from verify_trading_deployment import check_base_url
+          try:
+              check_base_url(os.environ['DEPLOY_BASE_URL'])
+          except ValueError as exc:
+              raise SystemExit(str(exc))
+          print('Pré-requisitos de entrada aprovados; o painel RunSite continua sendo a fonte para confirmar o disco.')
+          PY
+
+  deploy:
+    needs: preflight
+    name: Fazer deploy do serviço autorizado
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      DEPLOY_BASE_URL: ${{ inputs.public_base_url }}
+      DEPLOY_SERVICE: ${{ inputs.service_name }}
+      RUNSITE_API_TOKEN: ${{ secrets.RUNSITE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar cliente oficial RunSite
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+            https://runsite.app/install.sh -o /tmp/runsite-install.sh
+          sh /tmp/runsite-install.sh
+          test -x "$HOME/.local/bin/runsite"
+      - name: Consultar estado do serviço e publicar branch configurada no RunSite
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$HOME/.local/bin/runsite" service status "$DEPLOY_SERVICE"
+          "$HOME/.local/bin/runsite" deploy "$DEPLOY_SERVICE"
+      - name: Confirmar que o domínio publicou Trading PRO 5.0 PAPER ONLY
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if python scripts/verify_trading_deployment.py "$DEPLOY_BASE_URL"; then
+              echo 'PUBLICAÇÃO VERIFICADA: a rota pública respondeu com o Trading PRO 5.0 (somente simulação).'
+              exit 0
+            fi
+            if [[ "$attempt" != 5 ]]; then sleep 12; fi
+          done
+          echo 'PUBLICAÇÃO NÃO CONFIRMADA: consulte logs e branch atual do serviço no RunSite.'
+          exit 1
