@@ -324,12 +324,22 @@ def state_of(conn, user_id):
     }
 
 
-def execute_cycle(db_conn, user_id, markets):
+def execute_cycle(db_conn, user_id, markets, require_auto_enabled=False):
     prices = {symbol: entry["price"] for symbol, entry in markets.items()}
     conn = db_conn()
     try:
         conn.execute("BEGIN IMMEDIATE")
         account = ensure_account(conn, user_id)
+        if require_auto_enabled:
+            # Recheck opt-in under the exact transaction that can create orders.
+            # Disabling automation cannot race a pending scheduler snapshot.
+            setting = conn.execute(
+                "SELECT enabled FROM tp_auto_settings WHERE user_id=?",
+                (user_id,),
+            ).fetchone()
+            if not setting or setting["enabled"] != 1:
+                conn.rollback()
+                raise ValueError("Simulação automática desativada pelo usuário")
         if account["mode"] != "active":
             conn.rollback()
             raise ValueError("Robôs pausados. Retome primeiro, se permitido.")
@@ -530,3 +540,7 @@ def register_trading_pro(app, login_required, db_conn):
                 "ok": False,
                 "error": "Backtest não concluído: " + str(exc)[:180],
             }), 409
+
+
+    from trading_scheduler import register_automation_routes
+    register_automation_routes(app, login_required, protected_write, db_conn)
