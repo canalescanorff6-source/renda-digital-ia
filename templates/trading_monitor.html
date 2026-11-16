@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.mon-wrap{max-width:1400px;margin:auto}
+.mon-head{display:flex;align-items:start;justify-content:space-between;flex-wrap:wrap;gap:15px;margin-bottom:17px}
+.mon-head h1{margin:8px 0 11px;font-size:clamp(27px,4vw,44px)}
+.mon-head p{max-width:720px}
+.mon-actions{display:flex;gap:10px;flex-wrap:wrap}
+.mon-btn{background:#302b4b;color:#f5f3ff;padding:11px 16px;border-radius:13px;border:1px solid #6c5e95;cursor:pointer;font-size:14px;font-weight:750;text-decoration:none}
+.mon-btn.primary{background:linear-gradient(115deg,#8260dc,#6450ca)}
+.mon-btn:disabled{opacity:.5;cursor:wait}
+.mon-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:19px 0}
+.mon-card{background:linear-gradient(152deg,rgba(35,31,56,.96),rgba(13,14,30,.9));border:1px solid rgba(255,255,255,.11);padding:20px;border-radius:18px;min-width:0}
+.mon-card small{color:#b7b3ce;font-size:12px}
+.mon-card strong{display:block;color:#fff;font-size:clamp(19px,2.7vw,29px);margin-top:7px;font-variant-numeric:tabular-nums}
+.mon-panel{background:linear-gradient(145deg,rgba(34,31,58,.91),rgba(12,13,28,.95));border:1px solid rgba(255,255,255,.10);padding:20px;border-radius:18px;min-width:0}
+.mon-panel h2{font-size:19px;margin:0 0 13px;color:#f8f5ff}
+.mon-panel p{font-size:13px;line-height:1.65;color:#aaa8c3}
+.mon-cols{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin:16px 0}
+.mon-label{color:#b4b1c9;font-size:12px}
+.mon-state{padding:9px 12px;border-radius:12px;display:inline-flex;background:#25243e;border:1px solid #77718f;color:#f6f5ff;font-size:12px;font-weight:800}
+.mon-state.good{background:rgba(43,178,133,.13);border-color:rgba(43,178,133,.36);color:#a8f5cc}
+.mon-state.warn{background:rgba(240,168,75,.13);border-color:rgba(240,168,75,.4);color:#ffda9d}
+.mon-state.bad{background:rgba(225,89,128,.13);border-color:rgba(225,89,128,.36);color:#ff9eb6}
+.mon-note{background:rgba(237,174,73,.09);border:1px solid rgba(237,174,73,.26);color:#ffdfae;border-radius:14px;padding:14px;margin:10px 0 20px;font-size:13px;line-height:1.65}
+.mon-table-wrap{overflow-x:auto}
+.mon-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+.mon-table th,.mon-table td{padding:12px 11px;border-bottom:1px solid rgba(255,255,255,.08)}
+.mon-table th{text-align:left;color:#afacc4;font-weight:650}
+.mon-table td{color:#f5f3ff;font-variant-numeric:tabular-nums}
+.mon-table td:not(:first-child),.mon-table th:not(:first-child){text-align:right}
+.mon-good{color:#69e9b7!important}.mon-bad{color:#ff92af!important}
+.mon-muted{color:#aeabc4!important}.mon-muted strong{font-size:15px;color:#d3d0e4}
+.mon-timeline{height:170px;width:100%;display:block}
+.mon-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mon-stat{padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.09);min-width:0}
+.mon-stat span{display:block;color:#b6b0ca;font-size:12px}
+.mon-stat strong{font-size:19px;margin-top:5px}
+.mon-loading{font-size:13px;color:#b7b3c9;min-height:21px}
+.mon-foot{color:#a9a5c0;font-size:12px;line-height:1.7;margin:20px 0}
+@media(max-width:1100px){.mon-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:780px){.mon-cols{grid-template-columns:1fr}}
+@media(max-width:470px){.mon-card,.mon-panel{padding:14px}.mon-kpis{gap:9px}}
+</style>
+<section class="mon-wrap" id="mon-root" data-csrf="{{ csrf }}">
+  <div class="mon-head">
+    <div><span class="eyebrow">Renda Digital IA · Trading PRO 4.0</span>
+      <h1>Central de <span style="color:#b99bff">Monitoramento</span></h1>
+      <p>Audite a execução da simulação, verifique a conexão com o mercado público e acompanhe os resultados líquidos dos cinco robôs.</p>
+      <span class="mon-state warn">PAPER ONLY · Nenhum dinheiro real</span>
+    </div>
+    <div class="mon-actions">
+      <a class="mon-btn" href="{{ url_for('trading_pro_page') }}">← Robôs</a>
+      <a class="mon-btn" href="{{ url_for('trading_backtest_page') }}">Backtesting</a>
+      <button class="mon-btn" id="mon-refresh" type="button">Atualizar dados</button>
+      <button class="mon-btn primary" id="mon-check" type="button">Testar conexão de mercado</button>
+    </div>
+  </div>
+  <div class="mon-note"><strong>Validação operacional, não financeira.</strong> Os dados desta tela são registros simulados persistidos no servidor. Um teste positivo da conexão não prova que o agendador está ativo ou que a estratégia tem lucro. Nenhum teste desta tela envia ordens.</div>
+  <div id="mon-message" class="mon-loading" role="status" aria-live="polite">Carregando status de execução…</div>
+  <div class="mon-kpis">
+    <div class="mon-card"><small>Status da automação</small><strong id="mon-state-text">—</strong><small id="mon-state-more">—</small></div>
+    <div class="mon-card"><small>Último snapshot pessoal</small><strong id="mon-latest">—</strong><small>Fonte: SQLite do simulador</small></div>
+    <div class="mon-card"><small>Patrimônio fictício</small><strong id="mon-equity">—</strong><small id="mon-equity-note">Valores podem estar desatualizados</small></div>
+    <div class="mon-card"><small>Lucro/prejuízo simulado total</small><strong id="mon-pnl">—</strong><small id="mon-pnl-pct">Inclui posição aberta a preço salvo</small></div>
+  </div>
+  <div class="mon-cols">
+    <div class="mon-panel">
+      <h2>Registros diários da carteira</h2>
+      <svg id="mon-chart" class="mon-timeline" viewBox="0 0 660 170" role="img" aria-label="Evolução dos snapshots diários"></svg>
+      <p id="mon-curve-note">Não há registros suficientes para calcular uma curva.</p>
+    </div>
+    <div class="mon-panel">
+      <h2>Resultado realizado</h2>
+      <div class="mon-stats">
+        <div class="mon-stat"><span>Lucro/prejuízo de posições encerradas</span><strong id="mon-realized">—</strong></div>
+        <div class="mon-stat"><span>Taxas estimadas acumuladas</span><strong id="mon-fees">—</strong></div>
+        <div class="mon-stat"><span>Operações encerradas</span><strong id="mon-exits">—</strong></div>
+        <div class="mon-stat"><span>Taxa de acerto</span><strong id="mon-wins">—</strong></div>
+        <div class="mon-stat"><span>Profit factor</span><strong id="mon-profit-factor">—</strong></div>
+        <div class="mon-stat"><span>Drawdown salvo</span><strong id="mon-drawdown">—</strong></div>
+      </div>
+      <p>As métricas realizadas consideram somente operações fechadas. A soma das taxas já é considerada no lucro realizado, portanto não a subtraia outra vez.</p>
+    </div>
+  </div>
+  <div class="mon-cols">
+    <div class="mon-panel">
+      <h2>Saúde operacional</h2>
+      <div class="mon-stats">
+        <div class="mon-stat"><span>Autorização do usuário</span><strong id="mon-opt">—</strong></div>
+        <div class="mon-stat"><span>Servidor preparado</span><strong id="mon-server">—</strong></div>
+        <div class="mon-stat"><span>Último ciclo do usuário</span><strong id="mon-attempt">—</strong></div>
+        <div class="mon-stat"><span>Último job global</span><strong id="mon-job">—</strong></div>
+      </div>
+      <p>Não há verificação automática dos segredos do GitHub ou da disponibilidade contínua da hospedagem. O último job global pode ser de outro usuário.</p>
+    </div>
+    <div class="mon-panel">
+      <h2>Conexão pública com a corretora</h2>
+      <span id="mon-probe-state" class="mon-state">Ainda não testada</span>
+      <p id="mon-probe-time">Nenhuma consulta diagnóstica confirmada.</p>
+      <div class="mon-table-wrap"><table class="mon-table"><thead><tr><th>Ativo</th><th>Cotação obtida</th><th>Histórico</th></tr></thead><tbody id="mon-markets"><tr><td colspan="3">Sem dados coletados.</td></tr></tbody></table></div>
+      <p>Consulta limitada a uma tentativa a cada 90 segundos por conta. O diagnóstico não altera saldo, posições ou histórico de negociações.</p>
+    </div>
+  </div>
+  <div class="mon-panel" style="margin:15px 0">
+    <h2>Desempenho por robô · operações fictícias encerradas</h2>
+    <div class="mon-table-wrap"><table class="mon-table"><thead><tr><th>Robô</th><th>Ativo</th><th>Operações encerradas</th><th>Acerto</th><th>Lucro realizado</th><th>Taxas</th><th>Posição aberta?</th></tr></thead><tbody id="mon-bots"></tbody></table></div>
+    <p>Resultados isolados de cada robô são realizados e líquidos, mas não são comparáveis diretamente sem considerar exposição, tempo e capital utilizado. Posições abertas permanecem marcadas pelos preços antigos armazenados.</p>
+  </div>
+  <div class="mon-panel">
+    <h2>Histórico diário · até 30 dias</h2>
+    <div class="mon-table-wrap"><table class="mon-table"><thead><tr><th>Dia UTC</th><th>Patrimônio fictício</th><th>Lucro total</th><th>Drawdown</th><th>Posições</th><th>Operações</th><th>Capturado em</th></tr></thead><tbody id="mon-days"></tbody></table></div>
+  </div>
+  <p class="mon-foot">PAPER TRADING. Sem depósitos, sem saques e sem execução real. Não confundir verificações técnicas bem-sucedidas com renda comprovada. Para validar rentabilidade, mantenha a estratégia fixa e acompanhe resultados prospectivos por período suficiente, com custos e perdas.</p>
+</section>
+<script>
+(()=>{
+'use strict';
+const root=document.getElementById('mon-root'),node=id=>document.getElementById(id);
+const text=(id,v)=>{node(id).textContent=String(v)};
+const fmt=(v,dec=2)=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+const money=v=>fmt(v)+' USDT',percent=v=>fmt(v)+'%',stamp=v=>v?new Date(v).toLocaleString('pt-BR'):'—';
+const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const label={
+disabled:'Desativada',server_not_configured:'Sem configuração',risk_locked:'Bloqueada por risco',
+paused:'Pausada',awaiting_first_run:'Aguardando registro',stale:'Atividade defasada',
+recent_snapshot:'Atividade recente'
+};
+function chart(data){
+ const svg=node('mon-chart');
+ if(data.length<2){svg.innerHTML='';text('mon-curve-note','Menos de dois snapshots disponíveis para esta conta.');return;}
+ const vals=data.map(x=>Number(x.equity)),low=Math.min(...vals),high=Math.max(...vals),span=high-low||1;
+ const points=vals.map((v,i)=>(i/(vals.length-1)*640+10).toFixed(1)+','+(147-(v-low)/span*125).toFixed(1)).join(' ');
+ const stroke=vals.at(-1)>=vals[0]?'#6ee6b3':'#ff91aa';
+ svg.innerHTML='<line x1="10" y1="147" x2="650" y2="147" stroke="#5c5679" stroke-width="1"/>'+
+ '<polyline fill="none" stroke="'+stroke+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="'+points+'"/>';
+ text('mon-curve-note',data.length+' snapshots diários; intervalo '+data[0].day_utc+' a '+data.at(-1).day_utc+'. Não representa retornos em tempo real.');
+}
+function renderProbe(p){
+ const badge=node('mon-probe-state');
+ if(!p){badge.textContent='Não testada';badge.className='mon-state';text('mon-probe-time','Nenhum diagnóstico registrado nesta conta.');node('mon-markets').innerHTML='<tr><td colspan="3">Sem cotações coletadas.</td></tr>';return;}
+ badge.textContent=p.status==='ok'?'Conexão confirmada no último teste':p.status==='error'?'Último teste falhou':'Teste em andamento';
+ badge.className=p.status==='ok'?'mon-state good':p.status==='error'?'mon-state bad':'mon-state warn';
+ text('mon-probe-time','Última tentativa: '+stamp(p.checked_at)+' · '+(p.result?.message||'Sem ordens reais.'));
+ const rows=p.result?.symbols||[];
+ node('mon-markets').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.symbol)+'</td><td>'+fmt(x.price,4)+'</td><td>'+x.bars+' candles</td></tr>').join(''):'<tr><td colspan="3">Nenhuma cotação verificada.</td></tr>';
+}
+function render(r){
+ text('mon-state-text',label[r.state]||'Indefinido');
+ text('mon-state-more',r.state==='recent_snapshot'?'Snapshot recente, não garantia 24h':'Sem garantia de execução contínua');
+ text('mon-latest',r.last_snapshot_at?stamp(r.last_snapshot_at):'Nenhum');
+ text('mon-equity',money(r.portfolio.equity_usdt));
+ text('mon-equity-note','Última atualização do simulador: '+stamp(r.portfolio.price_last_updated_at));
+ text('mon-pnl',money(r.portfolio.total_pnl_usdt));
+ node('mon-pnl').className=r.portfolio.total_pnl_usdt>=0?'mon-good':'mon-bad';
+ text('mon-pnl-pct',percent(r.portfolio.pnl_pct)+' sobre capital inicial fictício');
+ text('mon-realized',money(r.trades.realized_pnl_usdt));
+ node('mon-realized').className=r.trades.realized_pnl_usdt>=0?'mon-good':'mon-bad';
+ text('mon-fees',money(r.trades.fees_usdt));
+ text('mon-exits',r.trades.closed_trades);
+ text('mon-wins',r.trades.win_rate_pct==null?'—':percent(r.trades.win_rate_pct));
+ text('mon-profit-factor',r.trades.profit_factor==null?'—':fmt(r.trades.profit_factor));
+ text('mon-drawdown',percent(r.portfolio.drawdown_pct));
+ text('mon-opt',r.individual_opt_in?'Ativada':'Desativada');
+ text('mon-server',r.scheduler_configured_on_server?'Endpoint configurado':'Desativado');
+ text('mon-attempt',stamp(r.last_user_attempt_at));
+ text('mon-job',r.last_job_global?r.last_job_global.status:'Nenhum');
+ chart(r.daily);
+ node('mon-bots').innerHTML=r.strategies.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.symbol)+'</td><td>'+x.closed_trades+'</td><td>'+(x.win_rate_pct==null?'—':percent(x.win_rate_pct))+'</td><td class="'+(x.realized_pnl_usdt>=0?'mon-good':'mon-bad')+'">'+money(x.realized_pnl_usdt)+'</td><td>'+money(x.fees_usdt)+'</td><td>'+(x.has_open_position?'Sim':'Não')+'</td></tr>').join('');
+ node('mon-days').innerHTML=r.daily.length?r.daily.slice().reverse().map(x=>'<tr><td>'+esc(x.day_utc)+'</td><td>'+money(x.equity)+'</td><td class="'+(x.pnl>=0?'mon-good':'mon-bad')+'">'+money(x.pnl)+'</td><td>'+percent(x.drawdown_pct)+'</td><td>'+x.positions_count+'</td><td>'+x.trades_count+'</td><td>'+stamp(x.as_of)+'</td></tr>').join(''):'<tr><td colspan="7">Nenhum snapshot registrado nesta conta.</td></tr>';
+ renderProbe(r.market_probe);
+}
+async function load(){
+ const res=await fetch('/trading-pro/api/monitor',{credentials:'same-origin',cache:'no-store'});
+ const obj=await res.json();
+ if(!res.ok||!obj.ok)throw Error(obj.error||'Falha no monitor');
+ render(obj.monitor);
+ text('mon-message','Painel atualizado: '+stamp(obj.monitor.generated_at)+'. Os valores são simulados.');
+}
+node('mon-refresh').addEventListener('click',()=>load().catch(e=>text('mon-message','Erro: '+e.message)));
+node('mon-check').addEventListener('click',async()=>{
+ const btn=node('mon-check');
+ btn.disabled=true;text('mon-message','Consultando dados públicos, sem alterar posições…');
+ try{
+   const res=await fetch('/trading-pro/api/monitor/check-market',{
+      method:'POST',credentials:'same-origin',cache:'no-store',
+      headers:{'X-Trading-CSRF':root.dataset.csrf}
+   });
+   const obj=await res.json();
+   if(!res.ok||!obj.ok){
+     text('mon-message','Teste não concluído: '+(obj.error||obj.result?.message||'Falha de mercado')+
+       (obj.retry_after_seconds?' · aguarde '+obj.retry_after_seconds+'s':''));
+   }else{text('mon-message','Conexão pública confirmada neste teste. Nenhuma ordem foi enviada.');}
+   await load();
+ }catch(e){text('mon-message','Erro de rede: '+e.message);}
+ finally{btn.disabled=false;}
+});
+load().catch(e=>text('mon-message','Falha ao carregar: '+e.message));
+})();
+</script>
+{% endblock %}
