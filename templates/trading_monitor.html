@@ -111,7 +111,21 @@
     <h2>Histórico diário · até 30 dias</h2>
     <div class="mon-table-wrap"><table class="mon-table"><thead><tr><th>Dia UTC</th><th>Patrimônio fictício</th><th>Lucro total</th><th>Drawdown</th><th>Posições</th><th>Operações</th><th>Capturado em</th></tr></thead><tbody id="mon-days"></tbody></table></div>
   </div>
-  <p class="mon-foot">PAPER TRADING. Sem depósitos, sem saques e sem execução real. Não confundir verificações técnicas bem-sucedidas com renda comprovada. Para validar rentabilidade, mantenha a estratégia fixa e acompanhe resultados prospectivos por período suficiente, com custos e perdas.</p>
+  <div class="mon-panel" style="margin:15px 0" id="mon-deploy-panel">
+  <h2>Verificação de implantação · Trading PRO 5.0</h2>
+  <p>Esta área verifica a configuração da instância atual. Sem comprovação de deploy e de persistência, o sistema não deve ser tratado como operacional.</p>
+  <span id="mon-deploy-state" class="mon-state warn">Verificando ambiente…</span>
+  <div class="mon-stats" style="margin:15px 0" id="mon-deploy-checks"></div>
+  <p id="mon-deploy-note">Não compartilhe credenciais ou segredos para realizar estes testes.</p>
+  <div class="mon-actions">
+    <button class="mon-btn" id="mon-deploy-refresh" type="button">Verificar configuração</button>
+    <button class="mon-btn primary" id="mon-deploy-checkpoint" type="button">Criar marco de persistência</button>
+    <a class="mon-btn" href="{{ url_for('trading_deploy_ping') }}" target="_blank" rel="noopener">Ver versão publicada</a>
+  </div>
+  <p id="mon-deploy-token" class="mon-loading">Nenhum marco carregado.</p>
+  <p>O marco é um código armazenado na base SQLite. Anote-o antes do próximo redeploy e confirme que <strong>o mesmo código</strong> aparece depois. Apenas gravar o código não prova que a base sobrevive a reinicializações.</p>
+</div>
+<p class="mon-foot">PAPER TRADING. Sem depósitos, sem saques e sem execução real. Não confundir verificações técnicas bem-sucedidas com renda comprovada. Para validar rentabilidade, mantenha a estratégia fixa e acompanhe resultados prospectivos por período suficiente, com custos e perdas.</p>
 </section>
 <script>
 (()=>{
@@ -195,6 +209,45 @@ node('mon-check').addEventListener('click',async()=>{
  }catch(e){text('mon-message','Erro de rede: '+e.message);}
  finally{btn.disabled=false;}
 });
+function renderDeploy(p){
+ const label=node('mon-deploy-state');
+ const blockers=(p.checks||[]).filter(c=>c.state==='blocker').length;
+ label.textContent=blockers?blockers+' verificação(ões) bloqueante(s)':'Verificações básicas aprovadas — deploy ainda não validado';
+ label.className=blockers?'mon-state bad':'mon-state warn';
+ node('mon-deploy-checks').innerHTML=(p.checks||[]).map(c=>
+   '<div class="mon-stat"><span>'+esc(c.id)+' · '+esc(c.state)+'</span><strong style="font-size:13px;line-height:1.6">'+esc(c.detail)+'</strong></div>'
+ ).join('');
+ text('mon-deploy-note',p.deployment_note);
+ const ck=p.checkpoint;
+ text('mon-deploy-token',ck?
+   'Marco salvo: '+ck.checkpoint_code+' · criado em '+stamp(ck.created_at)+' · versão '+ck.version_at_creation+
+   '. Compare após reiniciar/republicar; a persistência ainda não é confirmada automaticamente.':
+   'Nenhum marco gravado. Faça o registro somente se pretende comparar após um deploy.');
+ node('mon-deploy-checkpoint').disabled=!!ck;
+}
+async function loadDeploy(){
+ const response=await fetch('/trading-pro/api/deployment',{credentials:'same-origin',cache:'no-store'});
+ const result=await response.json();
+ if(!response.ok||!result.ok)throw Error(result.error||'Diagnóstico indisponível');
+ renderDeploy(result.preflight);
+}
+node('mon-deploy-refresh').addEventListener('click',()=>{
+ loadDeploy().catch(e=>text('mon-deploy-token','Erro: '+e.message));
+});
+node('mon-deploy-checkpoint').addEventListener('click',async()=>{
+ const b=node('mon-deploy-checkpoint');b.disabled=true;
+ text('mon-deploy-token','Gravando marco fictício na base SQLite…');
+ try {
+  const response=await fetch('/trading-pro/api/deployment/checkpoint',{
+    method:'POST',credentials:'same-origin',cache:'no-store',
+    headers:{'X-Trading-CSRF':root.dataset.csrf}
+  });
+  const result=await response.json();
+  if(!response.ok||!result.ok)throw Error(result.error||'Falha ao gravar');
+  await loadDeploy();
+ }catch(e){text('mon-deploy-token','Erro: '+e.message);b.disabled=false;}
+});
+loadDeploy().catch(e=>text('mon-deploy-token','Falha no diagnóstico: '+e.message));
 load().catch(e=>text('mon-message','Falha ao carregar: '+e.message));
 })();
 </script>
