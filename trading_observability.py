@@ -4,6 +4,7 @@ No exchange credentials, exchange orders, user deposits or simulated performance
 fabrication. A successful unit test is not proof of real market connectivity.
 """
 import json
+import math
 import secrets
 from datetime import datetime, timezone
 
@@ -255,18 +256,22 @@ def market_diagnostic(db_conn, user_id, fetcher=None, now=None):
     try:
         markets = (fetcher or fetch_markets)()
         candle = validate_fresh_markets(markets, now_millis=int(now.timestamp() * 1000))
+        quoted = []
+        for symbol in sorted({bot["symbol"] for bot in BOTS}):
+            price = float(markets[symbol]["price"])
+            if not math.isfinite(price) or price <= 0:
+                raise ValueError("Cotação inválida")
+            quoted.append({
+                "symbol": symbol,
+                "price": round(price, 8),
+                "bars": len(markets[symbol]["bars"]),
+            })
         data = {
             "source": "Binance Spot API pública",
             "candle_open_time_utc": datetime.fromtimestamp(
                 candle / 1000, timezone.utc
             ).isoformat(timespec="seconds"),
-            "symbols": [
-                {
-                    "symbol": symbol, "price": round(float(markets[symbol]["price"]), 8),
-                    "bars": len(markets[symbol]["bars"]),
-                }
-                for symbol in sorted({bot["symbol"] for bot in BOTS})
-            ],
+            "symbols": quoted,
             "no_orders_placed": True,
         }
     except (requests.RequestException, ValueError, KeyError, TypeError, IndexError, OverflowError):
