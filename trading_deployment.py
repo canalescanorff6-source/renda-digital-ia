@@ -3,6 +3,7 @@ import os
 import secrets
 from datetime import datetime, timezone
 from pathlib import Path
+from tempfile import gettempdir
 
 from flask import jsonify, session
 
@@ -20,8 +21,8 @@ def _temporary_database(path):
         return None
     try:
         resolved = Path(path).resolve()
-        for parent in ("/tmp", "/var/tmp", "/dev/shm"):
-            if resolved.is_relative_to(Path(parent)):
+        for parent in ("/tmp", "/var/tmp", "/dev/shm", gettempdir()):
+            if resolved.is_relative_to(Path(parent).resolve()):
                 return True
         return False
     except (OSError, RuntimeError, ValueError):
