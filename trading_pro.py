@@ -546,3 +546,5 @@ def register_trading_pro(app, login_required, db_conn):
     register_automation_routes(app, login_required, protected_write, db_conn)
     from trading_observability import register_monitor_routes
     register_monitor_routes(app, login_required, protected_write, db_conn)
+    from trading_deployment import register_deployment_routes
+    register_deployment_routes(app, login_required, protected_write, db_conn)
