@@ -76,6 +76,26 @@
     <div class="tp-metric"><span>Drawdown desde o pico</span><strong id="tp-dd">—</strong><small id="tp-mode">Carregando estado</small></div>
   </div>
 
+  <div class="tp-card" id="tp-automation-card" style="margin:18px 0">
+    <div class="tp-row-head" style="margin:0 0 10px"><h2>Simulação automática · Trading PRO 3.0</h2><span class="tp-pill">PAPER ONLY</span></div>
+    <p class="tp-foot" style="margin:0 0 14px">O processamento automático só ocorre após configuração do servidor e sua ativação abaixo. Sem ambos, os robôs continuam manuais. Nenhum robô negocia criptomoedas reais.</p>
+    <div class="tp-top-actions">
+      <button class="tp-action primary" id="tp-auto-enable" type="button">Ativar simulação programada</button>
+      <button class="tp-action warn" id="tp-auto-disable" type="button">Desativar</button>
+      <button class="tp-action" id="tp-auto-refresh" type="button">Atualizar monitoramento</button>
+    </div>
+    <div class="tp-status" role="status" aria-live="polite" id="tp-auto-message"></div>
+    <div class="tp-risk" style="margin-top:9px">
+      <div><span>Autorização pessoal</span><strong id="tp-auto-optin">—</strong></div>
+      <div><span>Servidor agendado</span><strong id="tp-auto-server">—</strong></div>
+      <div><span>Status efetivo</span><strong id="tp-auto-effective">—</strong></div>
+      <div><span>Última execução global</span><strong id="tp-auto-job">—</strong></div>
+    </div>
+    <div class="tp-row-head" style="margin:18px 0 6px"><h2>Registros diários fictícios</h2><span class="tp-live">Última medição disponível em cada dia UTC</span></div>
+    <div class="tp-table-wrap"><table class="tp-table"><thead><tr><th>Dia UTC</th><th>Patrimônio</th><th>Variação desde o início</th><th>Drawdown</th><th>Posições</th><th>Operações acumuladas</th><th>Coletado em</th></tr></thead><tbody id="tp-auto-history"><tr><td colspan="7" class="tp-empty">Carregando monitoramento…</td></tr></tbody></table></div>
+    <p class="tp-foot">Esses registros não são necessariamente o fechamento de mercado. A execução depende da disponibilidade da hospedagem, do agendador e da API pública. Não há garantia de funcionamento ininterrupto.</p>
+  </div>
+
   <div class="tp-row-head"><h2>Robôs de negociação</h2><span class="tp-live">Spot · sem margem e sem alavancagem</span></div>
   <div class="tp-bots" id="tp-bots"></div>
 
@@ -160,6 +180,49 @@
   el('tp-cycle').addEventListener('click',()=>action('cycle','Consultando mercado e calculando sinais...'));
   el('tp-pause').addEventListener('click',()=>action('pause','Pausando operações...'));
   el('tp-resume').addEventListener('click',()=>action('resume','Retomando modo de simulação...'));
+  async function automationRequest(enabled){
+    const body={enabled};
+    const result=await fetch('/trading-pro/api/automation/settings',{
+      method:'POST',credentials:'same-origin',cache:'no-store',
+      headers:{'X-Trading-CSRF':csrf,'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const data=await result.json();
+    if(!result.ok||!data.ok)throw Error(data.error||'Falha na configuração');
+    return data.automation;
+  }
+  function renderAutomation(a){
+    const configured=!!a.server_configured,enabled=!!a.opted_in;
+    put('tp-auto-optin',enabled?'ATIVADA':'DESATIVADA');
+    put('tp-auto-server',configured?'CONFIGURADO':'NÃO CONFIGURADO');
+    put('tp-auto-effective',a.will_run_when_triggered?'AGUARDA AGENDADOR':a.account_mode==='risk_paused'?'BLOQUEADO POR RISCO':'SEM EXECUÇÃO');
+    const job=a.latest_scheduler_run;
+    put('tp-auto-job',job?(job.status+' · '+new Date(job.started_at).toLocaleString('pt-BR')):'NENHUMA');
+    el('tp-auto-enable').disabled=enabled;
+    el('tp-auto-disable').disabled=!enabled;
+    const lines=(a.daily_snapshots||[]).map(r=>'<tr><td>'+escape(r.day_utc)+'</td><td>'+money(r.equity)+' USDT</td><td class="'+(r.pnl<0?'tp-bad':'tp-good')+'">'+percent(r.pnl_pct)+'</td><td>'+percent(r.drawdown_pct)+'</td><td>'+r.positions_count+'</td><td>'+r.trades_count+'</td><td>'+escape(r.as_of)+'</td></tr>');
+    el('tp-auto-history').innerHTML=lines.join('')||'<tr><td colspan="7" class="tp-empty">Nenhuma coleta programada confirmada até agora. Sem simular resultados.</td></tr>';
+    if(enabled&&!configured)put('tp-auto-message','Autorização salva, mas o servidor ainda não foi configurado para disparar os ciclos.');
+    else if(a.will_run_when_triggered)put('tp-auto-message','Tudo habilitado. Novas operações simuladas dependem de um disparo externo do agendador.');
+    else put('tp-auto-message','A automação não está executando novas entradas.');
+  }
+  async function refreshAutomation(){
+    const response=await fetch('/trading-pro/api/automation/status',{credentials:'same-origin',cache:'no-store'});
+    const data=await response.json();
+    if(!response.ok||!data.ok)throw Error(data.error||'Falha na leitura');
+    renderAutomation(data.automation);
+  }
+  for(const [id,value] of [['tp-auto-enable',true],['tp-auto-disable',false]]){
+    el(id).addEventListener('click',async()=>{
+      el('tp-auto-enable').disabled=true;el('tp-auto-disable').disabled=true;
+      put('tp-auto-message','Salvando sua preferência…');
+      try{renderAutomation(await automationRequest(value));}
+      catch(e){put('tp-auto-message','Falha: '+e.message);}
+      finally{try{await refreshAutomation()}catch(e){put('tp-auto-message','Falha ao recarregar: '+e.message)}}
+    });
+  }
+  el('tp-auto-refresh').addEventListener('click',()=>refreshAutomation().catch(e=>put('tp-auto-message','Falha: '+e.message)));
+  refreshAutomation().catch(e=>put('tp-auto-message','Falha ao carregar monitoramento: '+e.message));
   call('status',false).catch(e=>put('tp-status','Falha ao carregar: '+e.message));
 })();
 </script>
