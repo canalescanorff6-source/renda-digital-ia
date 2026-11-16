@@ -169,3 +169,47 @@ Página **/trading-pro/monitor**, acessível pelo menu do app e pelo próprio Tr
 - Testar conexão pública verifica apenas a disponibilidade naquele instante; não demonstra execução de ordens reais nem prova de rendimento.
 - O último job global pode se referir a outra conta; o sinal de saúde da conta depende do snapshot individual.
 - O profit factor fica sem valor se não houver trades negativos fechados; uma taxa de acerto alta, isoladamente, não demonstra rentabilidade.
+
+
+---
+
+## Etapa 5 — Prova de implantação e integridade de dados (v5)
+
+### Por que esta etapa existe
+
+GitHub atualizado **não significa** que a hospedagem esteja atualizada. Em consulta externa em 16/11/2026 ao domínio mencionado no repositório, https://renda-digital-ia.runsite.app/trading-pro/monitor retornou HTTP 404. A checagem de /healthz não gerou conteúdo verificável. Isso é um resultado pontual; o endereço pode ter mudado ou o deploy pode não ter ocorrido. **Não afirme que a simulação está em produção** sem confirmar a instância atual.
+
+### Novos recursos
+
+- **GET /trading-pro/ping**: rota pública de versão, sem autenticação ou acesso a corretora. Retorna JSON com version=5.0.0, execution_mode=PAPER_ONLY e ok=true. Não exibe senhas, caminhos ou dados dos usuários.
+- **GET /trading-pro/api/deployment**: diagnóstico autenticado com verificações de segurança da chave Flask, configuração de senha inicial do admin (não confirma senha já salva), integridade rápida do banco, localização temporária/com potencial persistência e disponibilidade da configuração do endpoint de cron. Os estados são pass, warning ou blocker. Nenhum segredo nem caminho absoluto são retornados.
+- **POST /trading-pro/api/deployment/checkpoint**: cria uma única vez por usuário um código aleatório no SQLite, com sessão e CSRF obrigatórios. O usuário pode verificar o **mesmo código após redeploy/reinício** para testar continuidade. Apenas gravar o código não comprova persistência. O checkpoint é isolado por usuário e não é sobrescrito por novos cliques.
+- A central /trading-pro/monitor mostra checklist, versão e marcador. O app continua **PAPER_ONLY**; o diagnóstico não chama execute_cycle e não cria ordens.
+- **.github/workflows/trading-pro-deploy-verify.yml**: workflow manual que verifica por HTTPS se a URL pública responde à versão 5.0.0. Não inclui credenciais e falha em versões antigas, 404, redirecionamento para login, HTTP, HTML em vez de JSON ou modo diferente de PAPER_ONLY.
+- **scripts/verify_trading_deployment.py**: alternativa local, usando só a biblioteca padrão de Python. Exemplo: python scripts/verify_trading_deployment.py https://renda-digital-ia.runsite.app
+
+### Checklist para implantação real
+
+1. No RunSite, certifique-se de que o app utiliza a branch main no commit correspondente à v5 e que o deploy realmente terminou. Um merge no GitHub não comprova essa etapa.
+2. Confirme HTTPS acessível na URL atual (se RunSite tiver mudado o domínio, atualize o endereço usado nas verificações).
+3. Configure APP_RUNTIME_DIR, STORAGE_DIR e DATABASE_PATH para **volume persistente**. O start.sh usa /tmp/renda_digital_ia por padrão, e /tmp geralmente não sobrevive a troca do contêiner; ele é inadequado para manter histórico financeiro fictício de longo prazo. O diagnóstico sinaliza essa configuração.
+4. Configure SECRET_KEY longa, ADMIN_PASSWORD forte, e **revise a senha do admin existente**. A criação inicial do usuário usa INSERT OR IGNORE; alterar ADMIN_PASSWORD depois de criar a conta não necessariamente muda a senha já armazenada.
+5. Depois do redeploy, abra /trading-pro/ping. A resposta esperada é JSON com version "5.0.0" e execution_mode "PAPER_ONLY".
+6. Faça login, abra /trading-pro/monitor, confira o checklist e clique em Criar marco de persistência. Anote o código e a data.
+7. Faça um redeploy controlado, sem perder acesso e com backup seguro, e compare o código após a reinicialização. Se desaparecer, o banco não foi conservado entre instâncias, ou a instância usa outro banco.
+8. Só então configure o agendamento opcional conforme a etapa 3, sem enviar secrets pelo chat ou salvar em arquivos versionados. Confirme disparo real no Actions e snapshot efetivo no painel.
+9. Execute o diagnóstico de preços públicos **a partir da hospedagem**, não somente em CI; se a Binance não responder, não invente resultados nem passe a operar.
+
+### Restrições que continuam
+
+- A conferência da rota pública comprova **somente qual código aquela URL está servindo no instante do acesso**, e não prova saúde do cron ou persistência.
+- Chaves administrativas com comprimento adequado não provam que não foram comprometidas; a senha do usuário já persistido não é auditada por este módulo.
+- A localização do banco fora de /tmp é somente **candidata** a persistência; confirme com o marco após redeploy e com a política da hospedagem.
+- A automação programada é separada de uma conta de corretora real. Não há ordens, saques nem depósitos reais nesta versão.
+- Não iniciar operação com capital real apenas porque a v5 foi publicada ou um teste de deploy foi aprovado.
+
+### Testes
+
+python -m unittest discover -s tests -p "test_trading*.py" -v
+
+O GitHub Actions executa testes offline do pré-check, do checkpoint, das rotas Flask e do verificador público de versão. O workflow manual de verificação de implantação exige acesso a uma URL HTTPS de produção de fato atualizada.
