@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.tp-shell{max-width:1480px;margin:auto}
+.tp-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.tp-heading h1{margin:.45rem 0;font-size:clamp(1.7rem,4vw,3.1rem)}
+.tp-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(36,245,208,.09);border:1px solid rgba(36,245,208,.28);color:#7df9db;padding:8px 13px;border-radius:99px;font-weight:750;font-size:12px}
+.tp-warning{margin:18px 0 24px;background:rgba(255,180,75,.09);color:#ffe5b6;border:1px solid rgba(255,180,75,.30);border-radius:16px;padding:15px;font-size:14px;line-height:1.5}
+.tp-top-actions{display:flex;gap:9px;flex-wrap:wrap;margin:8px 0}
+.tp-action{border:1px solid rgba(255,255,255,.15);background:#222039;color:#fff;border-radius:12px;min-height:43px;padding:10px 17px;font-size:14px;font-weight:750;cursor:pointer}
+.tp-action.primary{background:linear-gradient(115deg,#8f5cff,#6249d5);border-color:#9676ff}
+.tp-action.warn{color:#ffcbcd;border-color:#b45874}
+.tp-action:disabled{opacity:.55;cursor:wait}
+.tp-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}
+.tp-metric,.tp-card{background:linear-gradient(155deg,rgba(36,33,61,.94),rgba(13,14,29,.91));border:1px solid rgba(255,255,255,.10);border-radius:19px;padding:19px;min-width:0}
+.tp-metric span{display:block;color:#b4b2c7;font-size:13px}
+.tp-metric strong{display:block;color:#fefeff;font-size:clamp(1.35rem,2.8vw,2rem);margin:6px 0;font-variant-numeric:tabular-nums}
+.tp-metric small{color:#aaa8c0;font-size:12px}
+.tp-row-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:26px 0 12px}
+.tp-row-head h2{font-size:20px;margin:0}
+.tp-bots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.tp-bot{border:1px solid rgba(255,255,255,.10);background:linear-gradient(155deg,rgba(40,37,69,.8),rgba(12,13,30,.95));border-radius:18px;padding:16px}
+.tp-bot .tp-icon{width:37px;height:37px;border-radius:11px;display:grid;place-items:center;background:rgba(143,92,255,.22);color:#d0baff;font-weight:900}
+.tp-bot strong{display:block;font-size:17px;margin-top:12px;color:#fff}
+.tp-bot small{display:block;color:#aaa8bd;line-height:1.5;min-height:36px}
+.tp-bot .tp-symbol{display:inline-block;margin-top:10px;color:#90f4dd;font-size:12px;letter-spacing:.4px}
+.tp-bot .tp-signal{margin-top:8px;color:#cbd1e5;font-size:12px;line-height:1.5;min-height:52px}
+.tp-split{display:grid;grid-template-columns:1.45fr 1fr;gap:14px;margin-top:14px}
+.tp-table-wrap{width:100%;overflow:auto}
+.tp-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+.tp-table th,.tp-table td{padding:13px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+.tp-table th{color:#aaa8c6;font-weight:650}
+.tp-table td{color:#f5f4fc}
+.tp-good{color:#5be3af!important}
+.tp-bad{color:#ff8da3!important}
+.tp-muted{color:#a9a8be!important}
+.tp-empty{padding:23px 0;color:#aaa8c6;font-size:14px;line-height:1.6}
+.tp-card h3{margin:0 0 14px;font-size:17px}
+.tp-risk{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tp-risk div{padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:12px}
+.tp-risk strong{display:block;color:#fff;font-size:18px}
+.tp-risk span{color:#aaa8c5;font-size:11px}
+.tp-foot{color:#aca9c2;font-size:13px;line-height:1.6;margin-top:18px}
+.tp-status{font-size:13px;min-height:24px;color:#b6c2dc}
+.tp-live{color:#b9b7cd;font-size:13px}
+@media(max-width:1250px){.tp-bots{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:900px){.tp-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.tp-split{grid-template-columns:1fr}}
+@media(max-width:620px){.tp-bots{grid-template-columns:1fr 1fr}.tp-metric,.tp-card{padding:14px}.tp-bot{padding:13px}.tp-heading h1{font-size:1.8rem}}
+@media(max-width:390px){.tp-bots{grid-template-columns:1fr}.tp-metrics{grid-template-columns:1fr 1fr}}
+</style>
+<section class="tp-shell" id="tp-root" data-csrf="{{ csrf }}">
+  <div class="tp-heading">
+    <div>
+      <span class="eyebrow">Laboratório financeiro · v1.0</span>
+      <h1>Trading <span style="color:#ab8bff">PRO</span></h1>
+      <p>5 robôs de estratégias independentes. Análise com dados públicos de mercado e execução estritamente simulada.</p>
+      <div class="tp-pill">● PAPER TRADING · NÃO UTILIZA DINHEIRO REAL</div>
+    </div>
+    <div>
+      <div class="tp-top-actions">
+        <button class="tp-action primary" id="tp-cycle">Executar ciclo de análise</button>
+        <button class="tp-action warn" id="tp-pause">Pausar robôs</button>
+        <button class="tp-action" id="tp-resume">Retomar</button>
+      </div>
+      <div class="tp-live" id="tp-last">Aguardando primeira leitura</div>
+      <div role="status" aria-live="polite" class="tp-status" id="tp-status"></div>
+    </div>
+  </div>
+  <div class="tp-warning"><strong>Simulação, não investimento.</strong> O saldo inicial de 10.000 USDT é fictício. A API pública fornece preços reais, mas as ordens são calculadas internamente, com taxas e slippage estimados. Nenhuma ordem chega a uma corretora. Este ciclo é manual — a plataforma não opera 24 horas por dia nesta versão.</div>
+
+  <div class="tp-metrics">
+    <div class="tp-metric"><span>Patrimônio simulado</span><strong id="tp-equity">—</strong><small>USDT · atualizado no último ciclo</small></div>
+    <div class="tp-metric"><span>Lucro / prejuízo líquido</span><strong id="tp-pnl">—</strong><small id="tp-pnl-pct">Inclui taxas estimadas</small></div>
+    <div class="tp-metric"><span>Saldo disponível</span><strong id="tp-cash">—</strong><small>Sem depósitos nem retiradas</small></div>
+    <div class="tp-metric"><span>Drawdown desde o pico</span><strong id="tp-dd">—</strong><small id="tp-mode">Carregando estado</small></div>
+  </div>
+
+  <div class="tp-row-head"><h2>Robôs de negociação</h2><span class="tp-live">Spot · sem margem e sem alavancagem</span></div>
+  <div class="tp-bots" id="tp-bots"></div>
+
+  <div class="tp-split">
+    <div class="tp-card">
+      <h3>Posições simuladas em aberto</h3>
+      <div class="tp-table-wrap"><table class="tp-table"><thead><tr><th>Robô</th><th>Par</th><th>Quantidade</th><th>Entrada</th><th>Última cotação</th><th>Stop</th></tr></thead><tbody id="tp-positions"></tbody></table></div>
+    </div>
+    <div class="tp-card">
+      <h3>Proteções automáticas</h3>
+      <div class="tp-risk" id="tp-risks"></div>
+      <p class="tp-foot">Atingir o limite diário ou o drawdown máximo provoca a liquidação <strong>simulada</strong> das posições e bloqueia novos ciclos. A avaliação depende de cada ciclo executado e não protege contra oscilações entre ciclos.</p>
+    </div>
+  </div>
+  <div class="tp-card" style="margin-top:14px">
+    <h3>Histórico de operações e custos</h3>
+    <div class="tp-table-wrap"><table class="tp-table"><thead><tr><th>Horário UTC</th><th>Robô</th><th>Par</th><th>Operação</th><th>Preço</th><th>Taxa</th><th>Resultado realizado</th><th>Motivo</th></tr></thead><tbody id="tp-trades"></tbody></table></div>
+  </div>
+  <p class="tp-foot">Dados públicos: Binance Spot API. Os sinais utilizam candles horários já encerrados. Preços das posições ficam desatualizados até o próximo ciclo; ganhos exibidos não são garantias de desempenho futuro. Não envie chaves da corretora nem depósitos para este módulo.</p>
+</section>
+<script>
+(function(){
+  'use strict';
+  const root=document.getElementById('tp-root');
+  const el=id=>document.getElementById(id);
+  const csrf=root.dataset.csrf;
+  const money=x=>Number(x).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const decimal=x=>Number(x).toLocaleString('pt-BR',{maximumFractionDigits:7});
+  const percent=x=>Number(x).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  const escape=x=>String(x==null?'':x).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const put=(id,value)=>{el(id).textContent=value};
+  const labels={active:'Pronto para ciclo manual',paused:'Pausado manualmente',risk_paused:'BLOQUEADO POR RISCO'};
+  function render(s){
+    put('tp-equity',money(s.equity)+' USDT');
+    put('tp-pnl',(s.pnl>=0?'+':'')+money(s.pnl)+' USDT');
+    el('tp-pnl').className=s.pnl>=0?'tp-good':'tp-bad';
+    put('tp-pnl-pct',percent(s.pnl_pct)+' sobre saldo inicial · taxas: '+money(s.fees_total)+' USDT');
+    put('tp-cash',money(s.cash)+' USDT');
+    put('tp-dd',percent(s.drawdown_pct));
+    put('tp-mode',labels[s.mode]||s.mode);
+    put('tp-last',s.last_run?'Último ciclo: '+new Date(s.last_run).toLocaleString('pt-BR'):'Nenhum ciclo executado');
+    el('tp-cycle').disabled=s.mode!=='active';
+    el('tp-pause').disabled=s.mode!=='active';
+    el('tp-resume').disabled=s.mode!=='paused';
+    const lastByBot={};
+    for(const sig of s.signals){if(!lastByBot[sig.bot_id])lastByBot[sig.bot_id]=sig}
+    el('tp-bots').innerHTML=s.bots.map((b,i)=>{
+      const latest=lastByBot[b.id]; const hasPos=s.positions.some(p=>p.bot_id===b.id);
+      return '<article class="tp-bot"><div class="tp-icon">'+(i+1)+'</div><strong>'+escape(b.name)+'</strong><small>'+escape(b.strategy)+'</small><span class="tp-symbol">'+escape(b.symbol)+'</span><div class="tp-signal">'+
+        (hasPos?'● Posição aberta<br>':'')+(latest?escape(latest.signal)+' · '+escape(latest.reason):'Sem sinal avaliado')+'</div></article>';
+    }).join('');
+    const rows=s.positions.map(p=>'<tr><td>'+escape(p.bot_id)+'</td><td>'+escape(p.symbol)+'</td><td>'+decimal(p.quantity)+'</td><td>'+money(p.entry_price)+'</td><td>'+money(p.last_price)+'</td><td>'+money(p.stop_price)+'</td></tr>').join('');
+    el('tp-positions').innerHTML=rows||'<tr><td colspan="6" class="tp-empty">Nenhuma posição em aberto. Execute um ciclo para avaliar o mercado.</td></tr>';
+    const risk=[
+      ['Exposição máxima por robô',percent(s.limits.per_bot_exposure_pct)],
+      ['Exposição total',percent(s.limits.total_exposure_pct)],
+      ['Risco sugerido por entrada',percent(s.limits.risk_per_trade_pct)],
+      ['Limite de perda diária',percent(s.limits.daily_loss_pct)],
+      ['Drawdown máximo',percent(s.limits.drawdown_pct)],
+      ['Taxa + slippage estimados',percent(s.limits.fee_pct)+' + '+percent(s.limits.slippage_pct)]
+    ];
+    el('tp-risks').innerHTML=risk.map(r=>'<div><span>'+escape(r[0])+'</span><strong>'+escape(r[1])+'</strong></div>').join('');
+    const history=s.trades.map(t=>'<tr><td>'+escape(t.created_at)+'</td><td>'+escape(t.bot_id)+'</td><td>'+escape(t.symbol)+'</td><td>'+escape(t.side)+'</td><td>'+money(t.price)+'</td><td>'+money(t.fee)+'</td><td class="'+(t.realized_pnl<0?'tp-bad':'tp-good')+'">'+(t.side==='SELL'?money(t.realized_pnl):'—')+'</td><td>'+escape(t.reason)+'</td></tr>').join('');
+    el('tp-trades').innerHTML=history||'<tr><td colspan="8" class="tp-empty">Ainda não há negociações simuladas.</td></tr>';
+  }
+  async function call(route,post){
+    const options={credentials:'same-origin',cache:'no-store'};
+    if(post){options.method='POST';options.headers={'X-Trading-CSRF':csrf};}
+    const resp=await fetch('/trading-pro/api/'+route,options);
+    const data=await resp.json();
+    if(!resp.ok||!data.ok)throw Error(data.error||'Falha na comunicação');
+    render(data.state);
+    return data;
+  }
+  async function action(route,msg){
+    put('tp-status',msg);
+    for(const b of ['tp-cycle','tp-pause','tp-resume'])el(b).disabled=true;
+    try{await call(route,true);put('tp-status',route==='cycle'?'Ciclo concluído. Valores simulados.':'Estado atualizado.');}
+    catch(e){put('tp-status','Erro: '+e.message);}
+    finally{try{await call('status',false)}catch(e){put('tp-status','Erro de leitura: '+e.message)}}
+  }
+  el('tp-cycle').addEventListener('click',()=>action('cycle','Consultando mercado e calculando sinais...'));
+  el('tp-pause').addEventListener('click',()=>action('pause','Pausando operações...'));
+  el('tp-resume').addEventListener('click',()=>action('resume','Retomando modo de simulação...'));
+  call('status',false).catch(e=>put('tp-status','Falha ao carregar: '+e.message));
+})();
+</script>
+{% endblock %}
