@@ -2,17 +2,20 @@ name: Trading PRO — simulação e risco
 
 on:
   push:
-    branches: [feature/trading-pro-paper-v1, feature/trading-pro-historical-validation-v2, feature/trading-pro-scheduled-paper-v3]
+    branches: [feature/trading-pro-paper-v1, feature/trading-pro-historical-validation-v2, feature/trading-pro-scheduled-paper-v3, feature/trading-pro-observability-v4]
   pull_request:
     paths:
       - "trading_pro.py"
       - "trading_backtest.py"
       - "trading_scheduler.py"
+      - "trading_observability.py"
       - ".github/workflows/trading-pro-schedule.yml"
       - "tests/test_trading_pro.py"
       - "tests/test_trading_backtest.py"
       - "tests/test_trading_scheduler.py"
+      - "tests/test_trading_observability.py"
       - "templates/trading_pro.html"
+      - "templates/trading_monitor.html"
       - "templates/trading_backtest.html"
       - "app.py"
       - ".github/workflows/trading-pro-tests.yml"
@@ -32,7 +35,7 @@ jobs:
       - name: Dependências mínimas do motor
         run: python -m pip install Flask==3.0.3 requests==2.32.3 python-dotenv==1.0.1
       - name: Verificação de sintaxe
-        run: python -m py_compile trading_pro.py trading_backtest.py trading_scheduler.py app.py
+        run: python -m py_compile trading_pro.py trading_backtest.py trading_scheduler.py trading_observability.py app.py
       - name: Testes offline — nenhum dinheiro real
         run: python -m unittest discover -s tests -p "test_trading*.py" -v
       - name: Smoke test — importar Flask e servir dashboard autenticado
@@ -48,6 +51,8 @@ jobs:
           assert "trading_backtest_page" in app.app.view_functions
           assert "tp_auto_status" in app.app.view_functions
           assert "tp_scheduled_cron" in app.app.view_functions
+          assert "tp_monitor_page" in app.app.view_functions
+          assert "tp_monitor_check_market" in app.app.view_functions
           with app.app.test_client() as client:
               with client.session_transaction() as session:
                   session["user_id"] = 987
@@ -58,6 +63,11 @@ jobs:
               backtest_page = client.get("/trading-pro/backtest")
               assert backtest_page.status_code == 200
               assert b"Backtesting" in backtest_page.data
+              monitor_page = client.get("/trading-pro/monitor")
+              assert monitor_page.status_code == 200
+              monitor_api = client.get("/trading-pro/api/monitor")
+              assert monitor_api.status_code == 200
+              assert monitor_api.json["monitor"]["execution_mode"] == "PAPER_ONLY"
               scheduler = client.get("/trading-pro/api/automation/status")
               assert scheduler.status_code == 200
               assert scheduler.json["automation"]["paper_only"] is True
