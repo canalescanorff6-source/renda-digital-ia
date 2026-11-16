@@ -86,6 +86,15 @@ class TradingProTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             execute_cycle(self.connect, 11, self.markets())
 
+    def test_stops_trigger_on_repeat_cycle_even_with_same_candle(self):
+        opened = execute_cycle(self.connect, 88, self.markets())
+        self.assertGreater(len(opened["positions"]), 0)
+        stopped = execute_cycle(self.connect, 88, self.markets(price_factor=.96))
+        self.assertEqual(stopped["mode"], "active")
+        self.assertTrue(any(t["reason"] == "Stop-loss simulado"
+                            for t in stopped["trades"] if t["side"] == "SELL"))
+        self.assertLess(len(stopped["positions"]), len(opened["positions"]))
+
     def test_user_accounts_are_isolated(self):
         one = execute_cycle(self.connect, 101, self.markets())
         conn = self.connect()
