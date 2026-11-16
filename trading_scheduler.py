@@ -320,7 +320,7 @@ def run_scheduled_paper_cycle(db_conn, market_fetch=None):
                     # execute_cycle verifies mode inside its transaction; a
                     # concurrent pause request wins if it commits first.
                     try:
-                        state = execute_cycle(db_conn, user_id, market_data)
+                        state = execute_cycle(db_conn, user_id, market_data, require_auto_enabled=True)
                         record_snapshot(db_conn, user_id, state, candle)
                         processed += 1
                     except ValueError:
