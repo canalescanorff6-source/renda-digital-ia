@@ -544,3 +544,5 @@ def register_trading_pro(app, login_required, db_conn):
 
     from trading_scheduler import register_automation_routes
     register_automation_routes(app, login_required, protected_write, db_conn)
+    from trading_observability import register_monitor_routes
+    register_monitor_routes(app, login_required, protected_write, db_conn)
