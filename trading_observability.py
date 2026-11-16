@@ -4,8 +4,7 @@ No exchange credentials, exchange orders, user deposits or simulated performance
 fabrication. A successful unit test is not proof of real market connectivity.
 """
 import json
-import math
-import sqlite3
+import secrets
 from datetime import datetime, timezone
 
 import requests
@@ -296,7 +295,9 @@ def register_monitor_routes(app, login_required, protected_write, db_conn):
     @app.route("/trading-pro/monitor")
     @login_required
     def tp_monitor_page():
-        return render_template("trading_monitor.html")
+        if "trading_pro_csrf" not in session:
+            session["trading_pro_csrf"] = secrets.token_urlsafe(32)
+        return render_template("trading_monitor.html", csrf=session["trading_pro_csrf"])
 
     @app.route("/trading-pro/api/monitor")
     @login_required
