@@ -1,0 +1,28 @@
+name: Trading PRO — verificar publicação real
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'URL HTTPS publica da hospedagem, sem caminho'
+        required: true
+        type: string
+        default: 'https://renda-digital-ia.runsite.app'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-deployment:
+    name: Conferir versão do Trading PRO publicada
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Ler apenas o marcador público de versão (sem login/ordens)
+        env:
+          DEPLOY_BASE_URL: ${{ inputs.base_url }}
+        run: python scripts/verify_trading_deployment.py "$DEPLOY_BASE_URL"
